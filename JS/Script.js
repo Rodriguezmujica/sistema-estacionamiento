@@ -875,73 +875,358 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- FORMULARIO DE INGRESO ---
+  // --- MANEJO DE ENVÍO DEL FORMULARIO DE INGRESO ---
   const formIngreso = document.getElementById('form-ingreso');
+
   if (formIngreso) {
-    console.log('✅ Formulario de ingreso encontrado, agregando event listener...');
+    console.log('✅ Formulario de ingreso encontrado');
     
-    formIngreso.addEventListener('submit', async function(e) {
-      console.log('🚀 Formulario enviado, previniendo comportamiento por defecto...');
-      e.preventDefault();
+    formIngreso.addEventListener('submit', function(e) {
+      e.preventDefault(); // Prevenir envío normal del formulario
       
       const patente = document.getElementById('patente-ingreso').value.trim().toUpperCase();
-      const tipoServicio = document.getElementById('tipo-servicio').value;
+      const servicioId = document.getElementById('tipo-servicio').value;
       const nombreCliente = document.getElementById('nombre-cliente') ? document.getElementById('nombre-cliente').value.trim() : '';
 
-      console.log('📋 Datos del formulario:', { patente, tipoServicio, nombreCliente });
+      console.log('🎯 Formulario enviado:', { patente, servicioId, nombreCliente });
 
-      // Ajustar valor para la API según selección
-      let tipo_servicio_db = tipoServicio;
-      if (tipoServicio === 'Estacionamiento') {
-        tipo_servicio_db = 'estacionamiento x minuto';
-      }
-      if (tipoServicio === 'Lavado') {
-        tipo_servicio_db = 'Lavado';
-      }
-
-      console.log('🔄 Tipo de servicio mapeado:', tipo_servicio_db);
-
-      if (!patente || !tipoServicio) {
+      if (!patente || !servicioId) {
         mostrarAlerta('Por favor complete todos los campos obligatorios', 'warning');
         return;
       }
 
-      try {
-        const datosIngreso = {
-          patente: patente,
-          tipo_servicio: tipo_servicio_db,
-          nombre_cliente: nombreCliente
-        };
-
-        console.log('📤 Enviando datos a la API:', datosIngreso);
-
-        const response = await fetch('api/registrar-ingreso.php', {
+      // Si es servicio de lavado (ID = 2), abrir modal completo
+      if (servicioId === '2') {
+        console.log('🚗 Servicio de lavado seleccionado, abriendo modal completo...');
+        
+        // Verificar patente duplicada antes de abrir el modal
+        fetch('./api/verificar-patente.php', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams(datosIngreso)
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ patente: patente })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.existe) {
+            mostrarAlerta(`⚠️ La patente ${patente} ya está registrada en el sistema`, 'warning');
+            return;
+          }
+          
+          // Precargar datos en el modal
+          const patenteModalLavado = document.getElementById('patente-lavado-modal');
+          const clienteModalLavado = document.getElementById('nombre-cliente-lavado-modal');
+          
+          if (patenteModalLavado) {
+            patenteModalLavado.value = patente;
+          }
+          
+          if (clienteModalLavado) {
+            clienteModalLavado.value = nombreCliente;
+          }
+          
+          // Mostrar modal
+          const modalLavado = new bootstrap.Modal(document.getElementById('modalLavado'));
+          modalLavado.show();
+          
+          console.log('✅ Modal de lavado completo abierto con patente:', patente);
+        })
+        .catch(error => {
+          console.error('Error verificando patente:', error);
+          // En caso de error, permitir continuar
+          const patenteModalLavado = document.getElementById('patente-lavado-modal');
+          const clienteModalLavado = document.getElementById('nombre-cliente-lavado-modal');
+          
+          if (patenteModalLavado) patenteModalLavado.value = patente;
+          if (clienteModalLavado) clienteModalLavado.value = nombreCliente;
+          
+          const modalLavado = new bootstrap.Modal(document.getElementById('modalLavado'));
+          modalLavado.show();
         });
-
-        const resultado = await response.json();
-        console.log('📥 Respuesta de la API:', resultado);
-
-        if (resultado.success) {
-          mostrarAlerta('¡Ingreso registrado correctamente!', 'success');
-          formIngreso.reset();
-          cargarReporte();
-        } else {
-          mostrarAlerta('Error al registrar ingreso: ' + (resultado.error || ''), 'danger');
-        }
-
-      } catch (error) {
-        console.error('💥 Error en el formulario:', error);
-        mostrarAlerta('Error de conexión: ' + error.message, 'danger');
+        
+      } else if (servicioId === '1') {
+        console.log('🅿️ Servicio de estacionamiento, procesando ingreso normal...');
+        registrarIngresoEstacionamiento(patente, servicioId, nombreCliente);
       }
     });
   } else {
     console.error('❌ No se encontró el formulario form-ingreso');
   }
+
+  // --- BOTÓN REGISTRAR INGRESO ACTUALIZADO ---
+  const btnRegistrarIngreso = document.getElementById('btnRegistrarIngreso');
+
+  if (btnRegistrarIngreso) {
+    console.log('✅ Botón Registrar Ingreso encontrado');
+    
+    btnRegistrarIngreso.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      const patente = document.getElementById('patente-ingreso').value.trim().toUpperCase();
+      const servicioId = document.getElementById('tipo-servicio').value;
+      const nombreCliente = document.getElementById('nombre-cliente') ? document.getElementById('nombre-cliente').value.trim() : '';
+
+      console.log('🎯 Botón Registrar clickeado:', { patente, servicioId, nombreCliente });
+
+      if (!patente || !servicioId) {
+        mostrarAlerta('Por favor complete todos los campos obligatorios', 'warning');
+        return;
+      }
+
+      // Si es servicio de lavado (ID = 2), abrir modal completo
+      if (servicioId === '2') {
+        console.log('🚗 Servicio de lavado seleccionado, abriendo modal completo...');
+        
+        // Verificar patente duplicada antes de abrir el modal
+        fetch('./api/verificar-patente.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ patente: patente })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.existe) {
+            mostrarAlerta(`⚠️ La patente ${patente} ya está registrada en el sistema`, 'warning');
+            return;
+          }
+          
+          // Precargar datos en el modal
+          const patenteModalLavado = document.getElementById('patente-lavado-modal');
+          const clienteModalLavado = document.getElementById('nombre-cliente-lavado-modal');
+          
+          if (patenteModalLavado) {
+            patenteModalLavado.value = patente;
+          }
+          
+          if (clienteModalLavado) {
+            clienteModalLavado.value = nombreCliente;
+          }
+          
+          // Mostrar modal
+          const modalLavado = new bootstrap.Modal(document.getElementById('modalLavado'));
+          modalLavado.show();
+          
+          console.log('✅ Modal de lavado completo abierto con patente:', patente);
+        })
+        .catch(error => {
+          console.error('Error verificando patente:', error);
+          // En caso de error, permitir continuar
+          const patenteModalLavado = document.getElementById('patente-lavado-modal');
+          const clienteModalLavado = document.getElementById('nombre-cliente-lavado-modal');
+          
+          if (patenteModalLavado) patenteModalLavado.value = patente;
+          if (clienteModalLavado) clienteModalLavado.value = nombreCliente;
+          
+          const modalLavado = new bootstrap.Modal(document.getElementById('modalLavado'));
+          modalLavado.show();
+        });
+        
+      } else if (servicioId === '1') {
+        console.log('🅿️ Servicio de estacionamiento, procesando ingreso normal...');
+        registrarIngresoEstacionamiento(patente, servicioId, nombreCliente);
+      }
+    });
+  } else {
+    console.error('❌ No se encontró el botón btnRegistrarIngreso');
+  }
+// ========================================
+// 8. MODAL DE LAVADO COMPLETO
+// ========================================
+
+// Variables para el modal de lavado
+let serviciosLavadoModal = [];
+let precioBaseActual = 0;
+
+// Función para cargar servicios en el modal
+function cargarServiciosEnModalCompleto() {
+  fetch('./api/api_servicios_lavado.php')
+    .then(response => response.json())
+    .then(servicios => {
+      serviciosLavadoModal = servicios;
+      const select = document.getElementById('tipo-lavado-modal');
+      
+      if (select) {
+        select.innerHTML = '<option value="">Seleccionar servicio...</option>';
+        
+        servicios.forEach(servicio => {
+          const option = document.createElement('option');
+          option.value = servicio.idtipo_ingresos;
+          option.textContent = `${servicio.nombre_servicio} ($${parseInt(servicio.precio).toLocaleString('es-CL')})`;
+          option.setAttribute('data-precio', servicio.precio);
+          select.appendChild(option);
+        });
+        
+        console.log(`✅ ${servicios.length} servicios cargados en el modal`);
+      }
+    })
+    .catch(error => {
+      console.error('Error al cargar servicios:', error);
+      mostrarAlerta('Error al cargar servicios de lavado', 'danger');
+    });
+}
+
+// Función para calcular precio total del modal
+function calcularPrecioTotalModal() {
+  const tipoLavadoSelect = document.getElementById('tipo-lavado-modal');
+  const precioExtraInput = document.getElementById('precio-extra-modal');
+  
+  const precioBaseResumen = document.getElementById('precio-base-resumen');
+  const precioExtraResumen = document.getElementById('precio-extra-resumen');
+  const precioTotalResumen = document.getElementById('precio-total-resumen');
+  
+  if (!tipoLavadoSelect || !precioExtraInput) return;
+  
+  // Obtener precio base del servicio seleccionado
+  const servicioId = tipoLavadoSelect.value;
+  let precioBase = 0;
+  
+  if (servicioId && serviciosLavadoModal.length > 0) {
+    const servicioSeleccionado = serviciosLavadoModal.find(s => s.idtipo_ingresos == servicioId);
+    precioBase = servicioSeleccionado ? parseFloat(servicioSeleccionado.precio) : 0;
+  }
+  
+  const precioExtra = parseFloat(precioExtraInput.value) || 0;
+  const precioTotal = precioBase + precioExtra;
+  
+  // Actualizar resumen visual
+  if (precioBaseResumen) precioBaseResumen.textContent = `$${precioBase.toLocaleString('es-CL')}`;
+  if (precioExtraResumen) precioExtraResumen.textContent = `$${precioExtra.toLocaleString('es-CL')}`;
+  if (precioTotalResumen) precioTotalResumen.textContent = `$${precioTotal.toLocaleString('es-CL')}`;
+  
+  precioBaseActual = precioBase;
+}
+
+// Event listeners para el modal de lavado
+function inicializarEventListenersModalLavado() {
+  const tipoLavadoSelect = document.getElementById('tipo-lavado-modal');
+  const precioExtraInput = document.getElementById('precio-extra-modal');
+  const motivosCheckboxes = document.querySelectorAll('.motivo-extra');
+  const formLavadoModal = document.getElementById('form-lavado-modal');
+  
+  // Cambio en el tipo de lavado
+  if (tipoLavadoSelect) {
+    tipoLavadoSelect.addEventListener('change', calcularPrecioTotalModal);
+  }
+  
+  // Cambio en precio extra
+  if (precioExtraInput) {
+    precioExtraInput.addEventListener('input', calcularPrecioTotalModal);
+  }
+  
+  // Cambio en motivos (solo registrar el cambio, sin auto-calcular precio)
+  motivosCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', calcularPrecioTotalModal);
+  });
+  
+  // Envío del formulario
+  if (formLavadoModal) {
+    formLavadoModal.addEventListener('submit', function(e) {
+      e.preventDefault();
+      enviarFormularioLavadoModal();
+    });
+  }
+}
+
+// Función para enviar el formulario del modal
+function enviarFormularioLavadoModal() {
+  const patente = document.getElementById('patente-lavado-modal').value.trim().toUpperCase();
+  const tipoLavado = document.getElementById('tipo-lavado-modal').value;
+  const nombreCliente = document.getElementById('nombre-cliente-lavado-modal').value.trim();
+  const precioExtra = parseFloat(document.getElementById('precio-extra-modal').value) || 0;
+  const descripcion = document.getElementById('descripcion-extra-modal').value.trim();
+  
+  // Recopilar motivos seleccionados
+  const motivos = [];
+  const checkboxes = document.querySelectorAll('.motivo-extra:checked');
+  checkboxes.forEach(checkbox => {
+    motivos.push(checkbox.value);
+  });
+  
+  if (!patente || !tipoLavado) {
+    mostrarAlerta('Patente y tipo de lavado son obligatorios', 'warning');
+    return;
+  }
+  
+  const servicioSeleccionado = serviciosLavadoModal.find(s => s.idtipo_ingresos == tipoLavado);
+  const precioBase = servicioSeleccionado ? parseFloat(servicioSeleccionado.precio) : 0;
+  const precioTotal = precioBase + precioExtra;
+  
+  const resumen = `
+    Resumen del lavado:
+    • Patente: ${patente}
+    • Servicio: ${servicioSeleccionado?.nombre_servicio || 'N/A'}
+    • Precio base: $${precioBase.toLocaleString('es-CL')}
+    • Precio extra: $${precioExtra.toLocaleString('es-CL')}
+    • Total: $${precioTotal.toLocaleString('es-CL')}
+    • Motivos extra: ${motivos.length > 0 ? motivos.join(', ') : 'Ninguno'}
+    • Cliente: ${nombreCliente || 'No registrado'}
+  `;
+  
+  if (confirm(`${resumen}\n\n¿Confirmar el registro de este lavado?`)) {
+    const formData = new FormData();
+    formData.append('patente', patente);
+    formData.append('id_servicio', tipoLavado);
+    formData.append('nombre_cliente', nombreCliente);
+    formData.append('precio_extra', precioExtra);
+    formData.append('motivos_extra', JSON.stringify(motivos));
+    formData.append('descripcion_extra', descripcion);
+    
+    fetch('./api/registrar-lavado.php', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        mostrarAlerta('✅ Lavado registrado correctamente', 'success');
+        
+        // Cerrar modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalLavado'));
+        if (modal) modal.hide();
+        
+        // Limpiar formularios
+        document.getElementById('form-lavado-modal').reset();
+        document.getElementById('form-ingreso').reset();
+        calcularPrecioTotalModal();
+        
+        // Recargar estadísticas si existe la función
+        if (typeof actualizarEstadisticas === 'function') {
+          actualizarEstadisticas();
+        }
+      } else {
+        mostrarAlerta('❌ Error al registrar lavado: ' + data.error, 'danger');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      mostrarAlerta('❌ Error al registrar lavado: ' + error.message, 'danger');
+    });
+  }
+}
+
+// Event listener para cuando se abre el modal
+document.addEventListener('show.bs.modal', function(event) {
+  if (event.target && event.target.id === 'modalLavado') {
+    console.log('📋 Modal de lavado abierto, cargando servicios...');
+    
+    // Limpiar valores anteriores
+    const precioBaseResumen = document.getElementById('precio-base-resumen');
+    const precioExtraResumen = document.getElementById('precio-extra-resumen');
+    const precioTotalResumen = document.getElementById('precio-total-resumen');
+    
+    if (precioBaseResumen) precioBaseResumen.textContent = '$0';
+    if (precioExtraResumen) precioExtraResumen.textContent = '$0';
+    if (precioTotalResumen) precioTotalResumen.textContent = '$0';
+    
+    // Cargar servicios
+    cargarServiciosEnModalCompleto();
+    
+    // Configurar event listeners con un pequeño delay para asegurar que el DOM esté listo
+    setTimeout(() => {
+      inicializarEventListenersModalLavado();
+      calcularPrecioTotalModal();
+    }, 100);
+  }
+});
 
   // Inicializar todas las funcionalidades
   cargarServicios();
@@ -972,3 +1257,106 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 }); // Cierre del DOMContentLoaded principal
+
+// ========================================
+// 9. FUNCIONES AUXILIARES GLOBALES
+// ========================================
+
+// Función para registrar ingreso de estacionamiento
+function registrarIngresoEstacionamiento(patente, servicioId, nombreCliente) {
+  console.log('🅿️ Registrando estacionamiento:', { patente, servicioId, nombreCliente });
+  
+  const formData = new FormData();
+  formData.append('patente', patente);
+  formData.append('idtipo_ingreso', servicioId);
+  formData.append('cliente', nombreCliente);
+  
+  fetch('./api/ingresar.php', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Respuesta del servidor:', data);
+    
+    if (data.success) {
+      mostrarAlerta('✅ Ingreso de estacionamiento registrado correctamente', 'success');
+      
+      const formIngreso = document.getElementById('form-ingreso');
+      if (formIngreso) {
+        formIngreso.reset();
+      }
+      
+      // Actualizar estadísticas si existe la función
+      if (typeof actualizarEstadisticas === 'function') {
+        actualizarEstadisticas();
+      }
+    } else {
+      mostrarAlerta('❌ Error: ' + (data.error || data.message || 'Error desconocido'), 'danger');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    mostrarAlerta('❌ Error de conexión: ' + error.message, 'danger');
+  });
+}
+
+// Función mostrarAlerta global (por si se necesita fuera del DOMContentLoaded)
+function mostrarAlerta(mensaje, tipo = 'info') {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+  alertDiv.innerHTML = `
+    ${mensaje}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  
+  // Insertar al inicio del main
+  const main = document.querySelector('main');
+  if (main) {
+    main.insertBefore(alertDiv, main.firstChild);
+  } else {
+    document.body.insertBefore(alertDiv, document.body.firstChild);
+  }
+  
+  // Auto-remover después de 5 segundos
+  setTimeout(() => {
+    if (alertDiv.parentNode) {
+      alertDiv.remove();
+    }
+  }, 5000);
+}
+
+// Función global para cobrar lavado
+function cobrarLavado(idIngreso, patente) {
+  if (confirm(`¿Confirmar el cobro del lavado para la patente ${patente}?`)) {
+    const formData = new FormData();
+    formData.append('id_ingreso', idIngreso);
+    formData.append('patente', patente);
+    formData.append('metodo_pago', 'EFECTIVO');
+    
+    fetch('./api/cobrar-lavado.php', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        mostrarAlerta('✅ Lavado cobrado correctamente', 'success');
+        // Recargar funciones si existen
+        if (typeof cargarLavadosPendientes === 'function') {
+          cargarLavadosPendientes();
+        }
+        if (typeof cargarHistorialReciente === 'function') {
+          cargarHistorialReciente();
+        }
+      } else {
+        mostrarAlerta('❌ Error al cobrar lavado: ' + data.error, 'danger');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      mostrarAlerta('❌ Error al cobrar lavado: ' + error.message, 'danger');
+    });
+  }
+}
+

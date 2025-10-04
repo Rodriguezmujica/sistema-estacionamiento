@@ -101,8 +101,8 @@ $rol = $_SESSION['rol'];
                 </label>
                 <select class="form-select" id="tipo-servicio" required>
                   <option value="">Seleccionar servicio...</option>
-                  <option value="Estacionamiento">Estacionamiento por minuto</option>
-                  <option value="Lavado">Lavado</option>
+                  <option value="1">Estacionamiento por minuto</option>
+                  <option value="2">Lavado</option>
                 </select>
               </div>
 
@@ -115,7 +115,7 @@ $rol = $_SESSION['rol'];
               </div>
 
               <button type="submit" class="btn btn-primary btn-lg w-100">
-                <i class="fas fa-ticket-alt"></i> Registrar Ingreso
+                <i id="btnRegistrarIngreso" class="fas fa-ticket-alt"></i> Registrar Ingreso
               </button>
             </form>
 
@@ -222,34 +222,180 @@ $rol = $_SESSION['rol'];
   <!-- MODALES -->
   
   <!-- Modal Lavado -->
-  <div class="modal fade" id="modalLavado" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form id="form-lavado-modal">
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title">Selecciona Servicio de Lavado</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label class="form-label">Patente</label>
-              <input type="text" class="form-control" id="patente-lavado-modal" readonly>
+  <!-- Modal Lavado COMPLETO - REEMPLAZAR TODO EL MODAL EXISTENTE -->
+<div class="modal fade" id="modalLavado" tabindex="-1">
+  <div class="modal-dialog modal-xl"> <!-- Cambiado a modal-xl para más espacio -->
+    <div class="modal-content">
+      <form id="form-lavado-modal">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-plus-circle"></i> Registrar Nuevo Servicio de Lavado
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="row g-3">
+            <!-- Patente -->
+            <div class="col-md-3">
+              <label for="patente-lavado-modal" class="form-label">
+                <i class="fas fa-car"></i> Patente
+              </label>
+              <input type="text" class="form-control text-uppercase" id="patente-lavado-modal" 
+                     maxlength="6" placeholder="ABC123" required readonly>
+              <div class="form-text">
+                <i class="fas fa-lock text-muted"></i> Prellenada desde el dashboard
+              </div>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Servicio de Lavado</label>
-              <select class="form-select" id="servicio-lavado-modal" required>
-                <option value="">Seleccionar...</option>
+
+            <!-- Tipo de Lavado -->
+            <div class="col-md-3">
+              <label for="tipo-lavado-modal" class="form-label">
+                <i class="fas fa-soap"></i> Tipo de Lavado
+              </label>
+              <select class="form-select" id="tipo-lavado-modal" required>
+                <option value="">Seleccionar servicio...</option>
               </select>
             </div>
+
+            <!-- Cliente -->
+            <div class="col-md-3">
+              <label for="nombre-cliente-lavado-modal" class="form-label">
+                <i class="fas fa-user"></i> Cliente (Opcional)
+              </label>
+              <input type="text" class="form-control" id="nombre-cliente-lavado-modal" 
+                     placeholder="Nombre del cliente">
+            </div>
+
+            <!-- Precio Extra -->
+            <div class="col-md-3">
+              <label for="precio-extra-modal" class="form-label">
+                <i class="fas fa-dollar-sign"></i> Precio Extra
+              </label>
+              <input type="number" class="form-control" id="precio-extra-modal" min="0" value="0">
+            </div>
           </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-success">Aceptar</button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          
+          <!-- Motivos de cobro extra -->
+          <div class="mt-4">
+            <label class="form-label fw-bold">
+              <i class="fas fa-exclamation-triangle text-warning"></i> Motivos de Cobro Extra
+            </label>
+            <div class="row g-2">
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input motivo-extra" type="checkbox" id="motivo-hongos-modal" value="hongos">
+                  <label class="form-check-label" for="motivo-hongos-modal">
+                    <i class="fas fa-circle text-warning"></i> Hongos
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input motivo-extra" type="checkbox" id="motivo-pelos-modal" value="pelos">
+                  <label class="form-check-label" for="motivo-pelos-modal">
+                    <i class="fas fa-circle" style="color: #8B4513;"></i> Pelos de perros
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input motivo-extra" type="checkbox" id="motivo-barro-modal" value="barro">
+                  <label class="form-check-label" for="motivo-barro-modal">
+                    <i class="fas fa-circle text-secondary"></i> Barro excesivo
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input motivo-extra" type="checkbox" id="motivo-grasa-modal" value="grasa">
+                  <label class="form-check-label" for="motivo-grasa-modal">
+                    <i class="fas fa-circle text-dark"></i> Grasa/aceite
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input motivo-extra" type="checkbox" id="motivo-insectos-modal" value="insectos">
+                  <label class="form-check-label" for="motivo-insectos-modal">
+                    <i class="fas fa-circle text-success"></i> Insectos
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input motivo-extra" type="checkbox" id="motivo-pintura-modal" value="pintura">
+                  <label class="form-check-label" for="motivo-pintura-modal">
+                    <i class="fas fa-circle text-danger"></i> Pintura dañada
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input motivo-extra" type="checkbox" id="motivo-interior-modal" value="interior">
+                  <label class="form-check-label" for="motivo-interior-modal">
+                    <i class="fas fa-circle text-info"></i> Interior sucio
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input motivo-extra" type="checkbox" id="motivo-otro-modal" value="otro">
+                  <label class="form-check-label" for="motivo-otro-modal">
+                    <i class="fas fa-circle text-muted"></i> Otro
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
-        </form>
-      </div>
+          
+          <!-- Descripción adicional -->
+          <div class="mt-3">
+            <label for="descripcion-extra-modal" class="form-label">
+              <i class="fas fa-comment-alt"></i> Descripción Adicional (Opcional)
+            </label>
+            <textarea class="form-control" id="descripcion-extra-modal" rows="3" 
+                      placeholder="Describe cualquier detalle adicional sobre el estado del vehículo..."></textarea>
+          </div>
+
+          <!-- Resumen de precios -->
+          <div class="mt-4">
+            <div class="card bg-light">
+              <div class="card-body">
+                <h6 class="card-title">
+                  <i class="fas fa-calculator"></i> Resumen de Precios
+                </h6>
+                <div class="row">
+                  <div class="col-md-4">
+                    <small class="text-muted">Precio base:</small><br>
+                    <strong id="precio-base-resumen">$0</strong>
+                  </div>
+                  <div class="col-md-4">
+                    <small class="text-muted">Precio extra:</small><br>
+                    <strong id="precio-extra-resumen">$0</strong>
+                  </div>
+                  <div class="col-md-4">
+                    <small class="text-muted">Total:</small><br>
+                    <strong class="text-success" id="precio-total-resumen">$0</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success btn-lg">
+            <i class="fas fa-check"></i> Registrar Lavado Completo
+          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+      </form>
     </div>
   </div>
+</div>
 
   <!-- Modal Modificar Ticket -->
   <div class="modal fade" id="modalModificarTicket" tabindex="-1">
