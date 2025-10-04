@@ -8,38 +8,46 @@
 </head>
 <body>
   <header>
-    <nav class="navbar navbar-expand-lg" >
-      <div class="container-fluid">
-        <a class="navbar-brand" href="../index.html">
-          <span class="fw-bold" style="color: #fff;">🚗 Estacionamiento Los Ríos</span>
-        </a>
-        <button class="navbar-toggler nav-border" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <a class="nav-link" href="../index.html">Dashboard</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="lavados.html">Servicios Lavado</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="./reporte.html">Reporte</a>
-            </li>
-          </ul>
-          <div class="d-flex">
-            <span class="navbar-text me-3">
-              <span class="badge bg-success">💰 $35/min</span>
-            </span>
-            <span class="navbar-text" style="color: #fff;">
-              <span id="fecha-hora"></span>
-            </span>
-          </div>
-        </div>
-      </div>
-    </nav>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+  <div class="container-fluid">
+    <!-- Logo alineado a la izquierda -->
+    <a class="navbar-brand fw-bold d-flex align-items-center" href="../index.php">
+      <img src="../imagenes/los rios.jpg" alt="Logo" height="35" class="me-2 rounded">
+      Estacionamiento Los Ríos
+    </a>
+
+    <!-- Botón hamburguesa (responsive) -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Menú centrado -->
+    <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
+      <ul class="navbar-nav mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link text-white" href="../index.php">🏠 Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" href="./lavados.html">🧽 Servicios Lavado</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" href="./reporte.html">📊 Reporte</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Info + Logout alineados a la derecha -->
+    <div class="d-flex align-items-center">
+      <span class="navbar-text me-3">
+        <span class="badge bg-success fs-6">💰 $35/min</span>
+      </span>
+      <span class="navbar-text text-white me-3">
+        <span id="fecha-hora"></span>
+      </span>
+      <a href="../logout.php" class="btn btn-outline-light btn-sm">🚪 Cerrar sesión</a>
+    </div>
+  </div>
+</nav>
   </header>
   <main class="container py-4">
     <h2 class="mb-4">📊 Reporte Diario</h2>
@@ -67,30 +75,31 @@
     <div class="row g-4">
       <div class="col-md-4">
         <div class="card text-bg-success mb-3">
-          <div class="card-header">Lavados hoy</div>
+          <div class="card-header">📅 Total Diario</div>
           <div class="card-body">
-            <h5 class="card-title" id="lavados-hoy">0</h5>
-            <p class="card-text">Total lavados realizados hoy.</p>
-            <p class="card-text">Ingresos: $<span id="lavados-total">0</span></p>
+            <h5 class="card-title" id="servicios-diario">0</h5>
+            <p class="card-text">Servicios completados hoy.</p>
+            <p class="card-text">Ingresos: $<span id="ingresos-diario">0</span></p>
           </div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="card text-bg-primary mb-3">
-          <div class="card-header">Estacionamientos hoy</div>
+          <div class="card-header">🗓️ Mensual (L-V)</div>
           <div class="card-body">
-            <h5 class="card-title" id="estacionamientos-hoy">0</h5>
-            <p class="card-text">Total autos estacionados hoy.</p>
-            <p class="card-text">Ingresos: $<span id="estacionamientos-total">0</span></p>
+            <h5 class="card-title" id="servicios-mensual-lv">0</h5>
+            <p class="card-text">Servicios de Lunes a Viernes.</p>
+            <p class="card-text">Ingresos: $<span id="ingresos-mensual-lv">0</span></p>
           </div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="card text-bg-dark mb-3">
-          <div class="card-header">Total General</div>
+          <div class="card-header">📊 Mensual Completo</div>
           <div class="card-body">
-            <h5 class="card-title" id="total-general">0</h5>
-            <p class="card-text">Suma total de ingresos hoy.</p>
+            <h5 class="card-title" id="servicios-mensual-completo">0</h5>
+            <p class="card-text">Incluye fines de semana.</p>
+            <p class="card-text">Ingresos: $<span id="ingresos-mensual-completo">0</span></p>
           </div>
         </div>
       </div>
@@ -119,9 +128,32 @@
     </div>
   </main>
   <footer>
-    <!-- Copia aquí tu footer -->
+ <footer class="py-3 mt-5 footer-blanco">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h5 class="text-blanco">🚗 Estacionamiento Los Ríos</h5>
+          <p>Sistema de gestión integral para estacionamiento y servicios de lavado de autos.</p>
+        </div>
+        <div class="col-md-4">
+          <h5 class="text-blanco">📞 Contacto</h5>
+          <p>Teléfono: [TU_TELEFONO]<br>
+            Dirección: [TU_DIRECCION]<br>
+            Valdivia, Los Ríos</p>
+        </div>
+        <div class="col-md-4">
+          <h5 class="text-blanco">⚙️ Sistema</h5>
+          <p>Versión: 2.0<br>
+            Última actualización: <span id="fecha-sistema"></span></p>
+        </div>
+      </div>
+      <hr class="hr-blanco">
+      <div class="text-center">
+        <p class="mb-0 text-blanco">&copy; 2024 Estacionamiento Los Ríos - Todos los derechos reservados</p>
+      </div>
+    </div>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../js/Script.js"></script>
+  <script src="../JS/reporte.js"></script> <!-- Cambia esta línea -->
 </body>
 </html>

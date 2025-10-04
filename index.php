@@ -1,3 +1,12 @@
+<?php
+session_start();
+if (!isset($_SESSION['usuario'])) {
+    header("Location: login.php");
+    exit();
+}
+$rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -15,48 +24,60 @@
   <title>Dashboard | Estacionamiento y Lavado Los Ríos</title>
 </head>
 
-<body>
+<body class="bg-light">
   <!-- encabezado-->
   <header>
-  <nav class="navbar navbar-expand-lg bg-primary shadow-sm">
-    <div class="container-fluid">
-      <!-- Logo alineado a la izquierda -->
-      <a class="navbar-brand text-white fw-bold d-flex align-items-center" href="./index.html">
-        <img src="./imagenes/los rios.jpg" alt="Logo" height="35" class="me-2">
-        Estacionamiento Los Ríos
-      </a>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+  <div class="container-fluid">
+    <!-- Logo alineado a la izquierda -->
+    <a class="navbar-brand fw-bold d-flex align-items-center" href="./index.php">
+      <img src="./imagenes/los rios.jpg" alt="Logo" height="35" class="me-2 rounded">
+      Estacionamiento Los Ríos
+    </a>
 
-      <!-- Botón hamburguesa (responsive) -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+    <!-- Botón hamburguesa (responsive) -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-      <!-- Menú centrado -->
-      <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
-        <ul class="navbar-nav mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link text-white" href="./index.html">Dashboard</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link text-white" href="./secciones/lavados.html">Servicios Lavado</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link text-white" href="./secciones/reporte.html">Reporte</a>
-          </li>
-        </ul>
-      </div>
+    <!-- Menú centrado -->
+    <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
+      <ul class="navbar-nav mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link text-white" href="./index.php">🏠 Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" href="./secciones/lavados.html">🧽 Servicios Lavado</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" href="./secciones/reporte.html">📊 Reporte</a>
+        </li>
 
-      <!-- Info alineada a la derecha -->
-      <div class="d-flex align-items-center">
-        <span class="navbar-text me-3">
-          <span class="badge bg-success">💰 $35/min</span>
-        </span>
-        <span class="navbar-text text-white">
-          <span id="fecha-hora"></span>
-        </span>
-      </div>
+        <!-- 🔒 Sección solo visible para admin -->
+        <?php if ($rol === 'admin'): ?>
+        <li class="nav-item">
+          <a class="nav-link text-warning fw-bold" href="./secciones/admin.php">⚙️ Administración</a>
+        </li>
+        <?php endif; ?>
+      </ul>
     </div>
-  </nav>
+
+    <!-- Info + Logout alineados a la derecha -->
+    <div class="d-flex align-items-center">
+      <span class="navbar-text me-3">
+        <span class="badge bg-success fs-6">💰 $35/min</span>
+      </span>
+      <span class="navbar-text text-white me-3">
+        <span id="fecha-hora"></span>
+      </span>
+      <a href="./logout.php" class="btn btn-outline-light btn-sm">🚪 Cerrar sesión</a>
+    </div>
+  </div>
+</nav>
+
+
+
+
 </header>
 
   <!-- contenido principal -->

@@ -1,14 +1,14 @@
 <?php
 header('Content-Type: application/json');
+require_once __DIR__ . '/../conexion.php';
 
-// Conexión a la base de datos
-$conexion = new mysqli("localhost", "root", "", "estacionamiento");
-if ($conexion->connect_error) {
-    echo json_encode(['success' => false, 'error' => 'Error de conexión: ' . $conexion->connect_error]);
-    exit;
+// Aceptar patente por POST o GET
+$patente = '';
+if (isset($_POST['patente'])) {
+    $patente = strtoupper(trim($_POST['patente']));
+} elseif (isset($_GET['patente'])) {
+    $patente = strtoupper(trim($_GET['patente']));
 }
-
-$patente = isset($_POST['patente']) ? strtoupper(trim($_POST['patente'])) : '';
 
 if (!$patente) {
     echo json_encode(['success' => false, 'error' => 'Patente requerida']);
@@ -16,89 +16,92 @@ if (!$patente) {
 }
 
 try {
-    // Consultar historial de lavados para la patente (solo los cobrados)
     $sql = "SELECT 
                 i.idautos_estacionados,
                 i.patente,
                 i.fecha_ingreso,
-                t.nombre_servicio,
-                t.precio,
+                ti.nombre_servicio AS tipo_servicio,
+                ti.precio,
                 s.total,
                 s.fecha_salida,
-                s.metodo_pago,
                 s.motivos_extra,
                 s.descripcion_extra,
                 s.precio_extra
             FROM ingresos i
-            JOIN tipo_ingreso t ON i.idtipo_ingreso = t.idtipo_ingresos
+            JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
             LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
             WHERE i.patente = ? 
-            AND t.nombre_servicio NOT LIKE '%estacionamiento%'
-            AND i.salida = 1
+            AND ti.nombre_servicio NOT LIKE '%estacionamiento%'
             ORDER BY i.fecha_ingreso DESC
             LIMIT 10";
-    
-    $stmt = $conexion->prepare($sql);
+
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        echo json_encode([
+            'success' => false,
+            'error' => 'Error en prepare(): ' . $conn->error
+        ]);
+        exit;
+    }
+
     $stmt->bind_param('s', $patente);
     $stmt->execute();
     $result = $stmt->get_result();
-    
-    $historial = [];
+
+    $lavados = [];
     $totalLavados = 0;
     $ultimoLavado = null;
-    
+    $sumaPrecios = 0;
+
     while ($row = $result->fetch_assoc()) {
+        $lavados[] = $row;
         $totalLavados++;
-        
-        // El primer registro es el más reciente
-        if ($ultimoLavado === null) {
-            $ultimoLavado = [
-                'fecha' => $row['fecha_salida'] ?: $row['fecha_ingreso'],
-                'servicio' => $row['nombre_servicio'],
-                'precio' => $row['total'] ?: $row['precio'],
-                'motivos' => $row['motivos_extra'] ? json_decode($row['motivos_extra'], true) : [],
-                'descripcion' => $row['descripcion_extra'] ?: '',
-                'precio_extra' => $row['precio_extra'] ?: 0
-            ];
+        $sumaPrecios += floatval($row['precio'] ?? 0);
+
+        if (!$ultimoLavado) {
+            $ultimoLavado = $row;
         }
-        
-        $historial[] = [
-            'id' => $row['idautos_estacionados'],
-            'fecha' => $row['fecha_salida'] ?: $row['fecha_ingreso'],
-            'servicio' => $row['nombre_servicio'],
-            'precio' => $row['total'] ?: $row['precio'],
-            'precio_extra' => $row['precio_extra'] ?: 0,
-            'motivos' => $row['motivos_extra'] ? json_decode($row['motivos_extra'], true) : [],
-            'descripcion' => $row['descripcion_extra'] ?: '',
-            'metodo_pago' => $row['metodo_pago'] ?: 'EFECTIVO'
-        ];
     }
-    
-    $stmt->close();
-    
-    if ($totalLavados === 0) {
+
+    if ($totalLavados > 0) {
+        // Procesar motivos del último lavado
+        $motivos = [];
+        if (!empty($ultimoLavado['motivos_extra'])) {
+            $motivosDecoded = json_decode($ultimoLavado['motivos_extra'], true);
+            $motivos = is_array($motivosDecoded) ? $motivosDecoded : [];
+        }
+
+        $promedio = $sumaPrecios / $totalLavados;
+
         echo json_encode([
             'success' => true,
             'patente' => $patente,
-            'mensaje' => 'No se encontró historial de lavados para esta patente',
-            'total_lavados' => 0
+            'total_lavados' => $totalLavados,
+            'promedio_precio' => round($promedio, 2),
+            'ultimo_lavado' => [
+                'fecha' => $ultimoLavado['fecha_ingreso'],
+                'servicio' => $ultimoLavado['tipo_servicio'],
+                'precio' => floatval($ultimoLavado['precio'] ?? 0),
+                'precio_extra' => floatval($ultimoLavado['precio_extra'] ?? 0),
+                'descripcion' => $ultimoLavado['descripcion_extra'] ?? '',
+                'motivos' => $motivos
+            ],
+            'historial' => $lavados
         ]);
     } else {
         echo json_encode([
             'success' => true,
             'patente' => $patente,
-            'ultimo_lavado' => $ultimoLavado,
-            'historial' => $historial,
-            'total_lavados' => $totalLavados
-        ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            'total_lavados' => 0,
+            'promedio_precio' => 0,
+            'ultimo_lavado' => null,
+            'historial' => []
+        ]);
     }
-    
+
 } catch (Exception $e) {
     echo json_encode([
         'success' => false,
-        'error' => 'Error al consultar historial: ' . $e->getMessage()
+        'error' => 'Error en la consulta: ' . $e->getMessage()
     ]);
 }
-
-$conexion->close();
-?>

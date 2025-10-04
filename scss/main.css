@@ -15,7 +15,7 @@
 
 /* Navbar personalizado */
 .navbar {
-  background-color: #0d6efd !important;
+  background-color: #2a3b6e !important;
 }
 .navbar .nav-link,
 .navbar-brand {
@@ -53,6 +53,76 @@
   color: #333333;
   font-weight: 600;
   border-bottom: 1px solid #eee;
+}
+
+/* Estilo para campo con patente duplicada */
+.form-control.duplicado {
+  border-color: #dc3545;
+  background-color: #f8d7da;
+}
+
+.form-control.disponible {
+  border-color: #28a745;
+  background-color: #d4edda;
+}
+
+/* ================================
+   🎨 Estilos para Lavados.html
+   ================================ */
+
+/* Cards de historial de lavados */
+.card-historial {
+  border-left: 4px solid #0d6efd;
+  transition: transform 0.2s ease;
+}
+.card-historial:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Badges de motivos */
+.badge-motivo {
+  font-size: 0.75rem;
+  margin: 2px;
+}
+
+/* Footer con gradiente */
+.footer {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin-top: 50px;
+}
+
+/* Secciones del formulario */
+.form-section {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+/* Sección de historial */
+.historial-section {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Cards de historial completado (verde) */
+.card-historial.border-success {
+  border-left: 4px solid #198754 !important;
+  background-color: #f8fff9;
+}
+
+.card-historial.border-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(25, 135, 84, 0.15);
+}
+
+/* Badges para motivos completados */
+.badge-motivo.bg-success {
+  color: white;
 }
 
 /* Elimina o comenta estas líneas para que Bootstrap controle los colores:
