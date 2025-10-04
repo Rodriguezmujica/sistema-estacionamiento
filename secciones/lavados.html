@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="keywords" content="Estacionamiento,Lavado de autos,Los Ríos,Valdivia,Parking,Car wash,Servicios automotrices">
+  <meta name="description" content="Sistema de gestión de estacionamiento y lavado de autos Los Ríos. Control de ingresos, salidas y servicios de lavado.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+  <link rel="stylesheet" href="../scss/main.css">
+  <link rel="shortcut icon" href="../imagenes/Mi proyecto.png">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <title>Servicios de Lavado | Estacionamiento Los Ríos</title>
+  <style>
+    .card-historial {
+      border-left: 4px solid #0d6efd;
+      transition: transform 0.2s;
+    }
+    .card-historial:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .badge-motivo {
+      font-size: 0.75rem;
+      margin: 2px;
+    }
+    .footer {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      margin-top: 50px;
+    }
+    .form-section {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    .historial-section {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header de navegación -->
+  <header>
+    <nav class="navbar navbar-expand-lg" >
+      <div class="container-fluid">
+        <a class="navbar-brand" href="./index.html">
+          <span class="fw-bold" style="color: #fff;">🚗 Estacionamiento Los Ríos</span>
+        </a>
+        <button class="navbar-toggler nav-border" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" href="../index.html">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="./lavados.html">Servicios Lavado</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="./reporte.html">Reporte</a>
+            </li>
+          </ul>
+          <div class="d-flex">
+            <span class="navbar-text me-3">
+              <span class="badge bg-success">💰 $35/min</span>
+            </span>
+            <span class="navbar-text" style="color: #fff;">
+              <span id="fecha-hora"></span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Contenido principal -->
+  <main class="container py-4">
+    <!-- Sección de Consulta de Historial -->
+    <div class="historial-section mb-4">
+      <h3 class="mb-3"><i class="fas fa-history text-primary"></i> Consultar Historial de Lavados</h3>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="patente-consulta" class="form-label">Patente a Consultar</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="patente-consulta" placeholder="Ej: ABC123">
+            <button class="btn btn-outline-primary" type="button" id="btn-consultar-historial">
+              <i class="fas fa-search"></i> Consultar
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Resultado de la consulta -->
+      <div id="resultado-consulta" class="mt-3" style="display: none;">
+        <div class="alert alert-info">
+          <h5><i class="fas fa-car"></i> Información del Vehículo</h5>
+          <div id="info-vehiculo"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección de Registro de Lavado -->
+    <div class="form-section">
+      <h3 class="mb-3"><i class="fas fa-plus-circle text-success"></i> Registrar Nuevo Servicio de Lavado</h3>
+      <form id="form-lavado" class="row g-3">
+        <div class="col-md-3">
+          <label for="patente-lavado" class="form-label">Patente</label>
+          <input type="text" class="form-control" id="patente-lavado" required>
+        </div>
+        <div class="col-md-3">
+          <label for="tipo-lavado" class="form-label">Tipo de Lavado</label>
+          <select class="form-select" id="tipo-lavado" required>
+            <option value="">Seleccionar servicio...</option>
+            <!-- Opciones se llenan dinámicamente -->
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="nombre-cliente-lavado" class="form-label">Nombre Cliente (opcional)</label>
+          <input type="text" class="form-control" id="nombre-cliente-lavado">
+        </div>
+        <div class="col-md-3">
+          <label for="precio-extra" class="form-label">Precio Extra ($)</label>
+          <input type="number" class="form-control" id="precio-extra" min="0" value="0">
+        </div>
+        
+        <!-- Motivos de cobro extra -->
+        <div class="col-12">
+          <label class="form-label">Motivos de Cobro Extra (selecciona todos los que apliquen)</label>
+          <div class="row">
+            <div class="col-md-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="motivo-hongos" value="hongos">
+                <label class="form-check-label" for="motivo-hongos">
+                  🍄 Hongos
+                </label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="motivo-pelos" value="pelos">
+                <label class="form-check-label" for="motivo-pelos">
+                  🐕 Pelos de perros
+                </label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="motivo-barro" value="barro">
+                <label class="form-check-label" for="motivo-barro">
+                  🏔️ Barro excesivo
+                </label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="motivo-grasa" value="grasa">
+                <label class="form-check-label" for="motivo-grasa">
+                  🛢️ Grasa/aceite
+                </label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="motivo-insectos" value="insectos">
+                <label class="form-check-label" for="motivo-insectos">
+                  🐛 Insectos
+                </label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="motivo-pintura" value="pintura">
+                <label class="form-check-label" for="motivo-pintura">
+                  🎨 Pintura dañada
+                </label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="motivo-interior" value="interior">
+                <label class="form-check-label" for="motivo-interior">
+                  🪑 Interior sucio
+                </label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="motivo-otro" value="otro">
+                <label class="form-check-label" for="motivo-otro">
+                  📝 Otro
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Descripción adicional -->
+        <div class="col-12">
+          <label for="descripcion-extra" class="form-label">Descripción Adicional (opcional)</label>
+          <textarea class="form-control" id="descripcion-extra" rows="2" placeholder="Describe cualquier detalle adicional sobre el estado del vehículo..."></textarea>
+        </div>
+        
+        <div class="col-12">
+          <button type="submit" class="btn btn-success btn-lg">
+            <i class="fas fa-check"></i> Registrar Lavado
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Sección de Lavados Pendientes -->
+    <div class="historial-section mb-4">
+      <h3 class="mb-3"><i class="fas fa-clock text-warning"></i> Lavados Pendientes de Cobro</h3>
+      <div id="lavados-pendientes">
+        <div class="text-center text-muted">
+          <i class="fas fa-spinner fa-spin"></i> Cargando lavados pendientes...
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección de Historial Reciente -->
+    <div class="historial-section">
+      <h3 class="mb-3"><i class="fas fa-history text-info"></i> Historial Reciente de Lavados</h3>
+      <div id="historial-reciente">
+        <div class="text-center text-muted">
+          <i class="fas fa-spinner fa-spin"></i> Cargando historial...
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer py-4">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <h5><i class="fas fa-car"></i> Estacionamiento Los Ríos</h5>
+          <p class="mb-0">Sistema de gestión de estacionamiento y servicios de lavado</p>
+          <small>© 2024 - Todos los derechos reservados</small>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <h6>Contacto</h6>
+          <p class="mb-1"><i class="fas fa-map-marker-alt"></i> Pérez Rosales #733-C, Valdivia</p>
+          <p class="mb-1"><i class="fas fa-phone"></i> +56 63 2 438535</p>
+          <p class="mb-0"><i class="fas fa-clock"></i> Abierto 24/7</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Variables globales
+    let serviciosDisponibles = [];
+    
+    // Función para mostrar alertas
+    function mostrarAlerta(mensaje, tipo = 'info') {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+      alertDiv.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      // Insertar al inicio del main
+      const main = document.querySelector('main');
+      main.insertBefore(alertDiv, main.firstChild);
+      
+      // Auto-remover después de 5 segundos
+      setTimeout(() => {
+        if (alertDiv.parentNode) {
+          alertDiv.remove();
+        }
+      }, 5000);
+    }
+    
+    // Cargar servicios de lavado
+    function cargarServicios() {
+      fetch('../api/api_servicios_lavado.php')
+        .then(response => response.json())
+        .then(servicios => {
+          serviciosDisponibles = servicios;
+          const select = document.getElementById('tipo-lavado');
+          select.innerHTML = '<option value="">Seleccionar servicio...</option>';
+          
+          servicios.forEach(servicio => {
+            const option = document.createElement('option');
+            option.value = servicio.idtipo_ingresos;
+            option.textContent = `${servicio.nombre_servicio} ($${servicio.precio.toLocaleString('es-CL')})`;
+            select.appendChild(option);
+          });
+        })
+        .catch(error => {
+          console.error('Error al cargar servicios:', error);
+          mostrarAlerta('Error al cargar servicios de lavado', 'danger');
+        });
+    }
+    
+    // Consultar historial de patente
+    function consultarHistorial() {
+      const patente = document.getElementById('patente-consulta').value.trim().toUpperCase();
+      
+      if (!patente) {
+        mostrarAlerta('Ingresa una patente válida', 'warning');
+        return;
+      }
+      
+      // Mostrar loading
+      const resultadoDiv = document.getElementById('resultado-consulta');
+      const infoDiv = document.getElementById('info-vehiculo');
+      resultadoDiv.style.display = 'block';
+      infoDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Consultando...';
+      
+      // Llamada real a la API
+      fetch('../api/historial-lavados.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ patente: patente })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (data.total_lavados === 0) {
+            infoDiv.innerHTML = `
+              <div class="text-center text-muted">
+                <i class="fas fa-info-circle"></i> No se encontró historial de lavados para la patente ${data.patente}
+              </div>
+            `;
+          } else {
+            const ultimo = data.ultimo_lavado;
+            infoDiv.innerHTML = `
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Patente:</strong> ${data.patente}</p>
+                  <p><strong>Último lavado:</strong> ${new Date(ultimo.fecha).toLocaleDateString('es-CL')}</p>
+                  <p><strong>Último precio:</strong> $${ultimo.precio.toLocaleString('es-CL')}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Último servicio:</strong> ${ultimo.servicio}</p>
+                  <p><strong>Total lavados:</strong> ${data.total_lavados}</p>
+                  <p><strong>Motivos extra:</strong> 
+                    ${ultimo.motivos.length > 0 ? 
+                      ultimo.motivos.map(motivo => `<span class="badge bg-warning badge-motivo">${motivo}</span>`).join(' ') :
+                      '<span class="text-muted">Ninguno</span>'
+                    }
+                  </p>
+                </div>
+              </div>
+              <div class="row mt-2">
+                <div class="col-12">
+                  <p><strong>Descripción:</strong> ${ultimo.descripcion || 'Sin descripción adicional'}</p>
+                  ${ultimo.precio_extra > 0 ? `<p><strong>Precio extra:</strong> $${ultimo.precio_extra.toLocaleString('es-CL')}</p>` : ''}
+                </div>
+              </div>
+            `;
+          }
+        } else {
+          infoDiv.innerHTML = `<div class="alert alert-danger">Error: ${data.error}</div>`;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        infoDiv.innerHTML = `<div class="alert alert-danger">Error al consultar historial: ${error.message}</div>`;
+      });
+    }
+    
+    // Cargar lavados pendientes
+    function cargarLavadosPendientes() {
+      const pendientesDiv = document.getElementById('lavados-pendientes');
+      
+      fetch('../api/api_reporte.php')
+        .then(response => response.json())
+        .then(data => {
+          // Filtrar solo los lavados (no estacionamientos)
+          const lavadosPendientes = data.filter(item => item.lavado === 'Sí');
+          
+          if (lavadosPendientes.length === 0) {
+            pendientesDiv.innerHTML = '<div class="text-center text-muted">No hay lavados pendientes de cobro</div>';
+            return;
+          }
+          
+          pendientesDiv.innerHTML = lavadosPendientes.map(lavado => {
+            // Parsear motivos si es string JSON
+            let motivos = [];
+            if (lavado.motivos_extra) {
+              try {
+                // Limpiar el string de escapes adicionales
+                let motivosStr = lavado.motivos_extra.replace(/\\"/g, '"').replace(/^"|"$/g, '');
+                motivos = JSON.parse(motivosStr);
+              } catch (e) {
+                console.log('Error parseando motivos:', e, 'String original:', lavado.motivos_extra);
+                motivos = [];
+              }
+            }
+            
+            return `
+              <div class="card card-historial mb-3 border-warning">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-2">
+                      <h6 class="card-title">${lavado.patente}</h6>
+                      <small class="text-muted">${new Date(lavado.fecha_ingreso).toLocaleString('es-CL')}</small>
+                    </div>
+                    <div class="col-md-3">
+                      <p class="mb-1"><strong>Servicio:</strong></p>
+                      <p class="mb-0">${lavado.tipo_servicio}</p>
+                    </div>
+                    <div class="col-md-2">
+                      <p class="mb-1"><strong>Total:</strong></p>
+                      <p class="mb-0 text-success">$${lavado.total.toLocaleString('es-CL')}</p>
+                    </div>
+                    <div class="col-md-3">
+                      <p class="mb-1"><strong>Motivos extra:</strong></p>
+                      <div>
+                        ${Array.isArray(motivos) && motivos.length > 0 ? 
+                          motivos.map(motivo => `<span class="badge bg-warning badge-motivo">${motivo}</span>`).join(' ') :
+                          '<span class="text-muted">Ninguno</span>'
+                        }
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <button class="btn btn-success btn-sm" onclick="cobrarLavado(${lavado.idautos_estacionados}, '${lavado.patente}')">
+                        <i class="fas fa-money-bill"></i> Cobrar
+                      </button>
+                    </div>
+                  </div>
+                  ${lavado.descripcion_extra ? `<div class="row mt-2"><div class="col-12"><small class="text-muted"><strong>Descripción:</strong> ${lavado.descripcion_extra}</small></div></div>` : ''}
+                </div>
+              </div>
+            `;
+          }).join('');
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          pendientesDiv.innerHTML = `<div class="alert alert-danger">Error al cargar lavados pendientes: ${error.message}</div>`;
+        });
+    }
+    
+    // Cargar historial reciente
+    function cargarHistorialReciente() {
+      const historialDiv = document.getElementById('historial-reciente');
+      
+      // Simular datos de ejemplo (esto se puede reemplazar con una API real)
+      const historialEjemplo = [
+        {
+          patente: 'ABC123',
+          fecha: '2024-01-15 14:30',
+          servicio: 'Lavado exterior camioneta fango 20',
+          precio: 15000,
+          motivos: ['hongos', 'barro'],
+          cliente: 'Juan Pérez'
+        },
+        {
+          patente: 'XYZ789',
+          fecha: '2024-01-15 13:15',
+          servicio: 'Lavado exterior básico',
+          precio: 8000,
+          motivos: [],
+          cliente: 'María González'
+        },
+        {
+          patente: 'DEF456',
+          fecha: '2024-01-15 12:00',
+          servicio: 'Lavado completo premium',
+          precio: 25000,
+          motivos: ['pelos', 'interior'],
+          cliente: 'Carlos López'
+        }
+      ];
+      
+      if (historialEjemplo.length === 0) {
+        historialDiv.innerHTML = '<div class="text-center text-muted">No hay lavados registrados</div>';
+        return;
+      }
+      
+      historialDiv.innerHTML = historialEjemplo.map(lavado => `
+        <div class="card card-historial mb-3">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-2">
+                <h6 class="card-title">${lavado.patente}</h6>
+                <small class="text-muted">${lavado.fecha}</small>
+              </div>
+              <div class="col-md-3">
+                <p class="mb-1"><strong>Servicio:</strong></p>
+                <p class="mb-0">${lavado.servicio}</p>
+              </div>
+              <div class="col-md-2">
+                <p class="mb-1"><strong>Precio:</strong></p>
+                <p class="mb-0 text-success">$${lavado.precio.toLocaleString('es-CL')}</p>
+              </div>
+              <div class="col-md-3">
+                <p class="mb-1"><strong>Motivos extra:</strong></p>
+                <div>
+                  ${lavado.motivos.length > 0 ? 
+                    lavado.motivos.map(motivo => `<span class="badge bg-warning badge-motivo">${motivo}</span>`).join(' ') :
+                    '<span class="text-muted">Ninguno</span>'
+                  }
+                </div>
+              </div>
+              <div class="col-md-2">
+                <p class="mb-1"><strong>Cliente:</strong></p>
+                <p class="mb-0">${lavado.cliente || 'No registrado'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // Función para cobrar un lavado
+    function cobrarLavado(idIngreso, patente) {
+      if (confirm(`¿Confirmar el cobro del lavado para la patente ${patente}?`)) {
+        const formData = new FormData();
+        formData.append('id_ingreso', idIngreso);
+        formData.append('patente', patente);
+        formData.append('metodo_pago', 'EFECTIVO');
+        
+        fetch('../api/cobrar-lavado.php', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            mostrarAlerta('✅ Lavado cobrado correctamente', 'success');
+            cargarLavadosPendientes(); // Recargar la lista
+            cargarHistorialReciente(); // Recargar historial
+          } else {
+            mostrarAlerta('❌ Error al cobrar lavado: ' + data.error, 'danger');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          mostrarAlerta('❌ Error al cobrar lavado: ' + error.message, 'danger');
+        });
+      }
+    }
+    
+    // Manejar envío del formulario
+    function manejarEnvioFormulario(event) {
+      event.preventDefault();
+      
+      const formData = new FormData(event.target);
+      const patente = document.getElementById('patente-lavado').value.trim().toUpperCase();
+      const tipoLavado = document.getElementById('tipo-lavado').value;
+      const nombreCliente = document.getElementById('nombre-cliente-lavado').value.trim();
+      const precioExtra = parseFloat(document.getElementById('precio-extra').value) || 0;
+      const descripcion = document.getElementById('descripcion-extra').value.trim();
+      
+      // Recopilar motivos seleccionados
+      const motivos = [];
+      const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+      checkboxes.forEach(checkbox => {
+        motivos.push(checkbox.value);
+      });
+      
+      if (!patente || !tipoLavado) {
+        mostrarAlerta('Patente y tipo de lavado son obligatorios', 'warning');
+        return;
+      }
+      
+      // Encontrar el servicio seleccionado
+      const servicioSeleccionado = serviciosDisponibles.find(s => s.idtipo_ingresos == tipoLavado);
+      const precioBase = servicioSeleccionado ? parseFloat(servicioSeleccionado.precio) : 0;
+      const precioTotal = precioBase + precioExtra;
+      
+      // Mostrar resumen antes de enviar
+      const resumen = `
+        <strong>Resumen del lavado:</strong><br>
+        • Patente: ${patente}<br>
+        • Servicio: ${servicioSeleccionado?.nombre_servicio || 'N/A'}<br>
+        • Precio base: $${precioBase.toLocaleString('es-CL')}<br>
+        • Precio extra: $${precioExtra.toLocaleString('es-CL')}<br>
+        • Total: $${precioTotal.toLocaleString('es-CL')}<br>
+        • Motivos extra: ${motivos.length > 0 ? motivos.join(', ') : 'Ninguno'}<br>
+        • Cliente: ${nombreCliente || 'No registrado'}
+      `;
+      
+      if (confirm(`${resumen}\n\n¿Confirmar el registro de este lavado?`)) {
+        // Llamada real a la API para registrar el lavado
+        const formData = new FormData();
+        formData.append('patente', patente);
+        formData.append('id_servicio', tipoLavado);
+        formData.append('nombre_cliente', nombreCliente);
+        formData.append('precio_extra', precioExtra);
+        formData.append('motivos_extra', JSON.stringify(motivos));
+        formData.append('descripcion_extra', descripcion);
+        
+        fetch('../api/registrar-lavado.php', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            mostrarAlerta('✅ Lavado registrado correctamente', 'success');
+            
+            // Limpiar formulario
+            event.target.reset();
+            document.getElementById('precio-extra').value = 0;
+            
+            // Recargar lavados pendientes e historial
+            cargarLavadosPendientes();
+            cargarHistorialReciente();
+          } else {
+            mostrarAlerta('❌ Error al registrar lavado: ' + data.error, 'danger');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          mostrarAlerta('❌ Error al registrar lavado: ' + error.message, 'danger');
+        });
+      }
+    }
+    
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      // Cargar datos iniciales
+      cargarServicios();
+      cargarLavadosPendientes();
+      cargarHistorialReciente();
+      
+      // Consultar historial
+      document.getElementById('btn-consultar-historial').addEventListener('click', consultarHistorial);
+      
+      // Envío del formulario
+      document.getElementById('form-lavado').addEventListener('submit', manejarEnvioFormulario);
+      
+      // Auto-consulta cuando se escribe en el campo de patente
+      document.getElementById('patente-consulta').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          consultarHistorial();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

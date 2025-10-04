@@ -1,0 +1,84 @@
+.multimedia {
+    border-top: 2px solid;
+    display: flex;
+    flex-direction: row;
+  }
+  .video {
+    width: 10%;
+    height: 10%;
+    /* margin-right: 10px; */
+    margin-top: 10px;
+    align-self: center;
+    width: auto;
+  }
+  .muffins {
+    background: #f7f5f5; font-weight: bold; padding: 15px; ; border-bottom:2px solid #f77;
+    padding: 40px;
+    h1 {
+        font-size: 25px;
+      }
+      p {
+        font-size: 14px;
+        text-align: left;
+        margin-top: 10px;
+      }
+    
+  }
+  .ingredientes {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    li {
+        margin-left: 30px;
+        margin-top: 10px;
+      }
+  
+  }
+    
+    @media (max-width: 768px) {
+      .multimedia {
+        border-top: 2px solid;
+        display: flex;
+        flex-direction: column;
+      }
+      .video {
+        position: relative;
+        height: 0;
+        padding-bottom: 56.2%;
+        margin-bottom: 20px;
+        
+       iframe {
+        width: 100vw;
+        height: 32vh;
+       } 
+      }
+  
+    }
+    
+    @media (max-width: 480px) {
+      .multimedia {
+        border-top: 2px solid;
+        display: flex;
+        flex-direction: column;
+      }
+      .video {
+        position: relative;
+        height: 0;
+        padding-bottom: 56.2%;
+        margin-bottom: 20px;
+
+       iframe {
+        width: 100vw;
+        height: 32vh;
+       } 
+
+      
+      }
+
+    
+  
+  }
+  

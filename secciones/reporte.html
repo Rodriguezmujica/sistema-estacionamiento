@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reporte | Estacionamiento Los Ríos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../scss/main.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar navbar-expand-lg" >
+      <div class="container-fluid">
+        <a class="navbar-brand" href="../index.html">
+          <span class="fw-bold" style="color: #fff;">🚗 Estacionamiento Los Ríos</span>
+        </a>
+        <button class="navbar-toggler nav-border" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" href="../index.html">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="lavados.html">Servicios Lavado</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="./reporte.html">Reporte</a>
+            </li>
+          </ul>
+          <div class="d-flex">
+            <span class="navbar-text me-3">
+              <span class="badge bg-success">💰 $35/min</span>
+            </span>
+            <span class="navbar-text" style="color: #fff;">
+              <span id="fecha-hora"></span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <main class="container py-4">
+    <h2 class="mb-4">📊 Reporte Diario</h2>
+
+    <!-- Autos estacionados y lavados no cobrados -->
+    <div class="mb-5">
+      <h4>Autos actualmente estacionados y en lavado (no cobrados)</h4>
+      <table class="table table-bordered table-hover">
+  <thead class="table-info">
+    <tr>
+      <th>Patente</th>
+      <th>Cliente</th>
+      <th>Tipo de Servicio</th>
+      <th>Hora de ingreso</th>
+      <th>Lavado</th>
+    </tr>
+  </thead>
+  <tbody id="tabla-reporte">
+    <!-- Aquí se insertan los datos dinámicamente -->
+  </tbody>
+</table>
+    </div>
+
+    <!-- Resumen de ventas -->
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card text-bg-success mb-3">
+          <div class="card-header">Lavados hoy</div>
+          <div class="card-body">
+            <h5 class="card-title" id="lavados-hoy">0</h5>
+            <p class="card-text">Total lavados realizados hoy.</p>
+            <p class="card-text">Ingresos: $<span id="lavados-total">0</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card text-bg-primary mb-3">
+          <div class="card-header">Estacionamientos hoy</div>
+          <div class="card-body">
+            <h5 class="card-title" id="estacionamientos-hoy">0</h5>
+            <p class="card-text">Total autos estacionados hoy.</p>
+            <p class="card-text">Ingresos: $<span id="estacionamientos-total">0</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card text-bg-dark mb-3">
+          <div class="card-header">Total General</div>
+          <div class="card-body">
+            <h5 class="card-title" id="total-general">0</h5>
+            <p class="card-text">Suma total de ingresos hoy.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agrega esto donde quieras mostrar el reporte -->
+    <div class="card mt-4">
+      <div class="card-header bg-primary text-white">
+        Últimos Ingresos
+      </div>
+      <div class="card-body">
+        <table class="table table-striped" id="tabla-ingresos">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Patente</th>
+              <th>Fecha Ingreso</th>
+              <th>Servicio</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Se llenará por JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <!-- Copia aquí tu footer -->
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/Script.js"></script>
+</body>
+</html>
