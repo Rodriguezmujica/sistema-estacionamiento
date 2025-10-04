@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(actualizarFechaHora, 1000);
 
   // --- FORMULARIO DE INGRESO ---
-  const formIngreso = document.getElementById('form-ingreso');
   const patenteIngreso = document.getElementById('patente-ingreso');
   const tipoServicio = document.getElementById('tipo-servicio');
 
@@ -82,60 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Modificar el evento submit del formulario
-  if (formIngreso) {
-    formIngreso.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const patente = patenteIngreso.value.trim().toUpperCase();
-      const servicio = tipoServicio.value;
-      
-      if (!patente || !servicio) {
-        mostrarAlerta('Completa todos los campos requeridos', 'warning');
-        return;
-      }
-      
-      // Verificar duplicados antes de registrar
-      fetch('./api/verificar-patente.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: new URLSearchParams({ patente: patente })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.existe) {
-          mostrarAlerta(`
-            ❌ No se puede registrar: La patente ${patente} ya tiene un ingreso activo.
-          `, 'danger');
-          return;
-        }
-        
-        // Si no existe, proceder con el registro normal
-        procesarRegistroIngreso(patente, servicio);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        mostrarAlerta('Error al verificar patente', 'danger');
-      });
-    });
-  }
 
-  // Función para procesar el registro (tu código actual de registro)
-  function procesarRegistroIngreso(patente, servicio) {
-    // Aquí va tu lógica actual de registro de ingreso
-    // (el código que ya tienes para registrar un nuevo ingreso)
-    
-    if (servicio === 'Lavado') {
-      // Mostrar modal de lavado
-      const modal = new bootstrap.Modal(document.getElementById('modalLavado'));
-      document.getElementById('patente-lavado-modal').value = patente;
-      modal.show();
-    } else {
-      // Registrar estacionamiento normal
-      registrarEstacionamiento(patente);
-    }
+  // Función para cargar reporte (placeholder)
+  function cargarReporte() {
+    // Esta función se puede implementar más tarde
+    console.log('📊 Cargando reporte...');
   }
 
   // Función para mostrar alertas
@@ -930,6 +880,74 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   } else {
     console.error('El modal modalModificarTicket NO existe en el DOM');
+  }
+
+  // --- FORMULARIO DE INGRESO ---
+  const formIngreso = document.getElementById('form-ingreso');
+  if (formIngreso) {
+    console.log('✅ Formulario de ingreso encontrado, agregando event listener...');
+    
+    formIngreso.addEventListener('submit', async function(e) {
+      console.log('🚀 Formulario enviado, previniendo comportamiento por defecto...');
+      e.preventDefault();
+      
+      const patente = document.getElementById('patente-ingreso').value.trim().toUpperCase();
+      const tipoServicio = document.getElementById('tipo-servicio').value;
+      const nombreCliente = document.getElementById('nombre-cliente') ? document.getElementById('nombre-cliente').value.trim() : '';
+
+      console.log('📋 Datos del formulario:', { patente, tipoServicio, nombreCliente });
+
+      // Ajustar valor para la API según selección
+      let tipo_servicio_db = tipoServicio;
+      if (tipoServicio === 'Estacionamiento') {
+        tipo_servicio_db = 'estacionamiento x minuto';
+      }
+      if (tipoServicio === 'Lavado') {
+        tipo_servicio_db = 'Lavado';
+      }
+
+      console.log('🔄 Tipo de servicio mapeado:', tipo_servicio_db);
+
+      if (!patente || !tipoServicio) {
+        mostrarAlerta('Por favor complete todos los campos obligatorios', 'warning');
+        return;
+      }
+
+      try {
+        const datosIngreso = {
+          patente: patente,
+          tipo_servicio: tipo_servicio_db,
+          nombre_cliente: nombreCliente
+        };
+
+        console.log('📤 Enviando datos a la API:', datosIngreso);
+
+        const response = await fetch('api/registrar-ingreso.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams(datosIngreso)
+        });
+
+        const resultado = await response.json();
+        console.log('📥 Respuesta de la API:', resultado);
+
+        if (resultado.success) {
+          mostrarAlerta('¡Ingreso registrado correctamente!', 'success');
+          formIngreso.reset();
+          cargarReporte();
+        } else {
+          mostrarAlerta('Error al registrar ingreso: ' + (resultado.error || ''), 'danger');
+        }
+
+      } catch (error) {
+        console.error('💥 Error en el formulario:', error);
+        mostrarAlerta('Error de conexión: ' + error.message, 'danger');
+      }
+    });
+  } else {
+    console.error('❌ No se encontró el formulario form-ingreso');
   }
 
 }); // Cierre del DOMContentLoaded principal
