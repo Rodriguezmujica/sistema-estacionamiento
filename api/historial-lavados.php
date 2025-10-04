@@ -83,6 +83,7 @@ try {
                 'servicio' => $ultimoLavado['tipo_servicio'],
                 'precio' => floatval($ultimoLavado['precio'] ?? 0),
                 'precio_extra' => floatval($ultimoLavado['precio_extra'] ?? 0),
+                'total' => floatval($ultimoLavado['total'] ?? 0),
                 'descripcion' => $ultimoLavado['descripcion_extra'] ?? '',
                 'motivos' => $motivos
             ],

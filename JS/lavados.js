@@ -46,9 +46,13 @@ function cargarServicios() {
 
 // Consultar historial de patente
 function consultarHistorial() {
+  console.log('🔍 Función consultarHistorial ejecutada');
+  
   const patente = document.getElementById('patente-consulta').value.trim().toUpperCase();
+  console.log('📋 Patente ingresada:', patente);
   
   if (!patente) {
+    console.log('⚠️ Patente vacía, mostrando alerta');
     mostrarAlerta('Ingresa una patente válida', 'warning');
     return;
   }
@@ -57,31 +61,40 @@ function consultarHistorial() {
   const resultadoDiv = document.getElementById('resultado-consulta');
   const infoDiv = document.getElementById('info-vehiculo');
   resultadoDiv.style.display = 'block';
+  resultadoDiv.classList.remove('d-none');
   infoDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Consultando...';
+  console.log('🔄 Mostrando estado de carga');
   
   // Llamada real a la API
+  console.log('🌐 Realizando llamada a la API...');
   fetch('../api/historial-lavados.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ patente: patente })
   })
-  .then(response => response.json())
+  .then(response => {
+    console.log('📡 Respuesta recibida:', response.status, response.statusText);
+    return response.json();
+  })
   .then(data => {
+    console.log('📊 Datos recibidos:', data);
     if (data.success) {
       if (data.total_lavados === 0) {
+        console.log('❌ No se encontraron lavados');
         infoDiv.innerHTML = `
           <div class="text-center text-muted">
             <i class="fas fa-info-circle"></i> No se encontró historial de lavados para la patente ${data.patente}
           </div>
         `;
       } else {
+        console.log('✅ Lavados encontrados:', data.total_lavados);
         const ultimo = data.ultimo_lavado;
         infoDiv.innerHTML = `
           <div class="row">
             <div class="col-md-6">
               <p><strong>Patente:</strong> ${data.patente}</p>
               <p><strong>Último lavado:</strong> ${new Date(ultimo.fecha).toLocaleDateString('es-CL')}</p>
-              <p><strong>Último precio:</strong> $${ultimo.precio.toLocaleString('es-CL')}</p>
+              <p><strong>Total cobrado:</strong> $${(ultimo.total || (ultimo.precio + ultimo.precio_extra)).toLocaleString('es-CL')}</p>
             </div>
             <div class="col-md-6">
               <p><strong>Último servicio:</strong> ${ultimo.servicio}</p>
@@ -97,7 +110,14 @@ function consultarHistorial() {
           <div class="row mt-2">
             <div class="col-12">
               <p><strong>Descripción:</strong> ${ultimo.descripcion || 'Sin descripción adicional'}</p>
-              ${ultimo.precio_extra > 0 ? `<p><strong>Precio extra:</strong> $${ultimo.precio_extra.toLocaleString('es-CL')}</p>` : ''}
+              ${ultimo.precio_extra > 0 ? `
+                <div class="alert alert-info mt-2">
+                  <strong>Desglose del precio:</strong><br>
+                  • Precio base: $${ultimo.precio.toLocaleString('es-CL')}<br>
+                  • Precio extra: $${ultimo.precio_extra.toLocaleString('es-CL')}<br>
+                  • <strong>Total: $${(ultimo.total || (ultimo.precio + ultimo.precio_extra)).toLocaleString('es-CL')}</strong>
+                </div>
+              ` : ''}
             </div>
           </div>
         `;
@@ -119,11 +139,12 @@ function consultarHistorial() {
         });
       }
     } else {
+      console.log('❌ Error en la respuesta:', data.error);
       infoDiv.innerHTML = `<div class="alert alert-danger">Error: ${data.error}</div>`;
     }
   })
   .catch(error => {
-    console.error('Error:', error);
+    console.error('💥 Error en la consulta:', error);
     infoDiv.innerHTML = `<div class="alert alert-danger">Error al consultar historial: ${error.message}</div>`;
   });
 }
@@ -396,16 +417,36 @@ function manejarEnvioFormulario(event) {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 JavaScript cargado correctamente');
+  console.log('🔍 Configurando event listeners...');
+  
   cargarServicios();
   cargarLavadosPendientes();
   cargarHistorialReciente();
   
-  document.getElementById('btn-consultar-historial').addEventListener('click', consultarHistorial);
+  const btnConsultar = document.getElementById('btn-consultar-historial');
+  const inputPatente = document.getElementById('patente-consulta');
+  
+  console.log('🔘 Botón consultar encontrado:', !!btnConsultar);
+  console.log('📝 Input patente encontrado:', !!inputPatente);
+  
+  if (btnConsultar) {
+    btnConsultar.addEventListener('click', consultarHistorial);
+    console.log('✅ Event listener agregado al botón consultar');
+  } else {
+    console.error('❌ No se encontró el botón btn-consultar-historial');
+  }
+  
   document.getElementById('form-lavado').addEventListener('submit', manejarEnvioFormulario);
   
-  document.getElementById('patente-consulta').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-      consultarHistorial();
-    }
-  });
+  if (inputPatente) {
+    inputPatente.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        consultarHistorial();
+      }
+    });
+    console.log('✅ Event listener agregado al input patente');
+  } else {
+    console.error('❌ No se encontró el input patente-consulta');
+  }
 });
