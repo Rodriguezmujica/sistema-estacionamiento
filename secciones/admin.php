@@ -22,7 +22,7 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
   <header>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
       <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="../index.html">
+        <a class="navbar-brand fw-bold" href="../index.php">
           <i class="fas fa-car"></i> Estacionamiento Los Ríos
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -31,22 +31,22 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav me-auto">
             <li class="nav-item">
-              <a class="nav-link" href="../index.html">
+              <a class="nav-link" href="../index.php">
                 <i class="fas fa-home"></i> Inicio
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="reporte.html">
+              <a class="nav-link" href="./reportes.html">
                 <i class="fas fa-chart-bar"></i> Reportes
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="lavados.html">
+              <a class="nav-link" href="./lavados.html">
                 <i class="fas fa-car-wash"></i> Lavados
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link active" href="admin.php">
+              <a class="nav-link active" href="./admin.php">
                 <i class="fas fa-cog"></i> Administración
               </a>
             </li>
