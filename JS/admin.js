@@ -12,42 +12,63 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ============ GESTIÓN DE CLIENTES ============
 function cargarClientes() {
-  fetch('../api/api_reporte.php')
+  // Crear nueva API específica para clientes mensuales
+  fetch('../api/api_clientes_mensuales.php')
     .then(response => response.json())
     .then(data => {
       const tbody = document.getElementById('tabla-clientes');
       
       if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No hay clientes registrados</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No hay clientes mensuales registrados</td></tr>';
         return;
       }
       
       tbody.innerHTML = data.map(cliente => {
-        const estadoPago = cliente.fecha_salida ? 'pagado' : 'pendiente';
-        const badgeEstado = estadoPago === 'pagado' 
-          ? '<span class="badge bg-success">✅ Pagado</span>' 
-          : '<span class="badge bg-danger">❌ Pendiente</span>';
+        // Determinar estado basado en las fechas del plan
+        const hoy = new Date();
+        const inicioPlan = new Date(cliente.inicio_plan);
+        const finPlan = new Date(cliente.fin_plan);
         
-        const tipoVehiculo = determinarTipoVehiculo(cliente.patente);
-        const fechaMostrar = new Date(cliente.fecha_ingreso).toLocaleDateString('es-CL');
-        const total = cliente.total ? `$${cliente.total.toLocaleString('es-CL')}` : 'Sin cobrar';
+        let estadoPago = 'pendiente';
+        if (hoy >= inicioPlan && hoy <= finPlan) {
+          estadoPago = 'pagado'; // Plan activo
+        } else if (hoy > finPlan) {
+          estadoPago = 'vencido'; // Plan vencido
+        }
+        
+        const badgeEstado = estadoPago === 'pagado' 
+          ? '<span class="badge bg-success">✅ Activo</span>' 
+          : estadoPago === 'vencido'
+          ? '<span class="badge bg-danger">❌ Vencido</span>'
+          : '<span class="badge bg-warning">⏳ Pendiente</span>';
+        
+        const fechaInicio = inicioPlan.toLocaleDateString('es-CL');
+        const fechaFin = finPlan.toLocaleDateString('es-CL');
         
         return `
-          <tr class="${estadoPago === 'pendiente' ? 'table-warning' : ''}">
+          <tr class="${estadoPago === 'vencido' ? 'table-danger' : estadoPago === 'pendiente' ? 'table-warning' : ''}">
             <td>${badgeEstado}</td>
             <td><strong>${cliente.patente}</strong></td>
-            <td>${cliente.nombre_cliente || 'Sin nombre'}</td>
+            <td>${cliente.nombres} ${cliente.apellidos}</td>
             <td>
-              <i class="fas fa-car text-muted"></i> ${tipoVehiculo}
+              <i class="fas fa-car text-muted"></i> ${cliente.fono || 'No especificado'}
             </td>
-            <td><small>${cliente.tipo_servicio}</small></td>
-            <td><small>${fechaMostrar}</small></td>
-            <td><strong class="${estadoPago === 'pagado' ? 'text-success' : 'text-warning'}">${total}</strong></td>
+            <td><small>Plan Mensual</small></td>
             <td>
-              <button class="btn btn-sm btn-outline-primary" onclick="editarCliente(${cliente.idautos_estacionados})">
+              <small>
+                <strong>Inicio:</strong> ${fechaInicio}<br>
+                <strong>Fin:</strong> ${fechaFin}
+              </small>
+            </td>
+            <td><strong class="text-success">Mensual</strong></td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary" onclick="editarClienteMensual(${cliente.idclientes})">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="btn btn-sm btn-outline-danger" onclick="eliminarCliente(${cliente.idautos_estacionados})">
+              <button class="btn btn-sm btn-outline-info" onclick="renovarPlan(${cliente.idclientes})">
+                <i class="fas fa-calendar-plus"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="eliminarClienteMensual(${cliente.idclientes})">
                 <i class="fas fa-trash"></i>
               </button>
             </td>
@@ -58,29 +79,30 @@ function cargarClientes() {
     .catch(error => {
       console.error('Error cargando clientes:', error);
       document.getElementById('tabla-clientes').innerHTML = 
-        '<tr><td colspan="8" class="text-center text-danger py-4">Error cargando datos</td></tr>';
+        '<tr><td colspan="8" class="text-center text-danger py-4">Error cargando clientes mensuales</td></tr>';
     });
 }
 
-function determinarTipoVehiculo(patente) {
-  // Lógica simple para determinar tipo de vehículo por patente
-  if (patente.includes('MC') || patente.includes('MT')) return 'Motocicleta';
-  if (patente.includes('CM') || patente.includes('TR')) return 'Camioneta';
-  return 'Auto';
-}
-
 function cargarEstadisticas() {
-  fetch('../api/api_reporte.php')
+  fetch('../api/api_clientes_mensuales.php')
     .then(response => response.json())
     .then(data => {
-      const pagados = data.filter(c => c.fecha_salida).length;
-      const pendientes = data.filter(c => !c.fecha_salida).length;
-      const totalServicios = data.length;
+      const hoy = new Date();
+      
+      const activos = data.filter(c => {
+        const fin = new Date(c.fin_plan);
+        return hoy <= fin;
+      }).length;
+      const vencidos = data.filter(c => {
+        const fin = new Date(c.fin_plan);
+        return hoy > fin;
+      }).length;
+      const totalClientes = data.length;
       const ingresosMes = data.reduce((sum, c) => sum + (parseFloat(c.total) || 0), 0);
       
-      document.getElementById('clientes-pagados').textContent = pagados;
-      document.getElementById('clientes-pendientes').textContent = pendientes;
-      document.getElementById('total-servicios').textContent = totalServicios;
+      document.getElementById('clientes-activos').textContent = activos;
+      document.getElementById('clientes-vencidos').textContent = vencidos;
+      document.getElementById('total-clientes').textContent = totalClientes;
       document.getElementById('ingresos-mes').textContent = `$${ingresosMes.toLocaleString('es-CL')}`;
     })
     .catch(error => console.error('Error cargando estadísticas:', error));
