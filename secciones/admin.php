@@ -34,17 +34,17 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
               <a class="nav-link" href="../index.php">
                 <i class="fas fa-home"></i> Inicio
               </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="./reportes.html">
-                <i class="fas fa-chart-bar"></i> Reportes
-              </a>
-            </li>
-            <li class="nav-item">
+            </li>   <li class="nav-item">
               <a class="nav-link" href="./lavados.html">
                 <i class="fas fa-car-wash"></i> Lavados
               </a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="./reporte.html">
+                <i class="fas fa-chart-bar"></i> Reportes
+              </a>
+            </li>
+         
             <li class="nav-item">
               <a class="nav-link active" href="./admin.php">
                 <i class="fas fa-cog"></i> Administración
