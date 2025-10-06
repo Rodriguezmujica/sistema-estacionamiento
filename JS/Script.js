@@ -713,6 +713,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const tipoActual = document.getElementById('tipo-actual');
     const nuevoTipo = document.getElementById('nuevo-tipo');
     const btnGuardarCambio = document.getElementById('btn-guardar-cambio');
+    
+    // Variables para almacenar datos del ticket actual
+    let ticketActualData = null;
 
     // Cargar servicios de lavado en el select del modal
     function cargarServiciosModificarTicket() {
@@ -769,10 +772,16 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Registro encontrado:', registro);
             
             if (registro) {
+              // Almacenar datos del ticket para uso posterior
+              ticketActualData = registro;
+              
               if (tipoActual) tipoActual.value = registro.tipo_servicio || 'Sin tipo definido';
               if (btnGuardarCambio) btnGuardarCambio.disabled = false;
               mostrarAlerta('✅ Ticket encontrado', 'success');
             } else {
+              // Limpiar datos del ticket
+              ticketActualData = null;
+              
               if (tipoActual) tipoActual.value = '';
               if (btnGuardarCambio) btnGuardarCambio.disabled = true;
               mostrarAlerta('⚠️ No se encontró ticket activo para esa patente', 'warning');
@@ -841,15 +850,130 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('El botón btn-guardar-cambio NO existe en el DOM');
     }
 
+    // Interceptar cambios en el select de nuevo tipo
+    if (nuevoTipo) {
+      nuevoTipo.addEventListener('change', function() {
+        const nuevoTipoSeleccionado = this.value;
+        const textoSeleccionado = this.options[this.selectedIndex].text;
+        
+        console.log('🔄 Cambio detectado en tipo de servicio:', { 
+          id: nuevoTipoSeleccionado, 
+          texto: textoSeleccionado,
+          ticketActual: ticketActualData 
+        });
+        
+        // Verificar si se está cambiando a un servicio de lavado
+        if (nuevoTipoSeleccionado && ticketActualData && textoSeleccionado.toLowerCase().includes('lavado')) {
+          console.log('🚗 Cambio a lavado detectado, abriendo modal de lavado...');
+          
+          // Verificar que el ticket actual no sea ya de lavado
+          const tipoActual = ticketActualData.tipo_servicio || '';
+          if (!tipoActual.toLowerCase().includes('lavado')) {
+            // Abrir modal de lavado con datos precargados
+            abrirModalLavadoParaModificacion(ticketActualData, nuevoTipoSeleccionado);
+          }
+        }
+      });
+    }
+
     // Cargar servicios al abrir el modal
     if (modalModificarTicket) {
       modalModificarTicket.addEventListener('show.bs.modal', function() {
         console.log('Modal abierto, cargando servicios...');
         cargarServiciosModificarTicket();
+        // Limpiar datos del ticket al abrir
+        ticketActualData = null;
       });
     } else {
       console.error('El modal modalModificarTicket NO existe en el DOM');
     }
+  }
+
+  // Función para abrir el modal de lavado cuando se modifica un ticket
+  function abrirModalLavadoParaModificacion(ticketData, nuevoServicioId) {
+    console.log('🚗 Abriendo modal de lavado para modificación:', { ticketData, nuevoServicioId });
+    
+    // Verificar que los elementos existan
+    const patenteModalLavado = document.getElementById('patente-lavado-modal');
+    const clienteModalLavado = document.getElementById('nombre-cliente-lavado-modal');
+    const tipoLavadoModal = document.getElementById('tipo-lavado-modal');
+    const formLavadoModal = document.getElementById('form-lavado-modal');
+    const modalLavadoElement = document.getElementById('modalLavado');
+    
+    console.log('🔍 Elementos encontrados:', {
+      patenteModalLavado: !!patenteModalLavado,
+      clienteModalLavado: !!clienteModalLavado,
+      tipoLavadoModal: !!tipoLavadoModal,
+      formLavadoModal: !!formLavadoModal,
+      modalLavadoElement: !!modalLavadoElement
+    });
+    
+    if (!modalLavadoElement) {
+      console.error('❌ No se encontró el modal de lavado con ID "modalLavado"');
+      mostrarAlerta('Error: No se encontró el modal de lavado', 'danger');
+      return;
+    }
+    
+    // Precargar datos en el modal de lavado
+    if (patenteModalLavado) {
+      patenteModalLavado.value = ticketData.patente || '';
+      console.log('✅ Patente precargada:', patenteModalLavado.value);
+    }
+    
+    if (clienteModalLavado) {
+      clienteModalLavado.value = ticketData.nombre_cliente || '';
+      console.log('✅ Cliente precargado:', clienteModalLavado.value);
+    }
+    
+    // Establecer el modo de modificación en el formulario
+    if (formLavadoModal) {
+      formLavadoModal.setAttribute('data-modificacion', 'true');
+      formLavadoModal.setAttribute('data-id-ingreso', ticketData.idautos_estacionados || '');
+      console.log('✅ Modo de modificación activado');
+    }
+    
+    // Cerrar el modal de modificar ticket
+    const modalModificarTicket = bootstrap.Modal.getInstance(document.getElementById('modalModificarTicket'));
+    if (modalModificarTicket) {
+      modalModificarTicket.hide();
+      console.log('✅ Modal de modificar ticket cerrado');
+    }
+    
+    // Pequeña pausa antes de abrir el modal de lavado
+    setTimeout(() => {
+      // Abrir el modal de lavado
+      const modalLavado = new bootstrap.Modal(modalLavadoElement);
+      modalLavado.show();
+      console.log('✅ Modal de lavado abierto');
+      
+      // Cargar servicios y seleccionar el tipo correcto
+      setTimeout(() => {
+        console.log('🔧 Iniciando carga de servicios para modificación...');
+        
+        cargarServiciosEnModalCompleto().then(() => {
+          console.log('🔧 Servicios cargados, seleccionando tipo:', nuevoServicioId);
+          
+          // Configurar event listeners primero
+          inicializarEventListenersModalLavado();
+          
+          if (tipoLavadoModal) {
+            tipoLavadoModal.value = nuevoServicioId;
+            console.log('✅ Tipo de lavado seleccionado:', nuevoServicioId);
+            // Forzar el evento change para que se actualice el precio
+            tipoLavadoModal.dispatchEvent(new Event('change'));
+            calcularPrecioTotalModal();
+          }
+          
+          console.log('✅ Modal de lavado configurado completamente para modificación');
+        }).catch(error => {
+          console.error('❌ Error cargando servicios:', error);
+          mostrarAlerta('Error al cargar servicios de lavado', 'danger');
+        });
+      }, 300);
+      
+    }, 200);
+    
+    console.log('✅ Proceso de apertura del modal de lavado iniciado');
   }
 
   // ========================================
@@ -1038,7 +1162,7 @@ let precioBaseActual = 0;
 
 // Función para cargar servicios en el modal
 function cargarServiciosEnModalCompleto() {
-  fetch('./api/api_servicios_lavado.php')
+  return fetch('./api/api_servicios_lavado.php')
     .then(response => response.json())
     .then(servicios => {
       serviciosLavadoModal = servicios;
@@ -1057,10 +1181,12 @@ function cargarServiciosEnModalCompleto() {
         
         console.log(`✅ ${servicios.length} servicios cargados en el modal`);
       }
+      return servicios;
     })
     .catch(error => {
       console.error('Error al cargar servicios:', error);
       mostrarAlerta('Error al cargar servicios de lavado', 'danger');
+      throw error;
     });
 }
 
@@ -1150,8 +1276,13 @@ function enviarFormularioLavadoModal() {
   const precioBase = servicioSeleccionado ? parseFloat(servicioSeleccionado.precio) : 0;
   const precioTotal = precioBase + precioExtra;
   
+  // Verificar si es una modificación
+  const formLavadoModal = document.getElementById('form-lavado-modal');
+  const esModificacion = formLavadoModal.getAttribute('data-modificacion') === 'true';
+  const idIngreso = formLavadoModal.getAttribute('data-id-ingreso');
+  
   const resumen = `
-    Resumen del lavado:
+    Resumen del ${esModificacion ? 'lavado modificado' : 'lavado'}:
     • Patente: ${patente}
     • Servicio: ${servicioSeleccionado?.nombre_servicio || 'N/A'}
     • Precio base: $${precioBase.toLocaleString('es-CL')}
@@ -1161,7 +1292,11 @@ function enviarFormularioLavadoModal() {
     • Cliente: ${nombreCliente || 'No registrado'}
   `;
   
-  if (confirm(`${resumen}\n\n¿Confirmar el registro de este lavado?`)) {
+  const confirmacion = esModificacion 
+    ? `${resumen}\n\n¿Confirmar la modificación de este ticket a lavado?`
+    : `${resumen}\n\n¿Confirmar el registro de este lavado?`;
+  
+  if (confirm(confirmacion)) {
     const formData = new FormData();
     formData.append('patente', patente);
     formData.append('id_servicio', tipoLavado);
@@ -1170,22 +1305,38 @@ function enviarFormularioLavadoModal() {
     formData.append('motivos_extra', JSON.stringify(motivos));
     formData.append('descripcion_extra', descripcion);
     
-    fetch('./api/registrar-lavado.php', {
+    // Si es modificación, agregar el ID del ingreso
+    if (esModificacion && idIngreso) {
+      formData.append('id_ingreso', idIngreso);
+    }
+    
+    // Determinar la URL de la API
+    const apiUrl = esModificacion ? './api/modificar-lavado.php' : './api/registrar-lavado.php';
+    
+    fetch(apiUrl, {
       method: 'POST',
       body: formData
     })
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        mostrarAlerta('✅ Lavado registrado correctamente', 'success');
+        const mensaje = esModificacion 
+          ? '✅ Ticket modificado a lavado correctamente' 
+          : '✅ Lavado registrado correctamente';
+        mostrarAlerta(mensaje, 'success');
         
         // Cerrar modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('modalLavado'));
         if (modal) modal.hide();
         
-        // Limpiar formularios
+        // Limpiar formularios y atributos de modificación
         document.getElementById('form-lavado-modal').reset();
-        document.getElementById('form-ingreso').reset();
+        formLavadoModal.removeAttribute('data-modificacion');
+        formLavadoModal.removeAttribute('data-id-ingreso');
+        
+        if (!esModificacion) {
+          document.getElementById('form-ingreso').reset();
+        }
         calcularPrecioTotalModal();
         
         // Recargar estadísticas si existe la función
@@ -1193,12 +1344,18 @@ function enviarFormularioLavadoModal() {
           actualizarEstadisticas();
         }
       } else {
-        mostrarAlerta('❌ Error al registrar lavado: ' + data.error, 'danger');
+        const errorMsg = esModificacion 
+          ? 'Error al modificar ticket: ' + data.error
+          : 'Error al registrar lavado: ' + data.error;
+        mostrarAlerta('❌ ' + errorMsg, 'danger');
       }
     })
     .catch(error => {
       console.error('Error:', error);
-      mostrarAlerta('❌ Error al registrar lavado: ' + error.message, 'danger');
+      const errorMsg = esModificacion 
+        ? 'Error al modificar ticket: ' + error.message
+        : 'Error al registrar lavado: ' + error.message;
+      mostrarAlerta('❌ ' + errorMsg, 'danger');
     });
   }
 }
@@ -1206,25 +1363,42 @@ function enviarFormularioLavadoModal() {
 // Event listener para cuando se abre el modal
 document.addEventListener('show.bs.modal', function(event) {
   if (event.target && event.target.id === 'modalLavado') {
-    console.log('📋 Modal de lavado abierto, cargando servicios...');
+    console.log('📋 Modal de lavado abierto, verificando modo...');
     
-    // Limpiar valores anteriores
-    const precioBaseResumen = document.getElementById('precio-base-resumen');
-    const precioExtraResumen = document.getElementById('precio-extra-resumen');
-    const precioTotalResumen = document.getElementById('precio-total-resumen');
+    const formLavadoModal = document.getElementById('form-lavado-modal');
+    const esModificacion = formLavadoModal && formLavadoModal.hasAttribute('data-modificacion');
     
-    if (precioBaseResumen) precioBaseResumen.textContent = '$0';
-    if (precioExtraResumen) precioExtraResumen.textContent = '$0';
-    if (precioTotalResumen) precioTotalResumen.textContent = '$0';
+    console.log('🔍 Es modificación:', esModificacion);
     
-    // Cargar servicios
-    cargarServiciosEnModalCompleto();
-    
-    // Configurar event listeners con un pequeño delay para asegurar que el DOM esté listo
-    setTimeout(() => {
-      inicializarEventListenersModalLavado();
-      calcularPrecioTotalModal();
-    }, 100);
+    if (!esModificacion) {
+      console.log('📋 Modal abierto normalmente, cargando servicios...');
+      
+      // Limpiar valores anteriores
+      const precioBaseResumen = document.getElementById('precio-base-resumen');
+      const precioExtraResumen = document.getElementById('precio-extra-resumen');
+      const precioTotalResumen = document.getElementById('precio-total-resumen');
+      
+      if (precioBaseResumen) precioBaseResumen.textContent = '$0';
+      if (precioExtraResumen) precioExtraResumen.textContent = '$0';
+      if (precioTotalResumen) precioTotalResumen.textContent = '$0';
+      
+      // Limpiar atributos de modificación
+      if (formLavadoModal) {
+        formLavadoModal.removeAttribute('data-modificacion');
+        formLavadoModal.removeAttribute('data-id-ingreso');
+      }
+      
+      // Cargar servicios
+      cargarServiciosEnModalCompleto();
+      
+      // Configurar event listeners con un pequeño delay para asegurar que el DOM esté listo
+      setTimeout(() => {
+        inicializarEventListenersModalLavado();
+        calcularPrecioTotalModal();
+      }, 100);
+    } else {
+      console.log('🔧 Modal abierto en modo modificación, saltando carga automática...');
+    }
   }
 });
 
@@ -1266,12 +1440,20 @@ document.addEventListener('show.bs.modal', function(event) {
 function registrarIngresoEstacionamiento(patente, servicioId, nombreCliente) {
   console.log('🅿️ Registrando estacionamiento:', { patente, servicioId, nombreCliente });
   
+  // Mapear el ID del servicio al nombre del servicio
+  let nombreServicio = '';
+  if (servicioId === '1') {
+    nombreServicio = 'estacionamiento x minuto';
+  } else if (servicioId === '2') {
+    nombreServicio = 'Lavado';
+  }
+  
   const formData = new FormData();
   formData.append('patente', patente);
-  formData.append('idtipo_ingreso', servicioId);
-  formData.append('cliente', nombreCliente);
-  
-  fetch('./api/ingresar.php', {
+  formData.append('tipo_servicio', nombreServicio);
+  formData.append('nombre_cliente', nombreCliente);
+
+  fetch('./api/registrar-ingreso.php', {
     method: 'POST',
     body: formData
   })
