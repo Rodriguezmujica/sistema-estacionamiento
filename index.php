@@ -101,8 +101,8 @@ $rol = $_SESSION['rol'];
                 </label>
                 <select class="form-select" id="tipo-servicio" required>
                   <option value="">Seleccionar servicio...</option>
-                  <option value="1">Estacionamiento por minuto</option>
-                  <option value="2">Lavado</option>
+                  <option value="18">Estacionamiento x minuto</option>
+                  <option value="lavado">Lavado</option>
                 </select>
               </div>
 
@@ -152,28 +152,20 @@ $rol = $_SESSION['rol'];
           </div>
           <div class="card-body">
             <form id="form-cobro-salida" class="mb-3">
-              <label for="patente-cobro" class="form-label">
-                <i class="fas fa-car"></i> Patente del Vehículo
-              </label>
+              <label for="patente-cobro" class="form-label"><i class="fas fa-car"></i> Patente del Vehículo</label>
               <div class="input-group">
-                <input type="text" class="form-control form-control-lg text-uppercase" 
-                       id="patente-cobro" maxlength="6" placeholder="ABC123" required>
-                <button type="submit" class="btn btn-primary" id="btn-calcular-cobro">
-                  Calcular
-                </button>
+                <input type="text" class="form-control form-control-lg text-uppercase" id="patente-cobro" maxlength="6" placeholder="ABC123" required>
+                <button type="submit" class="btn btn-primary" id="btn-calcular-cobro">Calcular</button>
               </div>
             </form>
 
             <!-- Resultado del cálculo -->
-            <div id="resultado-cobro" class="alert alert-info d-none">
-              <strong>Total a pagar: </strong>
-              <span id="total-a-pagar">$0</span>
-            </div>
+            <div id="resultado-cobro" class="d-none"></div>
 
             <!-- Botones de pago -->
-            <div class="d-grid gap-2">
+            <div class="d-grid gap-2 mt-3">
               <button class="btn btn-success btn-lg" id="btn-cobrar-ticket" disabled>
-                <i class="fas fa-money-bill"></i> Cobrar e Imprimir Ticket
+                <i class="fas fa-money-bill"></i> Cobrar en Efectivo
               </button>
               <button class="btn btn-info btn-lg" id="btn-pagar-tuu" disabled>
                 <i class="fas fa-credit-card"></i> Pagar con TUU
@@ -242,7 +234,7 @@ $rol = $_SESSION['rol'];
                 <i class="fas fa-car"></i> Patente
               </label>
               <input type="text" class="form-control text-uppercase" id="patente-lavado-modal" 
-                     maxlength="6" placeholder="ABC123" required readonly>
+                     maxlength="6" placeholder="ABC123" required disabled>
               <div class="form-text">
                 <i class="fas fa-lock text-muted"></i> Prellenada desde el dashboard
               </div>
@@ -471,7 +463,19 @@ $rol = $_SESSION['rol'];
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="./JS/Script.js"></script>
+  
+  <!-- Scripts de la aplicación -->
+  <!-- main.js siempre primero -->
+  <script src="./JS/main.js"></script> 
+  
+  <!-- Módulos específicos para esta página -->
+  <script src="./JS/ingreso.js"></script>
+  <script src="./JS/reporte.js"></script>
+  <script src="./JS/cobro.js"></script>
+  <script src="./JS/modal-lavado.js"></script>
   <script src="./JS/modal-modificar-ticket.js"></script>
+  
+  <!-- El Script.js ahora es solo el orquestador -->
+  <script src="./JS/Script.js"></script>
 </body>
 </html>

@@ -15,25 +15,23 @@ if ($conn->connect_error) {
 }
 
 $patente = strtoupper(trim($_POST['patente'] ?? ''));
-$tipo_servicio = $_POST['tipo_servicio'] ?? '';
-$nombre_cliente = $_POST['nombre_cliente'] ?? '';
-// Si tienes usuario en sesión, puedes usar $_SESSION['usuario']
-$usuario = $_POST['usuario'] ?? null;
+$idtipo_ingreso = intval($_POST['tipo_servicio'] ?? 0);
+$nombre_cliente = trim($_POST['nombre_cliente'] ?? '');
 
-if (!$patente || !$tipo_servicio) {
+if (!$patente || !$idtipo_ingreso) {
     echo json_encode(['success' => false, 'error' => 'Datos incompletos']);
     exit;
 }
 
-// Buscar idtipo_ingreso según el tipo de servicio
-$stmt = $conn->prepare('SELECT idtipo_ingresos FROM tipo_ingreso WHERE nombre_servicio = ? LIMIT 1');
-$stmt->bind_param('s', $tipo_servicio);
+// Verificar que el tipo de servicio existe
+$stmt = $conn->prepare('SELECT idtipo_ingresos FROM tipo_ingreso WHERE idtipo_ingresos = ? LIMIT 1');
+$stmt->bind_param('i', $idtipo_ingreso);
 $stmt->execute();
-$stmt->bind_result($idtipo_ingreso);
+$stmt->bind_result($id_existe);
 $stmt->fetch();
 $stmt->close();
 
-if (!$idtipo_ingreso) {
+if (!$id_existe) {
     echo json_encode(['success' => false, 'error' => 'Tipo de servicio no válido']);
     exit;
 }

@@ -25,6 +25,26 @@ $fecha_salida = date('Y-m-d H:i:s');
 $conexion->begin_transaction();
 
 try {
+    // 🔍 Verificar tipo de ingreso
+    $sql_tipo = "SELECT idtipo_ingreso FROM ingresos WHERE idautos_estacionados = ?";
+    $stmt_tipo = $conexion->prepare($sql_tipo);
+    $stmt_tipo->bind_param("i", $id_ingreso);
+    $stmt_tipo->execute();
+    $result_tipo = $stmt_tipo->get_result();
+    $tipo = $result_tipo->fetch_assoc();
+    $stmt_tipo->close();
+
+    if ($tipo && intval($tipo['idtipo_ingreso']) === 1) {
+        // ⚡ Si es "Error de ingreso"
+        $total = 1; // forzar total fijo
+        // limpiar extras de lavados_pendientes
+        $sql_delete = "DELETE FROM lavados_pendientes WHERE id_ingreso = ?";
+        $stmt_delete = $conexion->prepare($sql_delete);
+        $stmt_delete->bind_param("i", $id_ingreso);
+        $stmt_delete->execute();
+        $stmt_delete->close();
+    }
+
     // 1. Insertar en tabla salidas
     $sql_salida = "INSERT INTO salidas (id_ingresos, fecha_salida, total) VALUES (?, ?, ?)";
     $stmt_salida = $conexion->prepare($sql_salida);
@@ -61,4 +81,3 @@ try {
 
 $conexion->close();
 ?>
-

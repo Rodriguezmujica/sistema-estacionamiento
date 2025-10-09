@@ -129,7 +129,7 @@
       </div>
       <div class="card-body">
         <div class="table-responsive">
-          <table class="table table-hover mb-0">
+          <table class="table table-hover mb-0" id="tabla-reporte">
             <thead class="table-dark">
               <tr>
                 <th><i class="fas fa-car"></i> Patente</th>
@@ -139,7 +139,7 @@
                 <th><i class="fas fa-soap"></i> Lavado</th>
               </tr>
             </thead>
-            <tbody id="tabla-reporte">
+            <tbody>
               <tr>
                 <td colspan="5" class="text-center text-muted py-4">
                   <i class="fas fa-spinner fa-spin"></i> Cargando servicios activos...
@@ -151,32 +151,94 @@
       </div>
     </div>
 
-    <!-- ÚLTIMOS INGRESOS -->
+    <!-- FILTRO POR FECHAS -->
     <div class="card border-info shadow-sm">
       <div class="card-header bg-info text-white">
         <h4 class="mb-0">
-          <i class="fas fa-history"></i> Últimos Ingresos Registrados
+          <i class="fas fa-calendar-alt"></i> Consulta por Rango de Fechas
         </h4>
       </div>
       <div class="card-body">
+        <!-- Controles de fecha -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label for="fecha-desde" class="form-label">
+              <i class="fas fa-calendar-plus"></i> Desde:
+            </label>
+            <input type="date" class="form-control" id="fecha-desde" value="">
+          </div>
+          <div class="col-md-4">
+            <label for="fecha-hasta" class="form-label">
+              <i class="fas fa-calendar-minus"></i> Hasta:
+            </label>
+            <input type="date" class="form-control" id="fecha-hasta" value="">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">&nbsp;</label>
+            <div>
+              <button class="btn btn-primary w-100" onclick="consultarPorFechas()">
+                <i class="fas fa-search"></i> Consultar
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Resumen de consulta -->
+        <div class="row g-3 mb-3" id="resumen-fechas" style="display: none;">
+          <div class="col-md-6">
+            <div class="alert alert-success mb-0">
+              <i class="fas fa-chart-line"></i> 
+              <strong>Total Servicios:</strong> <span id="total-servicios-fecha">0</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="alert alert-success mb-0">
+              <i class="fas fa-dollar-sign"></i> 
+              <strong>Total Ingresos:</strong> $<span id="total-ingresos-fecha">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla de categorías -->
         <div class="table-responsive">
-          <table class="table table-striped mb-0" id="tabla-ingresos">
+          <table class="table table-striped mb-0">
             <thead class="table-secondary">
               <tr>
-                <th>#</th>
-                <th><i class="fas fa-car"></i> Patente</th>
-                <th><i class="fas fa-calendar"></i> Fecha Ingreso</th>
-                <th><i class="fas fa-cog"></i> Servicio</th>
+                <th><i class="fas fa-tags"></i> Categoría</th>
+                <th><i class="fas fa-list"></i> Tipos de Servicios</th>
+                <th><i class="fas fa-chart-bar"></i> Cantidad</th>
+                <th><i class="fas fa-dollar-sign"></i> Total</th>
+                <th><i class="fas fa-eye"></i> Ver Detalles</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="tabla-fechas-body">
               <tr>
-                <td colspan="4" class="text-center text-muted py-4">
-                  <i class="fas fa-spinner fa-spin"></i> Cargando últimos ingresos...
+                <td colspan="5" class="text-center text-muted py-4">
+                  <i class="fas fa-info-circle"></i> Selecciona un rango de fechas para consultar
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
+        
+        <!-- Tabla de detalles (oculta por defecto) -->
+        <div id="detalles-container" style="display: none;" class="mt-3">
+          <h6><i class="fas fa-list-alt"></i> Detalles de Servicios</h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+              <thead class="table-dark">
+                <tr>
+                  <th>#</th>
+                  <th><i class="fas fa-car"></i> Patente</th>
+                  <th><i class="fas fa-calendar"></i> Fecha Salida</th>
+                  <th><i class="fas fa-cog"></i> Servicio</th>
+                  <th><i class="fas fa-dollar-sign"></i> Total</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-detalles-body">
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
