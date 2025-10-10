@@ -101,8 +101,8 @@ $rol = $_SESSION['rol'];
                 </label>
                 <select class="form-select" id="tipo-servicio" required>
                   <option value="">Seleccionar servicio...</option>
-                  <option value="18">Estacionamiento x minuto</option>
-                  <option value="lavado">Lavado</option>
+                  <option value="1">Estacionamiento por minuto</option>
+                  <option value="2">Lavado</option>
                 </select>
               </div>
 
@@ -115,7 +115,24 @@ $rol = $_SESSION['rol'];
               </div>
 
               <button type="submit" class="btn btn-primary btn-lg w-100">
-                <i id="btnRegistrarIngreso" class="fas fa-ticket-alt"></i> Registrar Ingreso
+                <i id="btnRegistrarIngreso" class="fas fa-ticket-alt"></i> Registrar Ingreso    <!-- ... tu contenido HTML ... -->
+                
+                    <!-- Scripts de la aplicación -->
+                    <!-- main.js siempre primero -->
+                    <script src="JS/main.js"></script> 
+                    
+                    <!-- Módulos específicos para esta página -->
+                    <script src="JS/ingreso.js"></script>
+                    <script src="JS/reporte.js"></script>
+                    <script src="JS/cobro.js"></script>
+                    <script src="JS/modal-lavado.js"></script>
+                    <script src="JS/modal-modificar-ticket.js"></script>
+                    
+                    <!-- El Script.js ahora es solo el orquestador (opcional si prefieres inicializar en cada archivo) -->
+                    <script src="JS/Script.js"></script>
+                </body>
+                </html>
+                
               </button>
             </form>
 
@@ -463,19 +480,7 @@ $rol = $_SESSION['rol'];
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <!-- Scripts de la aplicación -->
-  <!-- main.js siempre primero -->
-  <script src="./JS/main.js"></script> 
-  
-  <!-- Módulos específicos para esta página -->
-  <script src="./JS/ingreso.js"></script>
-  <script src="./JS/reporte.js"></script>
-  <script src="./JS/cobro.js"></script>
-  <script src="./JS/modal-lavado.js"></script>
-  <script src="./JS/modal-modificar-ticket.js"></script>
-  
-  <!-- El Script.js ahora es solo el orquestador -->
   <script src="./JS/Script.js"></script>
+  <script src="./JS/modal-modificar-ticket.js"></script>
 </body>
 </html>

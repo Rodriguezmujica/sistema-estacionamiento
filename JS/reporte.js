@@ -121,12 +121,20 @@ function cargarTablaActivos(servicios) {
 }
 
 function consultarPorFechas() {
-  const fechaDesde = document.getElementById('fecha-desde').value;
-  const fechaHasta = document.getElementById('fecha-hasta').value;
+  let fechaDesde = document.getElementById('fecha-desde').value;
+  let fechaHasta = document.getElementById('fecha-hasta').value;
   
+  // Si el usuario no elige fechas, tomamos el día anterior
   if (!fechaDesde || !fechaHasta) {
-    alert('Por favor selecciona ambas fechas');
-    return;
+    const ayer = new Date();
+    ayer.setDate(ayer.getDate() - 1);
+    
+    const yyyy = ayer.getFullYear();
+    const mm = String(ayer.getMonth() + 1).padStart(2, '0');
+    const dd = String(ayer.getDate()).padStart(2, '0');
+    
+    fechaDesde = `${yyyy}-${mm}-${dd}`;
+    fechaHasta = `${yyyy}-${mm}-${dd}`;
   }
   
   if (new Date(fechaDesde) > new Date(fechaHasta)) {
@@ -226,7 +234,7 @@ function verDetallesCategoria(categoria) {
       <tr>
         <td>${index + 1}</td>
         <td>${servicio.patente}</td>
-        <td>${new Date(servicio.fecha_salida).toLocaleString('es-CL')}</td>
+        <td>${new Date(servicio.fecha_salida_real || servicio.fecha_salida).toLocaleString('es-CL')}</td>
         <td>${servicio.nombre_servicio}</td>
         <td class="text-end">$${parseInt(servicio.total).toLocaleString('es-CL')}</td>
       </tr>

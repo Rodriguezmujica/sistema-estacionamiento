@@ -13,13 +13,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultadoCobro = document.getElementById('resultado-cobro');
   const btnCobrarTicket = document.getElementById('btn-cobrar-ticket');
   const btnPagarTuu = document.getElementById('btn-pagar-tuu');
+  
+  let modalPagoTUU = null;
+  const modalPagoTUUElement = document.getElementById('modalPagoTUU');
+  if (modalPagoTUUElement) {
+    modalPagoTUU = new bootstrap.Modal(modalPagoTUUElement);
+  } else {
+    console.error('❌ El elemento HTML del modal de pago TUU (#modalPagoTUU) no fue encontrado. Asegúrate de que esté en tu archivo HTML.');
+  }
   let ticketCobroActual = null;
 
   // Buscar ticket al enviar formulario
   formCobroSalida.addEventListener('submit', async (e) => {
     e.preventDefault();
     const patente = inputPatenteCobro.value.trim().toUpperCase();
-    if (!patente) {
+    if (patente.length < 6) {
       mostrarAlerta('Ingrese una patente válida', 'warning');
       return;
     }
@@ -28,12 +36,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Acción para cobrar en efectivo
   if (btnCobrarTicket) {
-    btnCobrarTicket.addEventListener('click', () => procesarPago('EFECTIVO'));
+    btnCobrarTicket.addEventListener('click', () => {
+      const esErrorIngreso = ticketCobroActual.tipo_calculo === 'Error de ingreso' || ticketCobroActual.nombre_servicio === 'Error de ingreso';
+      const totalFinal = esErrorIngreso ? 1 : ticketCobroActual.total;
+      const confirmar = confirm(`¿Confirmar cobro en EFECTIVO de $${totalFinal.toLocaleString('es-CL')} para la patente ${ticketCobroActual.patente}?`);
+      if (confirmar) {
+        procesarPago('EFECTIVO');
+      }
+    });
   }
 
   // Acción para pagar con TUU
   if (btnPagarTuu) {
-    btnPagarTuu.addEventListener('click', () => procesarPago('TUU'));
+    btnPagarTuu.addEventListener('click', () => {
+      if (!ticketCobroActual) {
+        mostrarAlerta('⚠️ Primero debe buscar un ticket para cobrar.', 'warning');
+        return;
+      }
+      
+      const esErrorIngreso = ticketCobroActual.tipo_calculo === 'Error de ingreso' || ticketCobroActual.nombre_servicio === 'Error de ingreso';
+      const totalFinal = esErrorIngreso ? 1 : ticketCobroActual.total;
+
+      // Llenar datos del modal y mostrarlo
+      document.getElementById('patente-modal-tuu').textContent = ticketCobroActual.patente;
+      document.getElementById('total-modal-tuu').textContent = `$${totalFinal.toLocaleString('es-CL')}`;
+      document.getElementById('spinner-pago-tuu').classList.add('d-none'); // Ocultar spinner
+      if (modalPagoTUU) modalPagoTUU.show();
+    });
   }
 
   // --- FUNCIONES AUXILIARES ---
@@ -98,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resultadoCobro.classList.remove('d-none');
   }
 
-  async function procesarPago(metodo) {
+  async function procesarPago(metodo, opciones = {}) {
     if (!ticketCobroActual) {
       mostrarAlerta('⚠️ No hay ticket para cobrar', 'warning');
       return;
@@ -107,14 +136,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const esErrorIngreso = ticketCobroActual.tipo_calculo === 'Error de ingreso' || ticketCobroActual.nombre_servicio === 'Error de ingreso';
     const totalFinal = esErrorIngreso ? 1 : ticketCobroActual.total;
 
-    if (metodo === 'TUU') {
-      const confirmar = confirm(`¿Procesar pago de $${totalFinal.toLocaleString('es-CL')} con TUU para la patente ${ticketCobroActual.patente}?`);
-      if (!confirmar) return;
+    if (metodo !== 'TUU') { // Para efectivo, el flujo es más directo
+      mostrarAlerta(`⏳ Procesando pago con ${metodo}...`, 'info');
+      btnCobrarTicket.disabled = true;
+      btnPagarTuu.disabled = true;
     }
-
-    mostrarAlerta(`⏳ Procesando pago con ${metodo}...`, 'info');
-    btnCobrarTicket.disabled = true;
-    btnPagarTuu.disabled = true;
 
     try {
       let dataPago;
@@ -125,7 +151,11 @@ document.addEventListener('DOMContentLoaded', () => {
           body: new URLSearchParams({
             id_ingreso: ticketCobroActual.id,
             patente: ticketCobroActual.patente,
-            total: totalFinal
+            total: totalFinal,
+            metodo_tarjeta: opciones.metodoTarjeta || 'desconocido',
+            tipo_documento: opciones.tipoDocumento || 'boleta',
+            rut_cliente: opciones.rutCliente || '',
+            toast_id: opciones.toastId || '' // Enviamos el ID del toast para actualizarlo
           })
         });
         dataPago = await responseTUU.json();
@@ -144,25 +174,70 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (dataPago.success) {
+        if (metodo === 'TUU') {
+          actualizarToast(opciones.toastId, `✅ Pago Aprobado para ${ticketCobroActual.patente}`, 'success');
+        }
         await finalizarCobroExitoso(metodo, totalFinal, dataPago);
       } else {
-        mostrarAlerta(`❌ Pago rechazado: ${dataPago.error || 'Error desconocido'}`, 'danger');
+        const mensajeError = `❌ Pago Rechazado para ${ticketCobroActual.patente}: ${dataPago.error || 'Error desconocido'}`;
+        if (metodo === 'TUU') actualizarToast(opciones.toastId, mensajeError, 'danger');
+        else mostrarAlerta(mensajeError, 'danger');
         btnCobrarTicket.disabled = false;
         btnPagarTuu.disabled = false;
       }
     } catch (error) {
-      mostrarAlerta(`❌ Error al procesar pago con ${metodo}: ${error.message}`, 'danger');
+      // Si el error es de parseo JSON, es muy probable que sea un error de PHP.
+      if (error instanceof SyntaxError) {
+        mostrarAlerta(`❌ Error en la respuesta del servidor. Revisa los logs de PHP para más detalles.`, 'danger');
+        console.error("El servidor no devolvió un JSON válido. Probablemente un error de PHP.", error);
+      } else {
+        mostrarAlerta(`❌ Error al procesar pago con ${metodo}: ${error.message}`, 'danger');
+      }
       btnCobrarTicket.disabled = false;
       btnPagarTuu.disabled = false;
+      if (metodo === 'TUU') {
+        actualizarToast(opciones.toastId, `❌ Error de Conexión para ${ticketCobroActual.patente}`, 'danger');
+        if (modalPagoTUU) modalPagoTUU.hide();
+      }
     }
   }
+  
+  // Event listeners para los botones dentro del modal TUU
+  document.querySelectorAll('#modalPagoTUU [data-metodo]').forEach(button => {
+    button.addEventListener('click', (e) => {
+      const metodoTarjeta = e.currentTarget.getAttribute('data-metodo');
+      const tipoDocumento = document.querySelector('input[name="tipoDocumento"]:checked').value;
+      let rutCliente = null;
+
+      // Validar y obtener RUT si es factura
+      if (tipoDocumento === 'factura') {
+        rutCliente = document.getElementById('rut-factura').value.trim();
+        if (!rutCliente) {
+          mostrarAlerta('Por favor, ingrese el RUT para la factura.', 'warning');
+          return; // Detiene el proceso si el RUT es requerido y está vacío
+        }
+      }
+
+      // Ocultar el modal inmediatamente
+      if (modalPagoTUU) modalPagoTUU.hide();
+
+      // Crear un ID único para la notificación "toast"
+      const toastId = `toast-${Date.now()}`;
+      const mensajeToast = `Esperando pago para patente <strong>${ticketCobroActual.patente}</strong> en la máquina TUU...`;
+      crearToast(toastId, mensajeToast);
+
+      // Llama a la función de procesamiento de pago
+      procesarPago('TUU', { metodoTarjeta, tipoDocumento, rutCliente, toastId }); 
+    });
+  });
 
   async function finalizarCobroExitoso(metodo, total, dataPago) {
     let mensaje = `✅ Pago con ${metodo} de $${total.toLocaleString('es-CL')} procesado correctamente.`;
     if (metodo === 'TUU' && dataPago.modo_prueba) {
       mensaje += ' (MODO PRUEBA)';
-    }
+    } else if (metodo !== 'TUU') {
     mostrarAlerta(mensaje, 'success');
+    }
 
     // Intentar imprimir ticket
     try {
@@ -197,6 +272,66 @@ document.addEventListener('DOMContentLoaded', () => {
     if (formCobroSalida) formCobroSalida.reset();
     if (btnCobrarTicket) btnCobrarTicket.disabled = true;
     if (btnPagarTuu) btnPagarTuu.disabled = true;
+    
+    // Resetear modal
+    document.querySelectorAll('#modalPagoTUU [data-metodo]').forEach(btn => btn.disabled = false);
+    const spinner = document.getElementById('spinner-pago-tuu');
+    if (spinner) spinner.classList.add('d-none');
+    const docBoleta = document.getElementById('docBoleta');
+    if (docBoleta) docBoleta.checked = true;
+    
+    // Ocultar y limpiar campo RUT
+    const campoRut = document.getElementById('campo-rut-factura');
+    if (campoRut) campoRut.classList.add('d-none');
+    const inputRut = document.getElementById('rut-factura');
+    if (inputRut) inputRut.value = '';
+
     if (inputPatenteCobro) inputPatenteCobro.focus();
+  }
+
+  // Lógica para mostrar/ocultar campo RUT en el modal
+  document.querySelectorAll('input[name="tipoDocumento"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      document.getElementById('campo-rut-factura').classList.toggle('d-none', e.target.value !== 'factura');
+    });
+  });
+
+  // --- FUNCIONES PARA NOTIFICACIONES TOAST ---
+
+  function crearToast(id, mensaje) {
+    const toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) return;
+
+    const toastHTML = `
+      <div id="${id}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-header">
+          <i class="fas fa-credit-card me-2"></i>
+          <strong class="me-auto">Pago con TUU</strong>
+          <small>En progreso</small>
+        </div>
+        <div class="toast-body d-flex align-items-center">
+          <div class="spinner-border spinner-border-sm me-2" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <span>${mensaje}</span>
+        </div>
+      </div>
+    `;
+    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+    const toastElement = document.getElementById(id);
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+  }
+
+  function actualizarToast(id, mensaje, estado) {
+    const toastElement = document.getElementById(id);
+    if (!toastElement) return;
+
+    const toastBody = toastElement.querySelector('.toast-body');
+    toastBody.innerHTML = mensaje; // Reemplaza el spinner y el texto
+    toastElement.classList.add(estado === 'success' ? 'bg-success-subtle' : 'bg-danger-subtle');
+    
+    // Ocultar el toast después de 10 segundos
+    setTimeout(() => bootstrap.Toast.getInstance(toastElement)?.hide(), 10000);
   }
 });

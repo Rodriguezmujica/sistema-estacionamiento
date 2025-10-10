@@ -8,30 +8,32 @@ try {
     // Obtener parámetros de fecha
     $fecha_desde = $_GET['fecha_desde'] ?? '';
     $fecha_hasta = $_GET['fecha_hasta'] ?? '';
-    
-    // Validar fechas
+
+    // Si no llegan fechas, usamos el día anterior como fallback
     if (empty($fecha_desde) || empty($fecha_hasta)) {
-        throw new Exception('Debe proporcionar fecha desde y fecha hasta');
+        $ayer = date('Y-m-d', strtotime('-1 day'));
+        $fecha_desde = $ayer;
+        $fecha_hasta = $ayer;
     }
-    
-    // Validar formato de fechas
-    $fecha_desde_obj = DateTime::createFromFormat('Y-m-d', $fecha_desde);
-    $fecha_hasta_obj = DateTime::createFromFormat('Y-m-d', $fecha_hasta);
-    
-    if (!$fecha_desde_obj || !$fecha_hasta_obj) {
-        throw new Exception('Formato de fecha inválido. Use YYYY-MM-DD');
-    }
-    
+
     // Asegurar que fecha_hasta incluya todo el día
-    $fecha_hasta_completa = $fecha_hasta . ' 23:59:59';
-    
+    $fecha_desde_completa = $fecha_desde . ' 00:00:00';
+    $fecha_hasta_completa = $fecha_hasta . ' 23:59:59';    
+
     // 1. Consulta de resumen (total servicios e ingresos)
+    // Cambiamos la lógica para empezar desde 'ingresos' y hacer LEFT JOIN a 'salidas'
     $sql_resumen = "SELECT 
-                        COUNT(s.id_ingresos) as total_servicios,
-                        SUM(s.total) as total_ingresos
-                    FROM salidas s
-                    WHERE DATE(s.fecha_salida) BETWEEN '$fecha_desde' AND '$fecha_hasta'
-                    AND s.fecha_salida > '1900-01-01'";
+                        COUNT(i.idautos_estacionados) as total_servicios,
+                        SUM(COALESCE(s.total, ti.precio, 0)) as total_ingresos
+                    FROM ingresos i
+                    LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
+                    JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
+                    WHERE i.salida = 1 
+                    AND CASE 
+                        WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                        THEN i.fecha_ingreso 
+                        ELSE s.fecha_salida 
+                    END BETWEEN '$fecha_desde_completa' AND '$fecha_hasta_completa'";
     
     $result_resumen = $conn->query($sql_resumen);
     if (!$result_resumen) {
@@ -50,15 +52,20 @@ try {
                             WHEN ti.nombre_servicio LIKE '%PROMOCION%' THEN 'Promociones'
                             ELSE 'Otros Servicios'
                         END as categoria,
-                        COUNT(s.id_ingresos) as cantidad_servicios,
-                        SUM(s.total) as total_categoria,
-                        GROUP_CONCAT(DISTINCT ti.nombre_servicio SEPARATOR ', ') as tipos_servicios
-                    FROM salidas s
-                    JOIN ingresos i ON s.id_ingresos = i.idautos_estacionados
+                        COUNT(i.idautos_estacionados) as cantidad_servicios,
+                        SUM(COALESCE(s.total, ti.precio, 0)) as total_categoria,
+                        GROUP_CONCAT(DISTINCT ti.nombre_servicio ORDER BY ti.nombre_servicio SEPARATOR ', ') as tipos_servicios                    
+                    FROM ingresos i
+                    LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
                     JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
-                    WHERE DATE(s.fecha_salida) BETWEEN '$fecha_desde' AND '$fecha_hasta'
-                    AND s.fecha_salida > '1900-01-01'
+                    WHERE i.salida = 1 
+                    AND CASE 
+                        WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                        THEN i.fecha_ingreso 
+                        ELSE s.fecha_salida 
+                    END BETWEEN '$fecha_desde_completa' AND '$fecha_hasta_completa'
                     GROUP BY categoria
+                    HAVING cantidad_servicios > 0
                     ORDER BY total_categoria DESC";
     
     $result_agrupado = $conn->query($sql_agrupado);
@@ -81,17 +88,30 @@ try {
                             WHEN ti.nombre_servicio LIKE '%PROMOCION%' THEN 'Promociones'
                             ELSE 'Otros Servicios'
                         END as categoria,
-                        s.id_ingresos,
+                        i.idautos_estacionados as id_ingresos,
                         i.patente,
                         ti.nombre_servicio,
-                        s.fecha_salida,
-                        s.total
-                    FROM salidas s
-                    JOIN ingresos i ON s.id_ingresos = i.idautos_estacionados
+                        CASE 
+                            WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                            THEN i.fecha_ingreso 
+                            ELSE s.fecha_salida 
+                        END as fecha_salida,
+                        CASE 
+                            WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                            THEN i.fecha_ingreso 
+                            ELSE s.fecha_salida 
+                        END as fecha_salida_real,
+                        COALESCE(s.total, ti.precio, 0) as total
+                    FROM ingresos i
+                    LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
                     JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
-                    WHERE DATE(s.fecha_salida) BETWEEN '$fecha_desde' AND '$fecha_hasta'
-                    AND s.fecha_salida > '1900-01-01'
-                    ORDER BY s.fecha_salida DESC";
+                    WHERE i.salida = 1 
+                    AND CASE 
+                        WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                        THEN i.fecha_ingreso 
+                        ELSE s.fecha_salida 
+                    END BETWEEN '$fecha_desde_completa' AND '$fecha_hasta_completa'
+                    ORDER BY fecha_salida DESC";
     
     $result_detalle = $conn->query($sql_detalle);
     if (!$result_detalle) {
