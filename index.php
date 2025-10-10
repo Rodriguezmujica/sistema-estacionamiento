@@ -116,23 +116,6 @@ $rol = $_SESSION['rol'];
 
               <button type="submit" class="btn btn-primary btn-lg w-100">
                 <i id="btnRegistrarIngreso" class="fas fa-ticket-alt"></i> Registrar Ingreso    <!-- ... tu contenido HTML ... -->
-                
-                    <!-- Scripts de la aplicación -->
-                    <!-- main.js siempre primero -->
-                    <script src="JS/main.js"></script> 
-                    
-                    <!-- Módulos específicos para esta página -->
-                    <script src="JS/ingreso.js"></script>
-                    <script src="JS/reporte.js"></script>
-                    <script src="JS/cobro.js"></script>
-                    <script src="JS/modal-lavado.js"></script>
-                    <script src="JS/modal-modificar-ticket.js"></script>
-                    
-                    <!-- El Script.js ahora es solo el orquestador (opcional si prefieres inicializar en cada archivo) -->
-                    <script src="JS/Script.js"></script>
-                </body>
-                </html>
-                
               </button>
             </form>
 
@@ -540,7 +523,14 @@ $rol = $_SESSION['rol'];
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="./JS/Script.js"></script>
-  <script src="./JS/modal-modificar-ticket.js"></script>
+  <!-- main.js siempre primero para funciones globales como el reloj y las alertas -->
+  <script src="JS/main.js"></script> 
+
+  <!-- Módulos específicos para el Dashboard -->
+  <script src="JS/ingreso.js"></script>
+  <script src="JS/cobro.js"></script>
+  <script src="JS/reporte.js"></script>
+  <script src="JS/modal-lavado.js"></script>
+  <script src="JS/modal-modificar-ticket.js"></script>
 </body>
 </html>

@@ -125,14 +125,20 @@
       </div>
     </div>
 
-    <!-- REGISTRO DE NUEVO LAVADO -->
+    <!-- REGISTRO O MODIFICACIÓN DE LAVADO -->
     <div class="card border-success shadow-sm mb-4">
       <div class="card-header bg-success text-white">
         <h4 class="mb-0">
-          <i class="fas fa-plus-circle"></i> Registrar Nuevo Servicio de Lavado
+          <i class="fas fa-edit"></i> Registrar o Modificar Servicio de Lavado
         </h4>
       </div>
       <div class="card-body">
+        <!-- Alerta de ticket existente -->
+        <div id="alerta-ticket-existente" class="alert alert-info d-none mb-3">
+          <i class="fas fa-info-circle"></i>
+          <span id="mensaje-ticket-existente"></span>
+        </div>
+        
         <form id="form-lavado">
           <div class="row g-3">
             <div class="col-md-3">
@@ -141,6 +147,9 @@
               </label>
               <input type="text" class="form-control text-uppercase" id="patente-lavado" 
                      maxlength="6" placeholder="ABC123" required>
+              <button type="button" class="btn btn-sm btn-outline-primary mt-1 w-100" id="btn-verificar-patente">
+                <i class="fas fa-search"></i> Verificar Ticket
+              </button>
             </div>
 
             <div class="col-md-3">

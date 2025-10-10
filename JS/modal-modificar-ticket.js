@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const inputTipoActual = document.getElementById('tipo-actual');
   const selectNuevoTipo = document.getElementById('nuevo-tipo');
   const btnGuardar = document.getElementById('btn-guardar-cambio');
+  let ticketEncontrado = null; // Variable para guardar el ticket actual
   
   console.log('Elementos encontrados:', {
     modal: !!modal,
@@ -39,56 +40,21 @@ document.addEventListener('DOMContentLoaded', function() {
     btnGuardar: !!btnGuardar
   });
   
-  // Función para cargar servicios
+  // Función para cargar solo las 3 opciones permitidas
   function cargarServicios() {
-    console.log('📡 Cargando todos los servicios...');
-    fetch('./api/api_todos_servicios.php')
-      .then(res => {
-        console.log('✅ Respuesta servicios:', res.status);
-        return res.json();
-      })
-      .then(servicios => {
-        console.log('📦 Servicios recibidos:', servicios);
-        if (selectNuevoTipo && Array.isArray(servicios)) {
-          selectNuevoTipo.innerHTML = '<option value="">Seleccionar servicio...</option>';
-          
-          // Separar servicios por categoría
-          const estacionamiento = servicios.filter(s => s.nombre_servicio.toLowerCase().includes('estacionamiento'));
-          const lavado = servicios.filter(s => !s.nombre_servicio.toLowerCase().includes('estacionamiento'));
-          
-          // Agregar grupo de Estacionamiento
-          if (estacionamiento.length > 0) {
-            const optgroupEst = document.createElement('optgroup');
-            optgroupEst.label = '🚗 Estacionamiento';
-            estacionamiento.forEach(s => {
-              const option = document.createElement('option');
-              option.value = s.idtipo_ingresos;
-              option.textContent = `${s.nombre_servicio} ($${s.precio || 0})`;
-              optgroupEst.appendChild(option);
-            });
-            selectNuevoTipo.appendChild(optgroupEst);
-          }
-          
-          // Agregar grupo de Lavado
-          if (lavado.length > 0) {
-            const optgroupLav = document.createElement('optgroup');
-            optgroupLav.label = '🧼 Lavado';
-            lavado.forEach(s => {
-              const option = document.createElement('option');
-              option.value = s.idtipo_ingresos;
-              option.textContent = `${s.nombre_servicio} ($${s.precio || 0})`;
-              optgroupLav.appendChild(option);
-            });
-            selectNuevoTipo.appendChild(optgroupLav);
-          }
-          
-          console.log('✅ Servicios cargados en el select (con categorías)');
-        }
-      })
-      .catch(err => {
-        console.error('❌ Error cargando servicios:', err);
-        mostrarAlerta('❌ Error al cargar servicios', 'danger');
-      });
+    console.log('📡 Cargando opciones de modificación...');
+    
+    if (selectNuevoTipo) {
+      // Opciones fijas según especificación
+      selectNuevoTipo.innerHTML = `
+        <option value="">Seleccionar servicio...</option>
+        <option value="18">🅿️ Estacionamiento por minuto</option>
+        <option value="19">❌ Error de ingreso</option>
+        <option value="lavado">🧽 Lavado</option>
+      `;
+      
+      console.log('✅ Opciones cargadas en el select');
+    }
   }
   
   // Cargar servicios cuando se abre el modal
@@ -120,11 +86,14 @@ document.addEventListener('DOMContentLoaded', function() {
           console.log('📊 Datos de API:', data);
           const ticket = data.find(t => t.patente && t.patente.trim().toUpperCase() === patente);
           console.log('🎫 Ticket encontrado:', ticket);
+          ticketEncontrado = ticket; // Guardamos el ticket
           
           if (ticket) {
+            // Mostrar el tipo de servicio actual
             inputTipoActual.value = ticket.tipo_servicio || 'Sin tipo';
             btnGuardar.disabled = false;
             mostrarAlerta('✅ Ticket encontrado correctamente', 'success');
+
           } else {
             inputTipoActual.value = '';
             btnGuardar.disabled = true;
@@ -147,21 +116,56 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('💾 Guardando cambio...');
       
       const patente = inputPatente.value.trim().toUpperCase();
-      const idServicio = selectNuevoTipo.value;
+      const valorSeleccionado = selectNuevoTipo.value;
       
-      if (!patente || !idServicio) {
+      if (!patente || !valorSeleccionado) {
         mostrarAlerta('⚠️ Por favor complete todos los campos', 'warning');
         return;
       }
+
+      // 🎯 LÓGICA DE REDIRECCIÓN SEGÚN ESPECIFICACIÓN
+      // Si el ticket actual es estacionamiento (ID 18) o error de ingreso (ID 19)
+      // Y el usuario selecciona "lavado", redirigir a lavados.html
       
-      console.log('📤 Enviando:', { patente, idServicio });
+      if (ticketEncontrado) {
+        const ticketActualId = ticketEncontrado.idtipo_ingreso || ticketEncontrado.id_tipo_servicio;
+        const esEstacionamientoOError = (ticketActualId == 18 || ticketActualId == 19);
+        const seleccionoLavado = (valorSeleccionado === 'lavado');
+        
+        console.log('🔍 Validación:', {
+          ticketActualId,
+          esEstacionamientoOError,
+          seleccionoLavado
+        });
+        
+        if (esEstacionamientoOError && seleccionoLavado) {
+          mostrarAlerta('🧽 Redirigiendo a la sección de lavados para gestionar este servicio...', 'info');
+          setTimeout(() => {
+            window.location.href = `./secciones/lavados.html?patente=${patente}`;
+          }, 2000);
+          return;
+        }
+      }
+
+      // Si seleccionó "lavado" pero no pudimos determinar el ticket actual
+      if (valorSeleccionado === 'lavado') {
+        mostrarAlerta('🧽 Redirigiendo a la sección de lavados...', 'info');
+        setTimeout(() => {
+          window.location.href = `./secciones/lavados.html?patente=${patente}`;
+        }, 2000);
+        return;
+      }
+
+      // Si llegamos aquí, es una modificación normal (estacionamiento ↔ error)
+      // Procedemos a guardar en la base de datos
+      console.log('📤 Enviando:', { patente, idServicio: valorSeleccionado });
       
       fetch('./api/modificar_ticket.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ 
           patente: patente,
-          id_nuevo_servicio: idServicio
+          id_nuevo_servicio: valorSeleccionado
         })
       })
         .then(res => res.json())
@@ -179,7 +183,12 @@ document.addEventListener('DOMContentLoaded', function() {
               inputTipoActual.value = '';
               selectNuevoTipo.value = '';
               btnGuardar.disabled = true;
-            }, 1500); // Esperar 1.5 seg para que se vea la alerta
+              
+              // Recargar la página para actualizar los datos
+              if (typeof cargarReportesUnificados === 'function') {
+                cargarReportesUnificados();
+              }
+            }, 1500);
             
           } else {
             console.error('❌ Error completo:', data);
@@ -201,4 +210,3 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
 });
-

@@ -1,5 +1,6 @@
 // Variables globales
 let serviciosDisponibles = [];
+let ticketExistenteData = null; // Guarda información del ticket existente
 
 // Función para mostrar alertas
 function mostrarAlerta(mensaje, tipo = 'info') {
@@ -20,6 +21,77 @@ function mostrarAlerta(mensaje, tipo = 'info') {
       alertDiv.remove();
     }
   }, 5000);
+}
+
+// Verificar si viene una patente desde el modal de modificar
+function verificarPatenteURL() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const patenteURL = urlParams.get('patente');
+  
+  if (patenteURL) {
+    document.getElementById('patente-lavado').value = patenteURL;
+    verificarTicketExistente(patenteURL);
+    
+    // Scroll al formulario
+    document.querySelector('#form-lavado').scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+// Verificar si existe un ticket activo para la patente
+function verificarTicketExistente(patente) {
+  if (!patente) {
+    patente = document.getElementById('patente-lavado').value.trim().toUpperCase();
+  }
+  
+  if (!patente) {
+    mostrarAlerta('Ingrese una patente para verificar', 'warning');
+    return;
+  }
+  
+  fetch('../api/verificar-patente.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ patente })
+  })
+    .then(res => res.json())
+    .then(data => {
+      const alertaDiv = document.getElementById('alerta-ticket-existente');
+      const mensajeSpan = document.getElementById('mensaje-ticket-existente');
+      
+      if (data.success && data.existe) {
+        ticketExistenteData = data.registro;
+        const esLavado = data.registro.servicio.toLowerCase().includes('lavado');
+        
+        if (esLavado) {
+          alertaDiv.className = 'alert alert-warning mb-3';
+          mensajeSpan.innerHTML = `
+            <strong>Esta patente ya tiene un lavado activo:</strong> ${data.registro.servicio}<br>
+            <small>Fecha ingreso: ${new Date(data.registro.fecha_ingreso).toLocaleString('es-CL')}</small>
+          `;
+        } else {
+          alertaDiv.className = 'alert alert-info mb-3';
+          mensajeSpan.innerHTML = `
+            <strong>Ticket existente encontrado:</strong> ${data.registro.servicio}<br>
+            <small>Fecha ingreso: ${new Date(data.registro.fecha_ingreso).toLocaleString('es-CL')}</small><br>
+            <em class="text-success">✅ Se modificará este ticket a servicio de lavado</em>
+          `;
+        }
+        
+        alertaDiv.classList.remove('d-none');
+      } else {
+        ticketExistenteData = null;
+        alertaDiv.className = 'alert alert-success mb-3';
+        mensajeSpan.innerHTML = `
+          <strong>No hay tickets activos</strong><br>
+          <em>✅ Se registrará como nuevo ingreso de lavado</em>
+        `;
+        alertaDiv.classList.remove('d-none');
+      }
+    })
+    .catch(error => {
+      console.error('Error verificando patente:', error);
+      mostrarAlerta('Error al verificar ticket: ' + error.message, 'danger');
+    });
 }
 
 // Cargar servicios de lavado
@@ -370,10 +442,15 @@ function manejarEnvioFormulario(event) {
   const precioBase = servicioSeleccionado ? parseFloat(servicioSeleccionado.precio) : 0;
   const precioTotal = precioBase + precioExtra;
   
+  // Determinar si es modificación o registro nuevo
+  const accion = ticketExistenteData ? 'modificar' : 'registrar';
+  const textoAccion = ticketExistenteData ? 'modificación' : 'registro';
+  
   const resumen = `
-    Resumen del lavado:
+    ${ticketExistenteData ? '🔄 MODIFICACIÓN' : '✨ NUEVO REGISTRO'} del lavado:
     • Patente: ${patente}
-    • Servicio: ${servicioSeleccionado?.nombre_servicio || 'N/A'}
+    ${ticketExistenteData ? `• Ticket actual: ${ticketExistenteData.servicio}` : ''}
+    • Nuevo servicio: ${servicioSeleccionado?.nombre_servicio || 'N/A'}
     • Precio base: $${precioBase.toLocaleString('es-CL')}
     • Precio extra: $${precioExtra.toLocaleString('es-CL')}
     • Total: $${precioTotal.toLocaleString('es-CL')}
@@ -381,7 +458,7 @@ function manejarEnvioFormulario(event) {
     • Cliente: ${nombreCliente || 'No registrado'}
   `;
   
-  if (confirm(`${resumen}\n\n¿Confirmar el registro de este lavado?`)) {
+  if (confirm(`${resumen}\n\n¿Confirmar esta operación?`)) {
     const formData = new FormData();
     formData.append('patente', patente);
     formData.append('id_servicio', tipoLavado);
@@ -390,6 +467,12 @@ function manejarEnvioFormulario(event) {
     formData.append('motivos_extra', JSON.stringify(motivos));
     formData.append('descripcion_extra', descripcion);
     
+    // Si hay ticket existente, agregar flag de modificación
+    if (ticketExistenteData) {
+      formData.append('modificar_ticket', '1');
+      formData.append('id_ticket_existente', ticketExistenteData.idautos_estacionados);
+    }
+    
     fetch('../api/registrar-lavado.php', {
       method: 'POST',
       body: formData
@@ -397,20 +480,26 @@ function manejarEnvioFormulario(event) {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        mostrarAlerta('✅ Lavado registrado correctamente', 'success');
+        const mensaje = ticketExistenteData 
+          ? '✅ Ticket modificado a lavado correctamente' 
+          : '✅ Lavado registrado correctamente';
+        mostrarAlerta(mensaje, 'success');
         
+        // Limpiar formulario y estado
         event.target.reset();
         document.getElementById('precio-extra').value = 0;
+        document.getElementById('alerta-ticket-existente').classList.add('d-none');
+        ticketExistenteData = null;
         
         cargarLavadosPendientes();
         cargarHistorialReciente();
       } else {
-        mostrarAlerta('❌ Error al registrar lavado: ' + data.error, 'danger');
+        mostrarAlerta('❌ Error al procesar: ' + data.error, 'danger');
       }
     })
     .catch(error => {
       console.error('Error:', error);
-      mostrarAlerta('❌ Error al registrar lavado: ' + error.message, 'danger');
+      mostrarAlerta('❌ Error de conexión: ' + error.message, 'danger');
     });
   }
 }
@@ -424,8 +513,12 @@ document.addEventListener('DOMContentLoaded', function() {
   cargarLavadosPendientes();
   cargarHistorialReciente();
   
+  // Verificar si viene patente por URL (desde modal de modificar)
+  verificarPatenteURL();
+  
   const btnConsultar = document.getElementById('btn-consultar-historial');
   const inputPatente = document.getElementById('patente-consulta');
+  const btnVerificarPatente = document.getElementById('btn-verificar-patente');
   
   console.log('🔘 Botón consultar encontrado:', !!btnConsultar);
   console.log('📝 Input patente encontrado:', !!inputPatente);
@@ -435,6 +528,13 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Event listener agregado al botón consultar');
   } else {
     console.error('❌ No se encontró el botón btn-consultar-historial');
+  }
+  
+  // Botón de verificar ticket existente
+  if (btnVerificarPatente) {
+    btnVerificarPatente.addEventListener('click', () => {
+      verificarTicketExistente();
+    });
   }
   
   document.getElementById('form-lavado').addEventListener('submit', manejarEnvioFormulario);
