@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ERROR | E_PARSE);
+ini_set('display_errors', '0');
 header('Content-Type: application/json');
 
 /**
@@ -12,12 +14,11 @@ header('Content-Type: application/json');
  */
 
 // ====== CONFIGURACIÓN TUU ======
-// TODO: Actualizar estos valores con las credenciales reales de TUU
-define('TUU_API_URL', 'https://api.haulmer.com/v2/payment/request'); // URL según documentación oficial
-define('TUU_API_KEY', 'uIAwXISF5Amug0O7QA16r72a07x10n6jdu4LNzjos3cdz736bGkHf7gM84bQ5CMsaeav0YSy8Y0qOlTdQy5pORoDE82m55HVDLybJFIuCKEwFeogRIBidkUU6nl6ux'); // API Key proporcionada por TUU
-define('TUU_MERCHANT_ID', 'BUSCA_EL_ID_DE_COMERCIO_EN_EL_PANEL'); // ID de comercio desde tu panel
-define('TUU_TERMINAL_ID', '6752d2805d5b1d86'); // Este es el UUID de tu máquina "Estacionamiento 1"
-define('TUU_TIMEOUT', 90); // Aumentamos el timeout a 90 segundos para dar tiempo al cliente a pagar
+// Configuración según documentación oficial: https://developers.tuu.cl/docs/pago-remoto
+define('TUU_API_URL', 'https://integrations.payment.haulmer.com/RemotePayment/v2/Create'); // URL V2 con idempotencia
+define('TUU_API_KEY', 'uIAwXISF5Amug0O7QA16r72a07x10n6jdu4LNzjos3cdz736bGkHf7gM84bQ5CMsaeav0YSy8Y0qOlTdQy5pORoDE82m55HVDLybJFIuCKEwFeogRIBidkUU6nl6ux'); // API Key desde Espacio de Trabajo
+define('TUU_DEVICE_SERIAL', '6752d2805d5b1d86'); // Número de serie del dispositivo POS (device)
+define('TUU_TIMEOUT', 90); // Timeout de 90 segundos para dar tiempo al cliente a pagar
 define('TUU_MODO_PRUEBA', true); // Cambiar a false para procesar pagos reales
 
 // Conexión a la base de datos
@@ -41,8 +42,8 @@ if ($id_ingreso <= 0 || empty($patente) || $total <= 0) {
 }
 
 // ====== FUNCIÓN PARA PROCESAR PAGO CON TUU ======
-function procesarPagoTUU($monto, $idTransaccion, $patente) {
-    if (TUU_MODO_PRUEBA || TUU_API_KEY === 'uIAwXISF5Amug0O7QA16r72a07x10n6jdu4LNzjos3cdz736bGkHf7gM84bQ5CMsaeav0YSy8Y0qOlTdQy5pORoDE82m55HVDLybJFIuCKEwFeogRIBidkUU6nl6ux') {
+function procesarPagoTUU($monto, $idTransaccion, $patente, $extraData = [], $metodo_tarjeta = 'desconocido', $rut_cliente = null, $tipo_documento = 'boleta') {
+    if (TUU_MODO_PRUEBA) {
         // MODO PRUEBA: Simula un pago exitoso
         error_log("TUU MODO PRUEBA - Pago de $monto para transacción $idTransaccion");
         
@@ -55,40 +56,90 @@ function procesarPagoTUU($monto, $idTransaccion, $patente) {
             'transaction_id' => 'TUU-TEST-' . time(),
             'authorization_code' => $exito ? 'AUTH' . rand(100000, 999999) : '',
             'message' => $exito ? 'Pago aprobado (MODO PRUEBA)' : 'Pago rechazado (MODO PRUEBA)',
-            'card_type' => 'VISA',
+            'card_type' => $metodo_tarjeta === 'efectivo' ? 'EFECTIVO' : 'VISA', // Simula efectivo
             'card_last4' => '****' . rand(1000, 9999),
             'modo_prueba' => true
         ];
     }
     
     // ====== MODO PRODUCCIÓN ======
-    // TODO: Implementar la comunicación real con TUU según su documentación
+    // Implementación según documentación oficial: https://developers.tuu.cl/docs/pago-remoto
     
     try {
-        // Preparar datos para enviar a TUU
-        // Formato según: https://developers.tuu.cl/reference/post_paymentrequest-create
+        // Construir customFields para extraData según documentación TUU
+        $customFields = [];
+        
+        // Agregar hora de ingreso si existe en extraData
+        if (isset($extraData['Hora Ingreso'])) {
+            $customFields[] = [
+                'name' => 'Hora Ingreso',
+                'value' => $extraData['Hora Ingreso'],
+                'print' => true
+            ];
+        }
+        
+        // Agregar hora de salida si existe
+        if (isset($extraData['Hora Salida'])) {
+            $customFields[] = [
+                'name' => 'Hora Salida',
+                'value' => $extraData['Hora Salida'],
+                'print' => true
+            ];
+        }
+        
+        // Agregar tipo de servicio si existe
+        if (isset($extraData['Servicio'])) {
+            $customFields[] = [
+                'name' => 'Servicio',
+                'value' => $extraData['Servicio'],
+                'print' => true
+            ];
+        }
+        
+        // Preparar datos según API V2 con idempotencia
+        // Referencia: https://developers.tuu.cl/docs/pago-remoto
         $datosTransaccion = [
-            'amount' => (int)$monto, // Debe ser un entero
-            'subject' => "Estacionamiento Patente: $patente",
-            'currency' => 'CLP',
-            'merchantId' => TUU_MERCHANT_ID,
-            'terminalId' => TUU_TERMINAL_ID,
-            'externalId' => $idTransaccion
+            'idempotencyKey' => $idTransaccion, // Identificador único (obligatorio en V2)
+            'amount' => (int)$monto, // Monto en entero (mínimo 100, máximo 99999999)
+            'device' => TUU_DEVICE_SERIAL, // Número de serie del dispositivo POS
+            'description' => "Estacionamiento - Patente: $patente", // Descripción de la transacción
+            'dteType' => ($tipo_documento === 'factura') ? 33 : 48, // 33 = Factura, 48 = Boleta
+            'extradata' => [ // Objeto extradata (minúscula según doc)
+                'customFields' => $customFields, // Array de campos personalizados
+                'sourceName' => 'Sistema Estacionamiento Los Ríos',
+                'sourceVersion' => 'v2.0'
+            ]
         ];
+
+        // ✅ Si es factura, agregamos el RUT del cliente
+        // El sistema TUU buscará automáticamente los datos en el SII
+        if ($datosTransaccion['dteType'] == 33 && !empty($rut_cliente)) {
+            $datosTransaccion['customer'] = [
+                'rut' => $rut_cliente // RUT con formato XX.XXX.XXX-X o XXXXXXXX-X
+            ];
+        }
+
+        // ✅ PaymentMethod: 1 = Crédito, 2 = Débito
+        // Si no se envía, la máquina muestra todas las opciones (incluyendo efectivo)
+        if ($metodo_tarjeta === 'credito') {
+            $datosTransaccion['paymentMethod'] = 1;
+        } elseif ($metodo_tarjeta === 'debito') {
+            $datosTransaccion['paymentMethod'] = 2;
+        }
+        // ✅ Para 'efectivo': NO enviamos paymentMethod para que muestre todas las opciones
         
         // Iniciar cURL para comunicación con TUU
-        $ch = curl_init();
+        $ch = curl_init(TUU_API_URL);
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => TUU_TIMEOUT,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
-                'Authorization: Bearer ' . TUU_API_KEY,
+                'X-API-Key: ' . TUU_API_KEY, // ✅ Header correcto según documentación
                 'Accept: application/json'
             ],
-            CURLOPT_POSTFIELDS => json_encode($datosTransaccion),
-            CURLOPT_URL => TUU_API_URL
+            CURLOPT_POSTFIELDS => json_encode($datosTransaccion, JSON_UNESCAPED_UNICODE)
         ]);
         
         $response = curl_exec($ch);
@@ -100,29 +151,34 @@ function procesarPagoTUU($monto, $idTransaccion, $patente) {
             return ['success' => false, 'error' => 'Error cURL: ' . $error_curl];
         }
 
-        // La API de TUU responde con 201 (Created) cuando la solicitud es exitosa
-        if ($httpCode === 201) {
-            $resultado = json_decode($response, true);
-            // La API real es asíncrona. El estado 'PAID' o 'REJECTED' viene en la respuesta.
-            // La máquina esperará a que el cliente pague.
-            $pagoExitoso = isset($resultado['status']) && $resultado['status'] === 'PAID';
+        $resultado = json_decode($response, true);
+        
+        // Estados según documentación TUU:
+        // 0=Pending, 1=Sent, 2=Canceled, 3=Processing, 4=Failed, 5=Completed
+        if ($httpCode === 200 || $httpCode === 201) {
+            $status = $resultado['status'] ?? null;
+            $pagoExitoso = ($status === 5 || $status === 'Completed'); // Estado Completed
 
             return [
                 'success' => $pagoExitoso,
-                'status' => $resultado['status'] ?? 'UNKNOWN',
-                'transaction_id' => $resultado['id'] ?? $idTransaccion, // El ID de la transacción de TUU
+                'status' => $status,
+                'transaction_id' => $resultado['id'] ?? $idTransaccion,
                 'authorization_code' => $resultado['paymentData']['authorizationCode'] ?? null,
-                'message' => $pagoExitoso ? 'Pago Aprobado' : ($resultado['status'] ?? 'Estado desconocido'),
+                'message' => $pagoExitoso ? 'Pago Aprobado' : ($resultado['message'] ?? 'Estado: ' . $status),
                 'card_type' => $resultado['paymentData']['cardType'] ?? null,
                 'card_last4' => $resultado['paymentData']['last4Digits'] ?? null,
                 'modo_prueba' => false
             ];
         } else {
-            $error_details = json_decode($response, true);
+            // Manejo de errores según tabla de errores de TUU
+            $errorCode = $resultado['code'] ?? 'UNKNOWN';
+            $errorMessage = $resultado['message'] ?? 'Error desconocido';
+            
             return [
                 'success' => false,
-                'error' => 'Error de comunicación con TUU (HTTP ' . $httpCode . '): ' . ($error_details['message'] ?? 'Error desconocido'),
-                'response' => $error_details
+                'error' => "TUU Error ($errorCode): $errorMessage",
+                'error_code' => $errorCode,
+                'response' => $resultado
             ];
         }
         
@@ -138,9 +194,37 @@ function procesarPagoTUU($monto, $idTransaccion, $patente) {
 date_default_timezone_set('America/Santiago');
 $fecha_salida = date('Y-m-d H:i:s');
 $transactionId = 'EST-' . $id_ingreso . '-' . time();
+$extraDataParaTUU = [];
+
+// 1. Obtener datos adicionales para el voucher de TUU
+$sql_info = "SELECT i.fecha_ingreso, ti.nombre_servicio 
+             FROM ingresos i
+             JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
+             WHERE i.idautos_estacionados = ?";
+$stmt_info = $conexion->prepare($sql_info);
+$stmt_info->bind_param("i", $id_ingreso);
+$stmt_info->execute();
+$result_info = $stmt_info->get_result();
+if ($info = $result_info->fetch_assoc()) {
+    $fecha_ingreso_dt = new DateTime($info['fecha_ingreso']);
+    $fecha_salida_dt = new DateTime($fecha_salida);
+
+    // Formateamos los datos para que se vean bien en el voucher
+    $extraDataParaTUU = [
+        "Servicio" => $info['nombre_servicio'],
+        "Hora Ingreso" => $fecha_ingreso_dt->format('H:i:s'),
+        "Hora Salida" => $fecha_salida_dt->format('H:i:s')
+    ];
+
+    // Si es factura y hay un RUT, lo agregamos al voucher para que se imprima
+    if ($tipo_documento === 'factura' && !empty($rut_cliente)) {
+        $extraDataParaTUU["RUT Cliente"] = $rut_cliente;
+    }
+}
+$stmt_info->close();
 
 // Intentar procesar el pago con TUU
-$resultadoPago = procesarPagoTUU($total, $transactionId, $patente);
+$resultadoPago = procesarPagoTUU($total, $transactionId, $patente, $extraDataParaTUU, $metodo_tarjeta, $rut_cliente, $tipo_documento);
 
 if ($resultadoPago['success']) {
     // Pago aprobado: Registrar en la base de datos

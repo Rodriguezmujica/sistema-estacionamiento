@@ -101,8 +101,8 @@ $rol = $_SESSION['rol'];
                 </label>
                 <select class="form-select" id="tipo-servicio" required>
                   <option value="">Seleccionar servicio...</option>
-                  <option value="1">Estacionamiento por minuto</option>
-                  <option value="2">Lavado</option>
+                  <option value="18">Estacionamiento por minuto</option>
+                  <option value="lavado">Lavado</option>
                 </select>
               </div>
 
@@ -451,6 +451,66 @@ $rol = $_SESSION['rol'];
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pago TUU -->
+  <div class="modal fade" id="modalPagoTUU" tabindex="-1" aria-labelledby="modalPagoTUULabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title" id="modalPagoTUULabel"><i class="fas fa-credit-card"></i> Procesar Pago con TUU</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center mb-3">
+            <p class="mb-1">Patente a cobrar:</p>
+            <h3 class="fw-bold" id="patente-modal-tuu">ABC-123</h3>
+            <p class="mb-1">Total a pagar:</p>
+            <h2 class="text-primary fw-bold" id="total-modal-tuu">$5.000</h2>
+          </div>
+          <hr>
+          <div class="mb-3">
+            <label class="form-label">Tipo de Documento:</label>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="tipoDocumento" id="docBoleta" value="boleta" checked>
+              <label class="form-check-label" for="docBoleta">Boleta</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="tipoDocumento" id="docFactura" value="factura">
+              <label class="form-check-label" for="docFactura">Factura</label>
+            </div>
+          </div>
+          <div class="mb-3 d-none" id="campo-rut-factura">
+            <label for="rut-factura" class="form-label">RUT Cliente (para factura)</label>
+            <input type="text" class="form-control" id="rut-factura" placeholder="Ej: 12345678-9">
+          </div>
+          <hr>
+          <p class="text-center text-muted">Seleccione el método de pago en la máquina TUU.</p>
+          <div class="d-grid gap-2" id="opciones-pago-tuu">
+            <button type="button" class="btn btn-success" data-metodo="efectivo">
+              <i class="fas fa-money-bill-wave"></i> Efectivo
+            </button>
+            <button type="button" class="btn btn-primary" data-metodo="credito">
+              <i class="fas fa-credit-card"></i> Crédito
+            </button>
+            <button type="button" class="btn btn-secondary" data-metodo="debito">
+              <i class="fas fa-credit-card"></i> Débito
+            </button>
+          </div>
+          <div id="spinner-pago-tuu" class="d-none text-center mt-3">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Procesando...</span>
+            </div>
+            <p class="mt-2">Esperando pago en la máquina...</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
       </div>
     </div>
   </div>

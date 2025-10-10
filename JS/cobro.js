@@ -216,6 +216,12 @@ document.addEventListener('DOMContentLoaded', () => {
           mostrarAlerta('Por favor, ingrese el RUT para la factura.', 'warning');
           return; // Detiene el proceso si el RUT es requerido y está vacío
         }
+        // Validar formato del RUT (ej: 12345678-9)
+        if (!validarFormatoRut(rutCliente)) {
+          mostrarAlerta('El formato del RUT no es válido. Debe ser como en el ejemplo: 12345678-9.', 'warning');
+          document.getElementById('rut-factura').focus();
+          return;
+        }
       }
 
       // Ocultar el modal inmediatamente
@@ -295,6 +301,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('campo-rut-factura').classList.toggle('d-none', e.target.value !== 'factura');
     });
   });
+
+  // Función para validar el formato básico de un RUT chileno
+  function validarFormatoRut(rut) {
+    const regex = /^[0-9]{7,8}-[0-9Kk]$/;
+    return regex.test(rut);
+  }
 
   // --- FUNCIONES PARA NOTIFICACIONES TOAST ---
 

@@ -1,5 +1,7 @@
 <?php
 // api/registrar-ingreso.php
+error_reporting(E_ERROR | E_PARSE);
+ini_set('display_errors', '0');
 header('Content-Type: application/json');
 
 // Configuración de conexión (ajusta según tu entorno)

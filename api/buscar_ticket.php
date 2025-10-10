@@ -1,6 +1,8 @@
 <?php
-require '../application/config/database.php'; // Ajusta la ruta según tu estructura
+error_reporting(E_ERROR | E_PARSE);
+ini_set('display_errors', '0');
 header('Content-Type: application/json');
+
 $patente = strtoupper($_POST['patente'] ?? '');
 if (!$patente) {
     echo json_encode(['success' => false, 'error' => 'Patente requerida']);
