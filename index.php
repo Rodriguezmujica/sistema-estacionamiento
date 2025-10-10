@@ -164,11 +164,14 @@ $rol = $_SESSION['rol'];
 
             <!-- Botones de pago -->
             <div class="d-grid gap-2 mt-3">
-              <button class="btn btn-success btn-lg" id="btn-cobrar-ticket" disabled>
-                <i class="fas fa-money-bill"></i> Cobrar en Efectivo
+              <button class="btn btn-warning btn-lg" id="btn-cobrar-ticket" disabled>
+                <i class="fas fa-file-invoice"></i> Pago Manual (Comprobante Interno)
               </button>
-              <button class="btn btn-info btn-lg" id="btn-pagar-tuu" disabled>
-                <i class="fas fa-credit-card"></i> Pagar con TUU
+              <small class="text-muted text-center">
+                <i class="fas fa-exclamation-circle"></i> Usar solo si TUU está caído o no hay Internet
+              </small>
+              <button class="btn btn-success btn-lg" id="btn-pagar-tuu" disabled>
+                <i class="fas fa-receipt"></i> Pagar con TUU (Boleta Oficial)
               </button>
             </div>
           </div>
@@ -434,6 +437,75 @@ $rol = $_SESSION['rol'];
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pago Manual -->
+  <div class="modal fade" id="modalPagoManual" tabindex="-1" aria-labelledby="modalPagoManualLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title" id="modalPagoManualLabel">
+            <i class="fas fa-exclamation-triangle"></i> Confirmar Pago Manual
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning">
+            <strong>⚠️ Atención:</strong> Este método genera un comprobante INTERNO, NO una boleta oficial.
+          </div>
+
+          <div class="text-center mb-3">
+            <p class="mb-1"><strong>Patente:</strong> <span id="patente-modal-manual"></span></p>
+            <p class="mb-0"><strong>Total:</strong> <span id="total-modal-manual" class="fs-4 text-primary"></span></p>
+          </div>
+
+          <div class="mb-3">
+            <label for="motivo-pago-manual" class="form-label">
+              <i class="fas fa-clipboard-list"></i> ¿Por qué usar pago manual?
+            </label>
+            <select class="form-select" id="motivo-pago-manual" required>
+              <option value="">Seleccione un motivo...</option>
+              <option value="TUU caído">🔴 TUU está caído</option>
+              <option value="Sin Internet">📡 Sin conexión a Internet</option>
+              <option value="Ingreso por error">⚠️ Ingreso por error</option>
+              <option value="Modo test">🧪 Modo test/prueba</option>
+              <option value="Cliente no requiere boleta">👤 Cliente no requiere boleta</option>
+              <option value="Otro">📝 Otro motivo</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="metodo-pago-manual" class="form-label">
+              <i class="fas fa-money-bill-wave"></i> Método de pago
+            </label>
+            <select class="form-select" id="metodo-pago-manual">
+              <option value="EFECTIVO">💵 Efectivo</option>
+              <option value="TRANSFERENCIA">🏦 Transferencia</option>
+              <option value="TARJETA">💳 Tarjeta (sin TUU)</option>
+            </select>
+          </div>
+
+          <div class="alert alert-info">
+            <small>
+              <strong>Importante:</strong>
+              <ul class="mb-0 small">
+                <li>Este comprobante NO tiene validez tributaria</li>
+                <li>Se registrará en el sistema para auditoría</li>
+                <li>Se puede imprimir comprobante interno</li>
+              </ul>
+            </small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-warning" id="btn-confirmar-pago-manual">
+            <i class="fas fa-check"></i> Confirmar Pago Manual
+          </button>
+        </div>
       </div>
     </div>
   </div>

@@ -171,12 +171,6 @@ function consultarHistorial() {
             <div class="col-md-6">
               <p><strong>Último servicio:</strong> ${ultimo.servicio}</p>
               <p><strong>Total lavados:</strong> ${data.total_lavados}</p>
-              <p><strong>Motivos extra:</strong> 
-                ${ultimo.motivos.length > 0 ? 
-                  ultimo.motivos.map(motivo => `<span class="badge bg-warning badge-motivo">${motivo}</span>`).join(' ') :
-                  '<span class="text-muted">Ninguno</span>'
-                }
-              </p>
             </div>
           </div>
           <div class="row mt-2">
@@ -285,108 +279,6 @@ function cargarLavadosPendientes() {
     });
 }
 
-// Cargar historial reciente - VERSIÓN REAL (sin ejemplos)
-function cargarHistorialReciente() {
-  const historialDiv = document.getElementById('historial-reciente');
-  
-  // Consultar lavados completados reales desde la base de datos
-  fetch('../api/api_reporte.php')
-    .then(response => response.json())
-    .then(data => {
-      // Filtrar solo lavados que ya fueron cobrados (completados)
-      const lavadosCompletados = data.filter(item => 
-        item.lavado === 'Sí' && 
-        item.total && 
-        item.fecha_salida // Solo los que tienen salida registrada
-      );
-      
-      if (lavadosCompletados.length === 0) {
-        historialDiv.innerHTML = `
-          <div class="text-center text-muted">
-            <i class="fas fa-info-circle"></i> No hay lavados completados registrados
-          </div>
-        `;
-        return;
-      }
-      
-      // Mostrar los últimos 10 lavados completados
-      const ultimosLavados = lavadosCompletados.slice(0, 10);
-      
-      historialDiv.innerHTML = ultimosLavados.map(lavado => {
-        // Procesar motivos extra
-        let motivos = [];
-        if (lavado.motivos_extra) {
-          try {
-            let motivosStr = lavado.motivos_extra.replace(/\\"/g, '"').replace(/^"|"$/g, '');
-            motivos = JSON.parse(motivosStr);
-          } catch (e) {
-            console.log('Error parseando motivos:', e);
-            motivos = [];
-          }
-        }
-        
-        return `
-          <div class="card card-historial mb-3 border-success">
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-2">
-                  <h6 class="card-title">${lavado.patente}</h6>
-                  <small class="text-muted">
-                    <strong>Ingreso:</strong> ${new Date(lavado.fecha_ingreso).toLocaleDateString('es-CL')}<br>
-                    <strong>Cobrado:</strong> ${new Date(lavado.fecha_salida).toLocaleDateString('es-CL')}
-                  </small>
-                </div>
-                <div class="col-md-3">
-                  <p class="mb-1"><strong>Servicio:</strong></p>
-                  <p class="mb-0">${lavado.tipo_servicio}</p>
-                </div>
-                <div class="col-md-2">
-                  <p class="mb-1"><strong>Total Cobrado:</strong></p>
-                  <p class="mb-0 text-success fw-bold">$${lavado.total.toLocaleString('es-CL')}</p>
-                </div>
-                <div class="col-md-3">
-                  <p class="mb-1"><strong>Motivos extra:</strong></p>
-                  <div>
-                    ${Array.isArray(motivos) && motivos.length > 0 ? 
-                      motivos.map(motivo => `<span class="badge bg-success badge-motivo">${motivo}</span>`).join(' ') :
-                      '<span class="text-muted">Ninguno</span>'
-                    }
-                  </div>
-                </div>
-                <div class="col-md-2">
-                  <p class="mb-1"><strong>Cliente:</strong></p>
-                  <p class="mb-0">${lavado.nombre_cliente || 'No registrado'}</p>
-                  <p class="mb-0">
-                    <small class="text-muted">
-                      <strong>Método:</strong> ${lavado.metodo_pago || 'EFECTIVO'}
-                    </small>
-                  </p>
-                </div>
-              </div>
-              ${lavado.descripcion_extra ? 
-                `<div class="row mt-2">
-                  <div class="col-12">
-                    <small class="text-muted">
-                      <strong>Descripción:</strong> ${lavado.descripcion_extra}
-                    </small>
-                  </div>
-                </div>` : ''
-              }
-            </div>
-          </div>
-        `;
-      }).join('');
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      historialDiv.innerHTML = `
-        <div class="alert alert-danger">
-          <i class="fas fa-exclamation-triangle"></i> Error al cargar el historial: ${error.message}
-        </div>
-      `;
-    });
-}
-
 // Función para cobrar un lavado
 function cobrarLavado(idIngreso, patente) {
   if (confirm(`¿Confirmar el cobro del lavado para la patente ${patente}?`)) {
@@ -404,7 +296,6 @@ function cobrarLavado(idIngreso, patente) {
       if (data.success) {
         mostrarAlerta('✅ Lavado cobrado correctamente', 'success');
         cargarLavadosPendientes();
-        cargarHistorialReciente();
       } else {
         mostrarAlerta('❌ Error al cobrar lavado: ' + data.error, 'danger');
       }
@@ -492,7 +383,6 @@ function manejarEnvioFormulario(event) {
         ticketExistenteData = null;
         
         cargarLavadosPendientes();
-        cargarHistorialReciente();
       } else {
         mostrarAlerta('❌ Error al procesar: ' + data.error, 'danger');
       }
@@ -511,7 +401,6 @@ document.addEventListener('DOMContentLoaded', function() {
   
   cargarServicios();
   cargarLavadosPendientes();
-  cargarHistorialReciente();
   
   // Verificar si viene patente por URL (desde modal de modificar)
   verificarPatenteURL();

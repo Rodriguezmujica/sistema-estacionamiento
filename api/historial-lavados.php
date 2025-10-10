@@ -24,14 +24,16 @@ try {
                 ti.precio,
                 s.total,
                 s.fecha_salida,
-                s.motivos_extra,
-                s.descripcion_extra,
-                s.precio_extra
+                COALESCE(s.motivos_extra, lp.motivos_extra) as motivos_extra,
+                COALESCE(s.descripcion_extra, lp.descripcion_extra) as descripcion_extra,
+                COALESCE(s.precio_extra, lp.precio_extra, 0) as precio_extra
             FROM ingresos i
             JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
             LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
+            LEFT JOIN lavados_pendientes lp ON i.idautos_estacionados = lp.id_ingreso
             WHERE i.patente = ? 
             AND ti.nombre_servicio NOT LIKE '%estacionamiento%'
+            AND i.idtipo_ingreso NOT IN (18, 19, 47)
             ORDER BY i.fecha_ingreso DESC
             LIMIT 10";
 

@@ -60,14 +60,15 @@ try {
         id_ingresos, 
         fecha_salida, 
         total, 
-        metodo_pago, 
+        metodo_pago,
+        tipo_pago, 
         motivos_extra, 
         descripcion_extra, 
         precio_extra
-    ) VALUES (?, NOW(), ?, ?, ?, ?, ?)";
+    ) VALUES (?, NOW(), ?, ?, 'manual', ?, ?, ?)";
     
     $stmt_salida = $conexion->prepare($sql_salida);
-    $stmt_salida->bind_param("idsssd", 
+    $stmt_salida->bind_param("idssd", 
         $id_ingreso, 
         $total, 
         $metodo_pago, 

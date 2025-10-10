@@ -231,11 +231,46 @@ if ($resultadoPago['success']) {
     $conexion->begin_transaction();
     
     try {
-        // Insertar en tabla salidas
+        // 1. Obtener información del lavado pendiente (si existe)
+        $motivos_extra = null;
+        $descripcion_extra = null;
+        $precio_extra = 0;
+        
+        $sql_pendiente = "SELECT motivos_extra, descripcion_extra, precio_extra FROM lavados_pendientes WHERE id_ingreso = ?";
+        $stmt_pendiente = $conexion->prepare($sql_pendiente);
+        $stmt_pendiente->bind_param("i", $id_ingreso);
+        $stmt_pendiente->execute();
+        $result_pendiente = $stmt_pendiente->get_result();
+        
+        if ($lavado_pendiente = $result_pendiente->fetch_assoc()) {
+            $motivos_extra = $lavado_pendiente['motivos_extra'];
+            $descripcion_extra = $lavado_pendiente['descripcion_extra'];
+            $precio_extra = floatval($lavado_pendiente['precio_extra']);
+        }
+        $stmt_pendiente->close();
+        
+        // 2. Insertar en tabla salidas (incluyendo datos del lavado si existen)
         // Construcción dinámica de la consulta para ser más robusto
-        $columnas = ['id_ingresos', 'fecha_salida', 'total', 'metodo_pago', 'metodo_tarjeta', 'tipo_documento', 'rut_cliente'];
-        $valores = [$id_ingreso, $fecha_salida, $total, 'TUU', $metodo_tarjeta, $tipo_documento, $rut_cliente];
-        $tipos = 'isdssss';
+        $columnas = ['id_ingresos', 'fecha_salida', 'total', 'metodo_pago', 'tipo_pago', 'metodo_tarjeta', 'tipo_documento', 'rut_cliente'];
+        $valores = [$id_ingreso, $fecha_salida, $total, 'TUU', 'tuu', $metodo_tarjeta, $tipo_documento, $rut_cliente];
+        $tipos = 'isdsssss';
+        
+        // Agregar datos del lavado si existen
+        if (!empty($motivos_extra)) {
+            $columnas[] = 'motivos_extra';
+            $valores[] = $motivos_extra;
+            $tipos .= 's';
+        }
+        if (!empty($descripcion_extra)) {
+            $columnas[] = 'descripcion_extra';
+            $valores[] = $descripcion_extra;
+            $tipos .= 's';
+        }
+        if ($precio_extra > 0) {
+            $columnas[] = 'precio_extra';
+            $valores[] = $precio_extra;
+            $tipos .= 'd';
+        }
 
         $campos_pago = [
             'transaction_id' => 's',
@@ -267,6 +302,13 @@ if ($resultadoPago['success']) {
         $stmt_update->bind_param("i", $id_ingreso);
         $stmt_update->execute();
         $stmt_update->close();
+        
+        // 3. Eliminar el registro de lavados_pendientes (si existe)
+        $sql_eliminar = "DELETE FROM lavados_pendientes WHERE id_ingreso = ?";
+        $stmt_eliminar = $conexion->prepare($sql_eliminar);
+        $stmt_eliminar->bind_param("i", $id_ingreso);
+        $stmt_eliminar->execute();
+        $stmt_eliminar->close();
         
         $conexion->commit();
         

@@ -14,13 +14,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCobrarTicket = document.getElementById('btn-cobrar-ticket');
   const btnPagarTuu = document.getElementById('btn-pagar-tuu');
   
+  // Inicializar modales
+  let modalPagoManual = null;
+  const modalPagoManualElement = document.getElementById('modalPagoManual');
+  if (modalPagoManualElement) {
+    modalPagoManual = new bootstrap.Modal(modalPagoManualElement);
+  } else {
+    console.error('❌ El elemento HTML del modal de pago manual (#modalPagoManual) no fue encontrado.');
+  }
+  
   let modalPagoTUU = null;
   const modalPagoTUUElement = document.getElementById('modalPagoTUU');
   if (modalPagoTUUElement) {
     modalPagoTUU = new bootstrap.Modal(modalPagoTUUElement);
   } else {
-    console.error('❌ El elemento HTML del modal de pago TUU (#modalPagoTUU) no fue encontrado. Asegúrate de que esté en tu archivo HTML.');
+    console.error('❌ El elemento HTML del modal de pago TUU (#modalPagoTUU) no fue encontrado.');
   }
+  
   let ticketCobroActual = null;
 
   // Buscar ticket al enviar formulario
@@ -34,15 +44,23 @@ document.addEventListener('DOMContentLoaded', () => {
     buscarTicketParaCobro(patente);
   });
 
-  // Acción para cobrar en efectivo
+  // Acción para abrir modal de pago manual
   if (btnCobrarTicket) {
     btnCobrarTicket.addEventListener('click', () => {
+      if (!ticketCobroActual) {
+        mostrarAlerta('⚠️ Primero debe buscar un ticket para cobrar.', 'warning');
+        return;
+      }
+      
       const esErrorIngreso = ticketCobroActual.tipo_calculo === 'Error de ingreso' || ticketCobroActual.nombre_servicio === 'Error de ingreso';
       const totalFinal = esErrorIngreso ? 1 : ticketCobroActual.total;
-      const confirmar = confirm(`¿Confirmar cobro en EFECTIVO de $${totalFinal.toLocaleString('es-CL')} para la patente ${ticketCobroActual.patente}?`);
-      if (confirmar) {
-        procesarPago('EFECTIVO');
-      }
+
+      // Llenar datos del modal de pago manual
+      document.getElementById('patente-modal-manual').textContent = ticketCobroActual.patente;
+      document.getElementById('total-modal-manual').textContent = `$${totalFinal.toLocaleString('es-CL')}`;
+      
+      // Mostrar modal
+      if (modalPagoManual) modalPagoManual.show();
     });
   }
 
@@ -202,6 +220,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
+  // Event listener para confirmar pago manual
+  const btnConfirmarPagoManual = document.getElementById('btn-confirmar-pago-manual');
+  if (btnConfirmarPagoManual) {
+    btnConfirmarPagoManual.addEventListener('click', () => {
+      const motivoPagoManual = document.getElementById('motivo-pago-manual').value;
+      const metodoPagoManual = document.getElementById('metodo-pago-manual').value;
+      
+      // Validar que se haya seleccionado un motivo
+      if (!motivoPagoManual) {
+        mostrarAlerta('Por favor, seleccione un motivo para el pago manual.', 'warning');
+        return;
+      }
+      
+      // Ocultar el modal inmediatamente
+      if (modalPagoManual) modalPagoManual.hide();
+      
+      // Procesar el pago manual
+      procesarPagoManual(metodoPagoManual, motivoPagoManual);
+    });
+  }
+  
   // Event listeners para los botones dentro del modal TUU
   document.querySelectorAll('#modalPagoTUU [data-metodo]').forEach(button => {
     button.addEventListener('click', (e) => {
@@ -237,35 +276,94 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  async function finalizarCobroExitoso(metodo, total, dataPago) {
-    let mensaje = `✅ Pago con ${metodo} de $${total.toLocaleString('es-CL')} procesado correctamente.`;
-    if (metodo === 'TUU' && dataPago.modo_prueba) {
-      mensaje += ' (MODO PRUEBA)';
-    } else if (metodo !== 'TUU') {
-    mostrarAlerta(mensaje, 'success');
+  async function procesarPagoManual(metodoPago, motivoManual) {
+    if (!ticketCobroActual) {
+      mostrarAlerta('⚠️ No hay ticket para cobrar', 'warning');
+      return;
     }
 
-    // Intentar imprimir ticket
+    const esErrorIngreso = ticketCobroActual.tipo_calculo === 'Error de ingreso' || ticketCobroActual.nombre_servicio === 'Error de ingreso';
+    const totalFinal = esErrorIngreso ? 1 : ticketCobroActual.total;
+
+    mostrarAlerta(`⏳ Procesando pago manual...`, 'info');
+    btnCobrarTicket.disabled = true;
+    btnPagarTuu.disabled = true;
+
     try {
-      const responseImprimir = await fetch('http://localhost:8080/sistemaEstacionamiento/ImpresionTermica/ticketsalida.php', {
+      const response = await fetch('./api/pago-manual.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           id_ingreso: ticketCobroActual.id,
-          hora_ingreso: ticketCobroActual.fecha_ingreso.split(' ')[1],
-          hora_egreso: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          total: total,
           patente: ticketCobroActual.patente,
-          metodo_pago: metodo
+          total: totalFinal,
+          metodo_pago: metodoPago,
+          motivo_manual: motivoManual
         })
       });
-      const dataImprimir = await responseImprimir.text();
-      if (dataImprimir.trim() !== '1') {
-        mostrarAlerta('El cobro fue exitoso, pero la impresión del ticket falló.', 'warning');
+
+      const dataPago = await response.json();
+
+      if (dataPago.success) {
+        mostrarAlerta(`✅ Pago manual de $${totalFinal.toLocaleString('es-CL')} registrado correctamente.`, 'success');
+        await finalizarCobroExitoso('MANUAL', totalFinal, dataPago);
+      } else {
+        mostrarAlerta(`❌ Error al procesar pago manual: ${dataPago.error || 'Error desconocido'}`, 'danger');
+        btnCobrarTicket.disabled = false;
+        btnPagarTuu.disabled = false;
       }
-    } catch (errorImprimir) {
-      console.warn('⚠️ No se pudo imprimir el ticket:', errorImprimir);
-      mostrarAlerta('El cobro fue exitoso, pero el servicio de impresión no está disponible.', 'warning');
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        mostrarAlerta(`❌ Error en la respuesta del servidor. Revisa los logs de PHP.`, 'danger');
+        console.error("El servidor no devolvió un JSON válido:", error);
+      } else {
+        mostrarAlerta(`❌ Error al procesar pago manual: ${error.message}`, 'danger');
+      }
+      btnCobrarTicket.disabled = false;
+      btnPagarTuu.disabled = false;
+    }
+  }
+
+  async function finalizarCobroExitoso(metodo, total, dataPago) {
+    let mensaje = '';
+    
+    if (metodo === 'MANUAL') {
+      mensaje = `✅ Pago Manual registrado: $${total.toLocaleString('es-CL')} (Comprobante Interno)`;
+      mostrarAlerta(mensaje, 'success');
+    } else if (metodo === 'TUU') {
+      mensaje = `✅ Pago con TUU de $${total.toLocaleString('es-CL')} procesado correctamente.`;
+      if (dataPago.modo_prueba) mensaje += ' (MODO PRUEBA)';
+    } else {
+      mensaje = `✅ Pago con ${metodo} de $${total.toLocaleString('es-CL')} procesado correctamente.`;
+      mostrarAlerta(mensaje, 'success');
+    }
+
+    // Intentar imprimir ticket solo para pagos no manuales
+    if (metodo !== 'MANUAL') {
+      try {
+        const responseImprimir = await fetch('http://localhost:8080/sistemaEstacionamiento/ImpresionTermica/ticketsalida.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            id_ingreso: ticketCobroActual.id,
+            hora_ingreso: ticketCobroActual.fecha_ingreso.split(' ')[1],
+            hora_egreso: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            total: total,
+            patente: ticketCobroActual.patente,
+            metodo_pago: metodo
+          })
+        });
+        const dataImprimir = await responseImprimir.text();
+        if (dataImprimir.trim() !== '1') {
+          mostrarAlerta('El cobro fue exitoso, pero la impresión del ticket falló.', 'warning');
+        }
+      } catch (errorImprimir) {
+        console.warn('⚠️ No se pudo imprimir el ticket:', errorImprimir);
+        mostrarAlerta('El cobro fue exitoso, pero el servicio de impresión no está disponible.', 'warning');
+      }
+    } else {
+      // Para pagos manuales, mostrar mensaje informativo
+      mostrarAlerta('💡 Comprobante interno generado. No se imprimió ticket en impresora térmica.', 'info');
     }
 
     // Limpiar UI
@@ -279,7 +377,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnCobrarTicket) btnCobrarTicket.disabled = true;
     if (btnPagarTuu) btnPagarTuu.disabled = true;
     
-    // Resetear modal
+    // Resetear modal de pago manual
+    const motivoManual = document.getElementById('motivo-pago-manual');
+    if (motivoManual) motivoManual.value = '';
+    const metodoPagoManual = document.getElementById('metodo-pago-manual');
+    if (metodoPagoManual) metodoPagoManual.value = 'EFECTIVO';
+    
+    // Resetear modal TUU
     document.querySelectorAll('#modalPagoTUU [data-metodo]').forEach(btn => btn.disabled = false);
     const spinner = document.getElementById('spinner-pago-tuu');
     if (spinner) spinner.classList.add('d-none');
