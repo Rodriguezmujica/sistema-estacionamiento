@@ -37,36 +37,51 @@ if ($result_check->num_rows === 0) {
 }
 
 $ticket_actual = $result_check->fetch_assoc();
+$id_ticket = $ticket_actual['idautos_estacionados'];
 $stmt_check->close();
 
-// Actualizar el ticket
-$sql = "UPDATE ingresos SET idtipo_ingreso = ? WHERE patente = ? AND (salida = 0 OR salida IS NULL) ORDER BY idautos_estacionados DESC LIMIT 1";
-$stmt = $conexion->prepare($sql);
-$stmt->bind_param("is", $id_nuevo_servicio, $patente);
-$resultado = $stmt->execute();
+// Iniciar transacción para asegurar consistencia
+$conexion->begin_transaction();
 
-// Si la ejecución fue exitosa, consideramos que funcionó
-// (affected_rows puede ser 0 si el valor es el mismo)
-if ($resultado) {
+try {
+    // Actualizar el ticket
+    $sql = "UPDATE ingresos SET idtipo_ingreso = ? WHERE patente = ? AND (salida = 0 OR salida IS NULL) ORDER BY idautos_estacionados DESC LIMIT 1";
+    $stmt = $conexion->prepare($sql);
+    $stmt->bind_param("is", $id_nuevo_servicio, $patente);
+    $resultado = $stmt->execute();
+    
+    if (!$resultado) {
+        throw new Exception('Error al actualizar el ticket: ' . $stmt->error);
+    }
+    
+    $stmt->close();
+    
+    // ✅ CORRECCIÓN: Si se cambia a "Error de ingreso" (ID 19), limpiar datos de lavado
+    if ($id_nuevo_servicio == 19) {
+        $sql_delete_lavado = "DELETE FROM lavados_pendientes WHERE id_ingreso = ?";
+        $stmt_delete = $conexion->prepare($sql_delete_lavado);
+        $stmt_delete->bind_param("i", $id_ticket);
+        $stmt_delete->execute();
+        $stmt_delete->close();
+    }
+    
+    // Confirmar transacción
+    $conexion->commit();
+    
     echo json_encode([
         'success' => true, 
         'message' => 'Ticket modificado correctamente',
         'ticket_anterior' => $ticket_actual,
         'nuevo_servicio_id' => $id_nuevo_servicio,
-        'filas_afectadas' => $stmt->affected_rows
+        'lavado_limpiado' => ($id_nuevo_servicio == 19)
     ]);
-} else {
+} catch (Exception $e) {
+    $conexion->rollback();
     echo json_encode([
         'success' => false, 
-        'error' => 'Error al ejecutar la actualización',
-        'debug' => [
-            'ticket_encontrado' => $ticket_actual,
-            'nuevo_servicio_id' => $id_nuevo_servicio,
-            'error_sql' => $stmt->error
-        ]
+        'error' => 'Error al modificar ticket: ' . $e->getMessage()
     ]);
 }
 
-$stmt->close();
 $conexion->close();
 ?>

@@ -47,9 +47,16 @@ if ($row = $result->fetch_assoc()) {
     $total = 0;
     $minutos = 0;
     $tipoCalculo = '';
+    $idTipoIngreso = $row['idtipo_ingreso'];
     
+    // ✅ CORRECCIÓN: Si es "Error de ingreso" (ID 19), forzar total a $1
+    if ($idTipoIngreso == 19 || stripos($nombreServicio, 'ERROR DE INGRESO') !== false) {
+        $total = 1;
+        $tipoCalculo = 'Error de ingreso';
+        $precioExtra = 0; // Ignorar precio extra
+    }
     // Si es estacionamiento por minuto
-    if (stripos($nombreServicio, 'estacionamiento') !== false && stripos($nombreServicio, 'minuto') !== false) {
+    else if (stripos($nombreServicio, 'estacionamiento') !== false && stripos($nombreServicio, 'minuto') !== false) {
         $ahora = new DateTime('now', new DateTimeZone('America/Santiago'));
         $ingreso = new DateTime($fechaIngreso, new DateTimeZone('America/Santiago'));
         $minutos = ceil(($ahora->getTimestamp() - $ingreso->getTimestamp()) / 60);
