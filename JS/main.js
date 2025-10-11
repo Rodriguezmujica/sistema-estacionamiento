@@ -59,7 +59,7 @@ function mostrarAlerta(mensaje, tipo = 'info') {
  */
 async function cargarPrecioNavbar() {
   try {
-    const response = await fetch('../api/api_precios.php');
+    const response = await fetch('/sistemaEstacionamiento/api/api_precios.php');
     const result = await response.json();
     
     if (result.success) {

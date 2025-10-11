@@ -284,6 +284,31 @@
 
   </main>
 
+  <!-- MODAL DE CONFIRMACIÓN DE LAVADO -->
+  <div class="modal fade" id="modalConfirmarLavado" tabindex="-1" aria-labelledby="modalConfirmarLavadoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content shadow-lg">
+        <div class="modal-header" id="confirmarLavadoHeader">
+          <h5 class="modal-title" id="confirmarLavadoTitulo">
+            <!-- Título dinámico -->
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="confirmarLavadoBody">
+          <!-- El resumen se insertará aquí dinámicamente -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-success" id="btn-confirmar-lavado-accion">
+            <i class="fas fa-check me-1"></i> Confirmar Operación
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="bg-dark text-white py-4 mt-5">
     <div class="container">

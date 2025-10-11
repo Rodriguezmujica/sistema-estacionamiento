@@ -50,7 +50,7 @@ function verificarTicketExistente(patente) {
   
   console.log('🔍 Verificando ticket para patente:', patente);
   
-  fetch('../api/verificar-patente.php', {
+  fetch('/sistemaEstacionamiento/api/verificar-patente.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ patente })
@@ -103,7 +103,7 @@ function verificarTicketExistente(patente) {
 
 // Cargar servicios de lavado
 function cargarServicios() {
-  fetch('../api/api_servicios_lavado.php')
+  fetch('/sistemaEstacionamiento/api/api_servicios_lavado.php')
     .then(response => response.json())
     .then(data => {
       if (!data.success) {
@@ -154,7 +154,7 @@ function consultarHistorial() {
   
   // Llamada real a la API
   console.log('🌐 Realizando llamada a la API...');
-  fetch('../api/historial-lavados.php', {
+  fetch('/sistemaEstacionamiento/api/historial-lavados.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ patente: patente })
@@ -234,7 +234,7 @@ function consultarHistorial() {
 function cargarLavadosPendientes() {
   const pendientesDiv = document.getElementById('lavados-pendientes');
   
-  fetch('../api/api_reporte.php')
+  fetch('/sistemaEstacionamiento/api/api_reporte.php')
     .then(response => response.json())
     .then(data => {
       const lavadosPendientes = data.filter(item => item.lavado === 'Sí');
@@ -302,7 +302,7 @@ function cobrarLavado(idIngreso, patente) {
     formData.append('patente', patente);
     formData.append('metodo_pago', 'EFECTIVO');
     
-    fetch('../api/cobrar-lavado.php', {
+    fetch('/sistemaEstacionamiento/api/cobrar-lavado.php', {
       method: 'POST',
       body: formData
     })
@@ -356,6 +356,10 @@ function manejarEnvioFormulario(event) {
   const accion = ticketExistenteData ? 'modificar' : 'registrar';
   const textoAccion = ticketExistenteData ? 'modificación' : 'registro';
   
+  // Preparamos el contenido para el modal
+  const esModificacion = !!ticketExistenteData;
+  const tituloModal = esModificacion ? '🔄 Confirmar Modificación' : '✨ Confirmar Nuevo Registro';
+  const claseHeader = esModificacion ? 'bg-info text-dark' : 'bg-success text-white';
   const resumen = `
     ${ticketExistenteData ? '🔄 MODIFICACIÓN' : '✨ NUEVO REGISTRO'} del lavado:
     • Patente: ${patente}
@@ -368,59 +372,73 @@ function manejarEnvioFormulario(event) {
     • Cliente: ${nombreCliente || 'No registrado'}
   `;
   
-  if (confirm(`${resumen}\n\n¿Confirmar esta operación?`)) {
-    const formData = new FormData();
-    formData.append('patente', patente);
-    formData.append('id_servicio', tipoLavado);
-    formData.append('nombre_cliente', nombreCliente);
-    formData.append('precio_extra', precioExtra);
-    formData.append('motivos_extra', JSON.stringify(motivos));
-    formData.append('descripcion_extra', descripcion);
-    
-    // Si hay ticket existente, agregar flag de modificación
-    if (ticketExistenteData) {
-      formData.append('modificar_ticket', '1');
-      formData.append('id_ticket_existente', ticketExistenteData.id);
-      console.log('🔄 Enviando como MODIFICACIÓN - ID:', ticketExistenteData.id);
-    } else {
-      console.log('✨ Enviando como NUEVO REGISTRO');
-    }
-    
-    // Mostrar todos los datos que se envían
-    console.log('📤 Datos enviados al servidor:');
-    for (let [key, value] of formData.entries()) {
-      console.log(`  ${key}:`, value);
-    }
-    
-    fetch('../api/registrar-lavado.php', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('📥 Respuesta del servidor:', data);
-      if (data.success) {
-        const mensaje = ticketExistenteData 
-          ? '✅ Ticket modificado a lavado correctamente' 
-          : '✅ Lavado registrado correctamente';
-        mostrarAlerta(mensaje, 'success');
-        
-        // Limpiar formulario y estado
-        event.target.reset();
-        document.getElementById('precio-extra').value = 0;
-        document.getElementById('alerta-ticket-existente').classList.add('d-none');
-        ticketExistenteData = null;
-        
-        cargarLavadosPendientes();
-      } else {
-        mostrarAlerta('❌ Error al procesar: ' + data.error, 'danger');
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      mostrarAlerta('❌ Error de conexión: ' + error.message, 'danger');
-    });
+  // Llenar y mostrar el modal de confirmación
+  const modalConfirmar = new bootstrap.Modal(document.getElementById('modalConfirmarLavado'));
+  document.getElementById('confirmarLavadoTitulo').textContent = tituloModal;
+  document.getElementById('confirmarLavadoHeader').className = `modal-header ${claseHeader}`;
+  document.getElementById('confirmarLavadoBody').innerHTML = `
+    <p>Por favor, revisa los detalles antes de confirmar:</p>
+    <ul class="list-group">
+      <li class="list-group-item"><strong>Patente:</strong> ${patente}</li>
+      ${esModificacion ? `<li class="list-group-item"><strong>Ticket Actual:</strong> ${ticketExistenteData.servicio}</li>` : ''}
+      <li class="list-group-item"><strong>Nuevo Servicio:</strong> ${servicioSeleccionado?.nombre_servicio || 'N/A'}</li>
+      <li class="list-group-item"><strong>Precio Base:</strong> $${precioBase.toLocaleString('es-CL')}</li>
+      <li class="list-group-item"><strong>Precio Extra:</strong> $${precioExtra.toLocaleString('es-CL')}</li>
+      <li class="list-group-item list-group-item-success"><strong>Total a Cobrar:</strong> $${precioTotal.toLocaleString('es-CL')}</li>
+    </ul>
+  `;
+  modalConfirmar.show();
+
+  // Manejar el click del botón de confirmación del modal
+  document.getElementById('btn-confirmar-lavado-accion').onclick = () => {
+    modalConfirmar.hide();
+
+    // Aquí va la lógica que antes estaba dentro del if(confirm(...))
+    realizarRegistroLavado(patente, tipoLavado, nombreCliente, precioExtra, motivos, descripcion, event);
+  };
+}
+
+function realizarRegistroLavado(patente, tipoLavado, nombreCliente, precioExtra, motivos, descripcion, event) {
+  const formData = new FormData();
+  formData.append('patente', patente);
+  formData.append('id_servicio', tipoLavado);
+  formData.append('nombre_cliente', nombreCliente);
+  formData.append('precio_extra', precioExtra);
+  formData.append('motivos_extra', JSON.stringify(motivos));
+  formData.append('descripcion_extra', descripcion);
+
+  if (ticketExistenteData) {
+    formData.append('modificar_ticket', '1');
+    formData.append('id_ticket_existente', ticketExistenteData.id);
   }
+
+  fetch('/sistemaEstacionamiento/api/registrar-lavado.php', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      const mensaje = ticketExistenteData 
+        ? '✅ Ticket modificado a lavado correctamente' 
+        : '✅ Lavado registrado correctamente';
+      mostrarAlerta(mensaje, 'success');
+      
+      // Limpiar formulario y estado
+      if (event) event.target.reset();
+      document.getElementById('precio-extra').value = 0;
+      document.getElementById('alerta-ticket-existente').classList.add('d-none');
+      ticketExistenteData = null;
+      
+      cargarLavadosPendientes();
+    } else {
+      mostrarAlerta('❌ Error al procesar: ' + data.error, 'danger');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    mostrarAlerta('❌ Error de conexión: ' + error.message, 'danger');
+  });
 }
 
 // Event listeners
@@ -470,6 +488,11 @@ document.addEventListener('DOMContentLoaded', function() {
           verificacionTimeout = null;
         }
         verificarTicketExistente(patente);
+      } else {
+        // Limpiar alerta si la patente está vacía
+        ticketExistenteData = null;
+        document.getElementById('alerta-ticket-existente').classList.add('d-none');
+        console.log('🧹 Patente vacía, limpiando estado');
       }
     });
     
