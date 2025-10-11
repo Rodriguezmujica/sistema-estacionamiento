@@ -24,3 +24,4 @@ Botón para agregar nuevo servicio (opcional, solo para admins)
 Solo requiere pequeños cambios en el frontend y algunos endpoints PHP para guardar los cambios en la base de datos.
 
 ¿Quieres que te muestre un ejemplo de cómo sería un formulario con precio editable y opción “Otro servicio”?
+contraseña Losrios$733

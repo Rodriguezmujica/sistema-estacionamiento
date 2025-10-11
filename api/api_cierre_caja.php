@@ -21,7 +21,7 @@ try {
                  JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                  WHERE i.salida = 1
                  AND CASE 
-                     WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                     WHEN s.fecha_salida IS NULL 
                      THEN i.fecha_ingreso 
                      ELSE s.fecha_salida 
                  END BETWEEN ? AND ?
@@ -48,7 +48,7 @@ try {
                     JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                     WHERE i.salida = 1
                     AND CASE 
-                        WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                        WHEN s.fecha_salida IS NULL 
                         THEN i.fecha_ingreso 
                         ELSE s.fecha_salida 
                     END BETWEEN ? AND ?
@@ -120,7 +120,7 @@ try {
                       JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                       WHERE i.salida = 1
                       AND CASE 
-                          WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                          WHEN s.fecha_salida IS NULL 
                           THEN i.fecha_ingreso 
                           ELSE s.fecha_salida 
                       END BETWEEN ? AND ?
@@ -151,7 +151,7 @@ try {
                       COALESCE(s.metodo_pago, 'EFECTIVO') as metodo_pago,
                       COALESCE(s.tipo_pago, 'manual') as tipo_pago,
                       CASE 
-                          WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                          WHEN s.fecha_salida IS NULL 
                           THEN i.fecha_ingreso 
                           ELSE s.fecha_salida 
                       END as fecha_cobro,
@@ -161,7 +161,7 @@ try {
                    JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                    WHERE i.salida = 1
                    AND CASE 
-                       WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                       WHEN s.fecha_salida IS NULL 
                        THEN i.fecha_ingreso 
                        ELSE s.fecha_salida 
                    END BETWEEN ? AND ?

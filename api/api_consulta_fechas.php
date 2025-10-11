@@ -32,7 +32,7 @@ try {
                     JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                     WHERE i.salida = 1 
                     AND CASE 
-                        WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                        WHEN s.fecha_salida IS NULL 
                         THEN i.fecha_ingreso 
                         ELSE s.fecha_salida 
                     END BETWEEN '$fecha_desde_completa' AND '$fecha_hasta_completa'";
@@ -62,7 +62,7 @@ try {
                     JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                     WHERE i.salida = 1 
                     AND CASE 
-                        WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                        WHEN s.fecha_salida IS NULL 
                         THEN i.fecha_ingreso 
                         ELSE s.fecha_salida 
                     END BETWEEN '$fecha_desde_completa' AND '$fecha_hasta_completa'
@@ -94,12 +94,12 @@ try {
                         i.patente,
                         ti.nombre_servicio,
                         CASE 
-                            WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                            WHEN s.fecha_salida IS NULL 
                             THEN i.fecha_ingreso 
                             ELSE s.fecha_salida 
                         END as fecha_salida,
                         CASE 
-                            WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                            WHEN s.fecha_salida IS NULL 
                             THEN i.fecha_ingreso 
                             ELSE s.fecha_salida 
                         END as fecha_salida_real,
@@ -109,7 +109,7 @@ try {
                     JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                     WHERE i.salida = 1 
                     AND CASE 
-                        WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                        WHEN s.fecha_salida IS NULL 
                         THEN i.fecha_ingreso 
                         ELSE s.fecha_salida 
                     END BETWEEN '$fecha_desde_completa' AND '$fecha_hasta_completa'

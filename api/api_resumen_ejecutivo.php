@@ -68,7 +68,7 @@ function obtenerResumenMensual($conn, $mes, $anio) {
                        JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                        WHERE i.salida = 1
                        AND CASE 
-                           WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                           WHEN s.fecha_salida IS NULL 
                            THEN i.fecha_ingreso 
                            ELSE s.fecha_salida 
                        END BETWEEN ? AND ?
@@ -123,7 +123,7 @@ function obtenerResumenMensual($conn, $mes, $anio) {
                 JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                 WHERE i.salida = 1
                 AND CASE 
-                    WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                    WHEN s.fecha_salida IS NULL 
                     THEN i.fecha_ingreso 
                     ELSE s.fecha_salida 
                 END BETWEEN ? AND ?
@@ -158,7 +158,7 @@ function obtenerResumenMensual($conn, $mes, $anio) {
                        JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                        WHERE i.salida = 1
                        AND CASE 
-                           WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                           WHEN s.fecha_salida IS NULL 
                            THEN i.fecha_ingreso 
                            ELSE s.fecha_salida 
                        END BETWEEN ? AND ?
@@ -201,7 +201,7 @@ function obtenerResumenMensual($conn, $mes, $anio) {
     // 6. INGRESOS POR DÍA DEL MES (para el gráfico)
     $sqlPorDia = "SELECT 
                     DATE(CASE 
-                        WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                        WHEN s.fecha_salida IS NULL 
                         THEN i.fecha_ingreso 
                         ELSE s.fecha_salida 
                     END) as fecha,
@@ -212,14 +212,14 @@ function obtenerResumenMensual($conn, $mes, $anio) {
                   JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                   WHERE i.salida = 1
                   AND CASE 
-                      WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                      WHEN s.fecha_salida IS NULL 
                       THEN i.fecha_ingreso 
                       ELSE s.fecha_salida 
                   END BETWEEN ? AND ?
                   AND ti.es_plan = 0
                   AND ti.idtipo_ingresos NOT IN (19)
                   GROUP BY DATE(CASE 
-                      WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                      WHEN s.fecha_salida IS NULL 
                       THEN i.fecha_ingreso 
                       ELSE s.fecha_salida 
                   END)
@@ -267,12 +267,12 @@ function obtenerResumenMensual($conn, $mes, $anio) {
                          JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                          WHERE i.salida = 1
                          AND CASE 
-                             WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                             WHEN s.fecha_salida IS NULL 
                              THEN i.fecha_ingreso 
                              ELSE s.fecha_salida 
                          END BETWEEN ? AND ?
                          AND WEEKDAY(CASE 
-                             WHEN s.fecha_salida IS NULL OR s.fecha_salida = '0000-00-00 00:00:00' 
+                             WHEN s.fecha_salida IS NULL 
                              THEN i.fecha_ingreso 
                              ELSE s.fecha_salida 
                          END) < 5
