@@ -157,17 +157,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function procesarPago(metodo, opciones = {}) {
-    console.log('🚀 procesarPago iniciado con:', { metodo, opciones, ticketCobroActual });
-    
     if (!ticketCobroActual) {
-      console.error('❌ No hay ticket actual');
       mostrarAlerta('⚠️ No hay ticket para cobrar', 'warning');
       return;
     }
 
     const esErrorIngreso = ticketCobroActual.tipo_calculo === 'Error de ingreso' || ticketCobroActual.nombre_servicio === 'Error de ingreso';
     const totalFinal = esErrorIngreso ? 1 : ticketCobroActual.total;
-    console.log('💰 Total a cobrar:', totalFinal);
 
     if (metodo !== 'TUU') { // Para efectivo, el flujo es más directo
       mostrarAlerta(`⏳ Procesando pago con ${metodo}...`, 'info');
@@ -178,16 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       let dataPago;
       if (metodo === 'TUU') {
-        console.log('📡 Enviando solicitud a api/tuu-pago.php...');
-        console.log('📦 Datos a enviar:', {
-          id_ingreso: ticketCobroActual.id,
-          patente: ticketCobroActual.patente,
-          total: totalFinal,
-          metodo_tarjeta: opciones.metodoTarjeta || 'desconocido',
-          tipo_documento: opciones.tipoDocumento || 'boleta',
-          rut_cliente: opciones.rutCliente || ''
-        });
-        
         const responseTUU = await fetch('./api/tuu-pago.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -201,9 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toast_id: opciones.toastId || '' // Enviamos el ID del toast para actualizarlo
           })
         });
-        console.log('📥 Respuesta recibida de TUU');
         dataPago = await responseTUU.json();
-        console.log('📊 Datos parseados:', dataPago);
       } else { // EFECTIVO
         const responseSalida = await fetch('./api/registrar-salida.php', {
           method: 'POST',
@@ -219,25 +203,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (dataPago.success) {
-        console.log('✅ Pago exitoso');
         if (metodo === 'TUU') {
           actualizarToast(opciones.toastId, `✅ Pago Aprobado para ${ticketCobroActual.patente}`, 'success');
         }
         await finalizarCobroExitoso(metodo, totalFinal, dataPago);
       } else {
-        console.error('❌ Pago rechazado por TUU');
-        console.error('📋 Detalles completos del error:', dataPago.details);
-        console.error('🔴 Error code:', dataPago.details?.error_code);
-        console.error('💬 Mensaje:', dataPago.details?.error);
-        console.error('📦 Response completo:', dataPago.details?.response);
-        
-        const mensajeError = `❌ Pago Rechazado para ${ticketCobroActual.patente}: ${dataPago.error || 'Error desconocido'}`;
-        const detalleError = dataPago.details?.error_code ? ` (Código: ${dataPago.details.error_code})` : '';
+        const mensajeError = `❌ Pago Rechazado: ${dataPago.error || 'Error desconocido'}`;
+        const detalleError = dataPago.details?.error_code ? ` (${dataPago.details.error_code})` : '';
         
         if (metodo === 'TUU') {
           actualizarToast(opciones.toastId, mensajeError + detalleError, 'danger');
-          // Mostrar alerta adicional con más detalles
-          mostrarAlerta(mensajeError + detalleError + '\n' + (dataPago.details?.error || ''), 'danger');
+          mostrarAlerta(mensajeError + detalleError, 'danger');
         } else {
           mostrarAlerta(mensajeError, 'danger');
         }
@@ -285,24 +261,17 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Event listener para confirmar pago con TUU
   const btnConfirmarPagoTUU = document.getElementById('btn-confirmar-pago-tuu');
-  console.log('🔍 Buscando botón btn-confirmar-pago-tuu:', btnConfirmarPagoTUU);
   
   if (btnConfirmarPagoTUU) {
-    console.log('✅ Botón TUU encontrado, agregando event listener');
     btnConfirmarPagoTUU.addEventListener('click', () => {
-      console.log('🎯 Click en botón Confirmar Pago TUU');
-      console.log('📋 Ticket actual:', ticketCobroActual);
-      
       // Obtener método de pago seleccionado
       const metodoTarjetaElement = document.querySelector('input[name="metodoTarjeta"]:checked');
-      console.log('💳 Método de tarjeta seleccionado:', metodoTarjetaElement);
       
       if (!metodoTarjetaElement) {
-        mostrarAlerta('Por favor, seleccione un método de pago.', 'warning');
+        mostrarAlerta('Por favor, seleccione un tipo de tarjeta.', 'warning');
         return;
       }
       const metodoTarjeta = metodoTarjetaElement.value;
-      console.log('✅ Método de pago:', metodoTarjeta);
       
       // Obtener tipo de documento
       const tipoDocumento = document.querySelector('input[name="tipoDocumento"]:checked').value;
@@ -339,11 +308,8 @@ document.addEventListener('DOMContentLoaded', () => {
       crearToast(toastId, mensajeToast);
 
       // Llama a la función de procesamiento de pago
-      console.log('📞 Llamando a procesarPago con:', { metodo: 'TUU', metodoTarjeta, tipoDocumento, rutCliente, toastId });
       procesarPago('TUU', { metodoTarjeta, tipoDocumento, rutCliente, toastId }); 
     });
-  } else {
-    console.error('❌ NO se encontró el botón btn-confirmar-pago-tuu');
   }
 
   async function procesarPagoManual(metodoPago, motivoManual) {
@@ -463,9 +429,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const spinner = document.getElementById('spinner-pago-tuu');
     if (spinner) spinner.classList.add('d-none');
     
-    // Resetear radio buttons de método de pago a efectivo
-    const metodoEfectivo = document.getElementById('metodoEfectivoTUU');
-    if (metodoEfectivo) metodoEfectivo.checked = true;
+    // Resetear radio buttons de método de pago a débito (ya no hay efectivo en TUU)
+    const metodoDebito = document.getElementById('metodoDebitoTUU');
+    if (metodoDebito) metodoDebito.checked = true;
     
     // Resetear tipo de documento a boleta
     const docBoleta = document.getElementById('docBoleta');

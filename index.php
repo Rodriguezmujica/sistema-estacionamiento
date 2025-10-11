@@ -577,7 +577,7 @@ $rol = $_SESSION['rol'];
           <!-- Método de Pago -->
           <div class="mb-3">
             <label class="form-label fw-bold">
-              <i class="fas fa-credit-card"></i> Método de Pago:
+              <i class="fas fa-credit-card"></i> Tipo de Tarjeta:
             </label>
             <div class="btn-group w-100" role="group">
               <input type="radio" class="btn-check" name="metodoTarjeta" id="metodoCreditoTUU" value="credito" autocomplete="off">
@@ -585,19 +585,20 @@ $rol = $_SESSION['rol'];
                 <i class="fas fa-credit-card"></i> Crédito
               </label>
 
-              <input type="radio" class="btn-check" name="metodoTarjeta" id="metodoDebitoTUU" value="debito" autocomplete="off">
+              <input type="radio" class="btn-check" name="metodoTarjeta" id="metodoDebitoTUU" value="debito" autocomplete="off" checked>
               <label class="btn btn-outline-info" for="metodoDebitoTUU">
                 <i class="fas fa-wallet"></i> Débito
               </label>
-
-              <input type="radio" class="btn-check" name="metodoTarjeta" id="metodoEfectivoTUU" value="efectivo" autocomplete="off" checked>
-              <label class="btn btn-outline-success" for="metodoEfectivoTUU">
-                <i class="fas fa-money-bill-wave"></i> Efectivo
-              </label>
             </div>
             <small class="text-muted d-block mt-2">
-              <i class="fas fa-info-circle"></i> La máquina TUU mostrará las opciones disponibles
+              <i class="fas fa-info-circle"></i> La máquina TUU procesará el pago con tarjeta y emitirá boleta oficial
             </small>
+          </div>
+          
+          <!-- Alerta sobre efectivo -->
+          <div class="alert alert-info">
+            <i class="fas fa-money-bill-wave"></i> <strong>¿Cliente paga en efectivo?</strong><br>
+            <small>Usa el botón <strong>"Pago Manual"</strong> (amarillo) para registrar pagos en efectivo. Este genera un comprobante interno sin boleta oficial.</small>
           </div>
 
           <hr>

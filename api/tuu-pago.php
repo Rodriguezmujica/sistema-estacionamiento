@@ -297,10 +297,11 @@ if ($info = $result_info->fetch_assoc()) {
     $fecha_salida_dt = new DateTime($fecha_salida);
 
     // Formateamos los datos para que se vean bien en el voucher
+    // Usar formato sin caracteres especiales (TUU elimina los : )
     $extraDataParaTUU = [
         "Servicio" => $info['nombre_servicio'],
-        "Hora Ingreso" => $fecha_ingreso_dt->format('H:i:s'),
-        "Hora Salida" => $fecha_salida_dt->format('H:i:s')
+        "Hora Ingreso" => $fecha_ingreso_dt->format('H.i.s'), // Usar puntos en lugar de dos puntos
+        "Hora Salida" => $fecha_salida_dt->format('H.i.s')     // Ejemplo: 14.45.30
     ];
 
     // Si es factura y hay un RUT, lo agregamos al voucher para que se imprima
