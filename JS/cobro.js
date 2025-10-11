@@ -37,8 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
   formCobroSalida.addEventListener('submit', async (e) => {
     e.preventDefault();
     const patente = inputPatenteCobro.value.trim().toUpperCase();
-    if (patente.length < 6) {
-      mostrarAlerta('Ingrese una patente válida', 'warning');
+    if (!patente) {
+      mostrarAlerta('Por favor, ingrese una patente', 'warning');
       return;
     }
     buscarTicketParaCobro(patente);
@@ -114,8 +114,19 @@ document.addEventListener('DOMContentLoaded', () => {
   function mostrarDetallesTicket(data) {
     const esErrorIngreso = data.tipo_calculo === 'Error de ingreso' || data.nombre_servicio === 'Error de ingreso';
     const totalFinal = esErrorIngreso ? 1 : data.total;
+    
+    // Mostrar advertencia si hay múltiples pendientes
+    let advertenciaHTML = '';
+    if (data.total_pendientes && data.total_pendientes > 1) {
+      advertenciaHTML = `
+        <div class="alert alert-warning mb-3">
+          <strong>⚠️ Advertencia:</strong> Esta patente tiene ${data.total_pendientes} registros pendientes.<br>
+          <small>Se cobrará el más reciente. Si hay duplicados, considere cobrarlos o eliminarlos desde Administración.</small>
+        </div>
+      `;
+    }
 
-    let detalleHTML = `
+    let detalleHTML = advertenciaHTML + `
       <div class="card mb-3 ${esErrorIngreso ? 'border-warning' : ''}">
         <div class="card-body">
           <h5 class="card-title ${esErrorIngreso ? 'text-warning' : ''}">

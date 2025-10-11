@@ -17,6 +17,16 @@ if (!$patente) {
     exit;
 }
 
+// Primero, verificar si hay múltiples ingresos pendientes
+$sqlCount = "SELECT COUNT(*) as total FROM ingresos WHERE patente = ? AND (salida = 0 OR salida IS NULL)";
+$stmtCount = $conexion->prepare($sqlCount);
+$stmtCount->bind_param('s', $patente);
+$stmtCount->execute();
+$resultCount = $stmtCount->get_result();
+$countRow = $resultCount->fetch_assoc();
+$totalPendientes = $countRow['total'];
+$stmtCount->close();
+
 // Buscar el ingreso activo (salida = 0 o NULL) con información de lavados pendientes
 $sql = "SELECT i.idautos_estacionados, i.patente, i.fecha_ingreso, i.idtipo_ingreso,
                t.nombre_servicio, t.precio, t.es_plan,
@@ -109,7 +119,9 @@ if ($row = $result->fetch_assoc()) {
         'precio_extra' => $precioExtra,
         'motivos_extra' => $motivosArray,
         'descripcion_extra' => $descripcionExtra,
-        'nombre_cliente' => $nombreCliente
+        'nombre_cliente' => $nombreCliente,
+        'total_pendientes' => $totalPendientes,
+        'advertencia' => $totalPendientes > 1 ? "⚠️ Esta patente tiene $totalPendientes registros pendientes. Se cobrará el más reciente." : null
     ], JSON_UNESCAPED_UNICODE);
 } else {
     echo json_encode(['success' => false, 'error' => 'No se encontró ingreso activo para esa patente']);

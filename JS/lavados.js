@@ -48,6 +48,8 @@ function verificarTicketExistente(patente) {
     return;
   }
   
+  console.log('🔍 Verificando ticket para patente:', patente);
+  
   fetch('../api/verificar-patente.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -55,23 +57,27 @@ function verificarTicketExistente(patente) {
   })
     .then(res => res.json())
     .then(data => {
+      console.log('📡 Respuesta de verificar-patente:', data);
+      
       const alertaDiv = document.getElementById('alerta-ticket-existente');
       const mensajeSpan = document.getElementById('mensaje-ticket-existente');
       
       if (data.success && data.existe) {
         ticketExistenteData = data.registro;
+        console.log('✅ Ticket existente guardado:', ticketExistenteData);
         const esLavado = data.registro.servicio.toLowerCase().includes('lavado');
         
         if (esLavado) {
-          alertaDiv.className = 'alert alert-warning mb-3';
+          alertaDiv.className = 'alert alert-danger mb-3';
           mensajeSpan.innerHTML = `
-            <strong>Esta patente ya tiene un lavado activo:</strong> ${data.registro.servicio}<br>
-            <small>Fecha ingreso: ${new Date(data.registro.fecha_ingreso).toLocaleString('es-CL')}</small>
+            <strong>⚠️ ¡ATENCIÓN! Esta patente ya tiene un lavado activo:</strong> ${data.registro.servicio}<br>
+            <small>Fecha ingreso: ${new Date(data.registro.fecha_ingreso).toLocaleString('es-CL')}</small><br>
+            <strong class="text-danger">⚠️ Si continúa, SE MODIFICARÁ este lavado (NO se creará uno nuevo)</strong>
           `;
         } else {
           alertaDiv.className = 'alert alert-info mb-3';
           mensajeSpan.innerHTML = `
-            <strong>Ticket existente encontrado:</strong> ${data.registro.servicio}<br>
+            <strong>ℹ️ Ticket existente encontrado:</strong> ${data.registro.servicio}<br>
             <small>Fecha ingreso: ${new Date(data.registro.fecha_ingreso).toLocaleString('es-CL')}</small><br>
             <em class="text-success">✅ Se modificará este ticket a servicio de lavado</em>
           `;
@@ -80,6 +86,7 @@ function verificarTicketExistente(patente) {
         alertaDiv.classList.remove('d-none');
       } else {
         ticketExistenteData = null;
+        console.log('ℹ️ No hay ticket existente');
         alertaDiv.className = 'alert alert-success mb-3';
         mensajeSpan.innerHTML = `
           <strong>No hay tickets activos</strong><br>
@@ -333,6 +340,10 @@ function manejarEnvioFormulario(event) {
   const precioBase = servicioSeleccionado ? parseFloat(servicioSeleccionado.precio) : 0;
   const precioTotal = precioBase + precioExtra;
   
+  // DEBUG: Log del estado actual
+  console.log('🔍 Estado al enviar formulario:');
+  console.log('ticketExistenteData:', ticketExistenteData);
+  
   // Determinar si es modificación o registro nuevo
   const accion = ticketExistenteData ? 'modificar' : 'registrar';
   const textoAccion = ticketExistenteData ? 'modificación' : 'registro';
@@ -361,7 +372,16 @@ function manejarEnvioFormulario(event) {
     // Si hay ticket existente, agregar flag de modificación
     if (ticketExistenteData) {
       formData.append('modificar_ticket', '1');
-      formData.append('id_ticket_existente', ticketExistenteData.idautos_estacionados);
+      formData.append('id_ticket_existente', ticketExistenteData.id);
+      console.log('🔄 Enviando como MODIFICACIÓN - ID:', ticketExistenteData.id);
+    } else {
+      console.log('✨ Enviando como NUEVO REGISTRO');
+    }
+    
+    // Mostrar todos los datos que se envían
+    console.log('📤 Datos enviados al servidor:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`  ${key}:`, value);
     }
     
     fetch('../api/registrar-lavado.php', {
@@ -370,6 +390,7 @@ function manejarEnvioFormulario(event) {
     })
     .then(response => response.json())
     .then(data => {
+      console.log('📥 Respuesta del servidor:', data);
       if (data.success) {
         const mensaje = ticketExistenteData 
           ? '✅ Ticket modificado a lavado correctamente' 
@@ -423,6 +444,58 @@ document.addEventListener('DOMContentLoaded', function() {
   if (btnVerificarPatente) {
     btnVerificarPatente.addEventListener('click', () => {
       verificarTicketExistente();
+    });
+  }
+  
+  // Verificación automática al cambiar la patente
+  const inputPatenteLavado = document.getElementById('patente-lavado');
+  let verificacionTimeout = null;
+  
+  if (inputPatenteLavado) {
+    inputPatenteLavado.addEventListener('blur', function() {
+      const patente = this.value.trim().toUpperCase();
+      console.log('👁️ Blur event - Patente:', patente);
+      if (patente) {
+        // Cancelar timeout pendiente para evitar duplicados
+        if (verificacionTimeout) {
+          clearTimeout(verificacionTimeout);
+          verificacionTimeout = null;
+        }
+        verificarTicketExistente(patente);
+      }
+    });
+    
+    // También verificar mientras escribe (después de una pausa)
+    inputPatenteLavado.addEventListener('input', function() {
+      const patente = this.value.trim().toUpperCase();
+      
+      // Cancelar timeout anterior
+      if (verificacionTimeout) {
+        clearTimeout(verificacionTimeout);
+      }
+      
+      if (patente) {
+        // Solo verificar si la patente cambió respecto a ticketExistenteData
+        const patenteExistente = ticketExistenteData ? ticketExistenteData.patente : null;
+        
+        if (patente !== patenteExistente) {
+          // Esperar un momento para que el usuario termine de escribir
+          verificacionTimeout = setTimeout(() => {
+            const patenteActual = this.value.trim().toUpperCase();
+            if (patenteActual && patenteActual === patente) {
+              console.log('⌨️ Input event (timeout) - Verificando:', patente);
+              verificarTicketExistente(patente);
+            }
+          }, 800); // Aumentado a 800ms para dar más tiempo
+        } else {
+          console.log('⏭️ Patente sin cambios, saltando verificación');
+        }
+      } else {
+        // Limpiar alerta si la patente está vacía
+        ticketExistenteData = null;
+        document.getElementById('alerta-ticket-existente').classList.add('d-none');
+        console.log('🧹 Patente vacía, limpiando estado');
+      }
     });
   }
   

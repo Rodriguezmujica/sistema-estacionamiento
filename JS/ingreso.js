@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (patenteIngreso) {
     patenteIngreso.addEventListener('blur', function() {
       const patente = this.value.trim().toUpperCase();
-      if (patente.length >= 6) {
+      if (patente) {
         verificarPatenteDuplicada(patente);
       }
     });

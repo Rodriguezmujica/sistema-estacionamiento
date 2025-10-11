@@ -92,7 +92,7 @@ $rol = $_SESSION['rol'];
                   <i class="fas fa-car"></i> Patente del Vehículo
                 </label>
                 <input type="text" class="form-control form-control-lg text-uppercase" 
-                       id="patente-ingreso" maxlength="6" placeholder="ABC123" required>
+                       id="patente-ingreso" maxlength="7" placeholder="ABC123" required>
               </div>
 
               <div class="mb-3">
@@ -154,7 +154,7 @@ $rol = $_SESSION['rol'];
             <form id="form-cobro-salida" class="mb-3">
               <label for="patente-cobro" class="form-label"><i class="fas fa-car"></i> Patente del Vehículo</label>
               <div class="input-group">
-                <input type="text" class="form-control form-control-lg text-uppercase" id="patente-cobro" maxlength="6" placeholder="ABC123" required>
+                <input type="text" class="form-control form-control-lg text-uppercase" id="patente-cobro" maxlength="7" placeholder="ABC123" required>
                 <button type="submit" class="btn btn-primary" id="btn-calcular-cobro">Calcular</button>
               </div>
             </form>
@@ -237,7 +237,7 @@ $rol = $_SESSION['rol'];
                 <i class="fas fa-car"></i> Patente
               </label>
               <input type="text" class="form-control text-uppercase" id="patente-lavado-modal" 
-                     maxlength="6" placeholder="ABC123" required disabled>
+                     maxlength="7" placeholder="ABC123" required disabled>
               <div class="form-text">
                 <i class="fas fa-lock text-muted"></i> Prellenada desde el dashboard
               </div>
@@ -408,7 +408,7 @@ $rol = $_SESSION['rol'];
               <div class="col-md-6">
                 <label for="patente-modificar" class="form-label">Patente</label>
                 <input type="text" class="form-control text-uppercase" id="patente-modificar" 
-                       maxlength="6" placeholder="ABC123" required>
+                       maxlength="7" placeholder="ABC123" required>
               </div>
               <div class="col-md-6">
                 <label class="form-label">&nbsp;</label>
