@@ -39,10 +39,30 @@ try {
                 }
             }
             
+            // Leer configuración del archivo tuu-pago.php
+            $tuu_pago_file = __DIR__ . '/tuu-pago.php';
+            $api_key = '';
+            $modo_prueba = true;
+            
+            if (file_exists($tuu_pago_file)) {
+                $content = file_get_contents($tuu_pago_file);
+                // Extraer API Key
+                if (preg_match("/define\('TUU_API_KEY',\s*'([^']+)'/", $content, $matches)) {
+                    $api_key = $matches[1];
+                }
+                // Extraer modo prueba
+                if (preg_match("/define\('TUU_MODO_PRUEBA',\s*(true|false)/", $content, $matches)) {
+                    $modo_prueba = ($matches[1] === 'true');
+                }
+            }
+            
             echo json_encode([
                 'success' => true,
                 'maquinas' => $maquinas,
-                'activa' => $maquinaActiva
+                'activa' => $maquinaActiva,
+                'maquina_activa' => $maquinaActiva,
+                'api_key' => $api_key,
+                'modo_prueba' => $modo_prueba
             ]);
             break;
             

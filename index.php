@@ -557,51 +557,98 @@ $rol = $_SESSION['rol'];
   <div class="modal fade" id="modalPagoTUU" tabindex="-1" aria-labelledby="modalPagoTUULabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
-        <div class="modal-header bg-info text-white">
-          <h5 class="modal-title" id="modalPagoTUULabel"><i class="fas fa-credit-card"></i> Procesar Pago con TUU</h5>
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="modalPagoTUULabel">
+            <i class="fas fa-receipt"></i> Pagar con TUU (Boleta Oficial)
+          </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="text-center mb-3">
-            <p class="mb-1">Patente a cobrar:</p>
-            <h3 class="fw-bold" id="patente-modal-tuu">ABC-123</h3>
-            <p class="mb-1">Total a pagar:</p>
-            <h2 class="text-primary fw-bold" id="total-modal-tuu">$5.000</h2>
+          <!-- Información del cobro -->
+          <div class="card bg-light mb-3">
+            <div class="card-body text-center">
+              <p class="mb-1 text-muted">Patente:</p>
+              <h4 class="fw-bold text-dark" id="patente-modal-tuu">ABC-123</h4>
+              <p class="mb-1 text-muted">Total a pagar:</p>
+              <h2 class="text-success fw-bold" id="total-modal-tuu">$5.000</h2>
+            </div>
           </div>
-          <hr>
+
+          <!-- Método de Pago -->
           <div class="mb-3">
-            <label class="form-label">Tipo de Documento:</label>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="tipoDocumento" id="docBoleta" value="boleta" checked>
-              <label class="form-check-label" for="docBoleta">Boleta</label>
+            <label class="form-label fw-bold">
+              <i class="fas fa-credit-card"></i> Método de Pago:
+            </label>
+            <div class="btn-group w-100" role="group">
+              <input type="radio" class="btn-check" name="metodoTarjeta" id="metodoCreditoTUU" value="credito" autocomplete="off">
+              <label class="btn btn-outline-primary" for="metodoCreditoTUU">
+                <i class="fas fa-credit-card"></i> Crédito
+              </label>
+
+              <input type="radio" class="btn-check" name="metodoTarjeta" id="metodoDebitoTUU" value="debito" autocomplete="off">
+              <label class="btn btn-outline-info" for="metodoDebitoTUU">
+                <i class="fas fa-wallet"></i> Débito
+              </label>
+
+              <input type="radio" class="btn-check" name="metodoTarjeta" id="metodoEfectivoTUU" value="efectivo" autocomplete="off" checked>
+              <label class="btn btn-outline-success" for="metodoEfectivoTUU">
+                <i class="fas fa-money-bill-wave"></i> Efectivo
+              </label>
             </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="tipoDocumento" id="docFactura" value="factura">
-              <label class="form-check-label" for="docFactura">Factura</label>
-            </div>
+            <small class="text-muted d-block mt-2">
+              <i class="fas fa-info-circle"></i> La máquina TUU mostrará las opciones disponibles
+            </small>
           </div>
-          <div class="mb-3 d-none" id="campo-rut-factura">
-            <label for="rut-factura" class="form-label">RUT Cliente (para factura)</label>
-            <input type="text" class="form-control" id="rut-factura" placeholder="Ej: 12345678-9">
-          </div>
+
           <hr>
-          <p class="text-center text-muted">Seleccione el método de pago en la máquina TUU.</p>
-          <div class="d-grid gap-2" id="opciones-pago-tuu">
-            <button type="button" class="btn btn-success" data-metodo="efectivo">
-              <i class="fas fa-money-bill-wave"></i> Efectivo
-            </button>
-            <button type="button" class="btn btn-primary" data-metodo="credito">
-              <i class="fas fa-credit-card"></i> Crédito
-            </button>
-            <button type="button" class="btn btn-secondary" data-metodo="debito">
-              <i class="fas fa-credit-card"></i> Débito
+
+          <!-- Tipo de Documento -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">
+              <i class="fas fa-file-invoice"></i> Tipo de Documento:
+            </label>
+            <div class="btn-group w-100" role="group">
+              <input type="radio" class="btn-check" name="tipoDocumento" id="docBoleta" value="boleta" autocomplete="off" checked>
+              <label class="btn btn-outline-secondary" for="docBoleta">
+                <i class="fas fa-receipt"></i> Boleta
+              </label>
+
+              <input type="radio" class="btn-check" name="tipoDocumento" id="docFactura" value="factura" autocomplete="off">
+              <label class="btn btn-outline-warning" for="docFactura">
+                <i class="fas fa-file-invoice-dollar"></i> Factura
+              </label>
+            </div>
+          </div>
+
+          <!-- Campo RUT para Factura -->
+          <div class="mb-3 d-none" id="campo-rut-factura">
+            <label for="rut-factura" class="form-label">
+              <i class="fas fa-id-card"></i> RUT del Cliente:
+            </label>
+            <input type="text" class="form-control" id="rut-factura" placeholder="Ej: 12345678-9">
+            <small class="text-muted">
+              <i class="fas fa-info-circle"></i> TUU buscará automáticamente los datos del cliente en el SII
+            </small>
+          </div>
+
+          <hr>
+
+          <!-- Botón de pago -->
+          <div class="d-grid gap-2">
+            <button type="button" class="btn btn-success btn-lg" id="btn-confirmar-pago-tuu">
+              <i class="fas fa-check-circle"></i> Confirmar y Pagar con TUU
             </button>
           </div>
+
+          <!-- Spinner (oculto por defecto) -->
           <div id="spinner-pago-tuu" class="d-none text-center mt-3">
-            <div class="spinner-border text-primary" role="status">
+            <div class="spinner-border text-success" role="status">
               <span class="visually-hidden">Procesando...</span>
             </div>
-            <p class="mt-2">Esperando pago en la máquina...</p>
+            <p class="mt-2 text-success fw-bold">
+              <i class="fas fa-wifi"></i> Enviando solicitud a la máquina TUU...
+            </p>
+            <p class="text-muted">Por favor, complete el pago en el dispositivo TUU.</p>
           </div>
         </div>
         <div class="modal-footer">

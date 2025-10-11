@@ -157,13 +157,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function procesarPago(metodo, opciones = {}) {
+    console.log('🚀 procesarPago iniciado con:', { metodo, opciones, ticketCobroActual });
+    
     if (!ticketCobroActual) {
+      console.error('❌ No hay ticket actual');
       mostrarAlerta('⚠️ No hay ticket para cobrar', 'warning');
       return;
     }
 
     const esErrorIngreso = ticketCobroActual.tipo_calculo === 'Error de ingreso' || ticketCobroActual.nombre_servicio === 'Error de ingreso';
     const totalFinal = esErrorIngreso ? 1 : ticketCobroActual.total;
+    console.log('💰 Total a cobrar:', totalFinal);
 
     if (metodo !== 'TUU') { // Para efectivo, el flujo es más directo
       mostrarAlerta(`⏳ Procesando pago con ${metodo}...`, 'info');
@@ -174,6 +178,16 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       let dataPago;
       if (metodo === 'TUU') {
+        console.log('📡 Enviando solicitud a api/tuu-pago.php...');
+        console.log('📦 Datos a enviar:', {
+          id_ingreso: ticketCobroActual.id,
+          patente: ticketCobroActual.patente,
+          total: totalFinal,
+          metodo_tarjeta: opciones.metodoTarjeta || 'desconocido',
+          tipo_documento: opciones.tipoDocumento || 'boleta',
+          rut_cliente: opciones.rutCliente || ''
+        });
+        
         const responseTUU = await fetch('./api/tuu-pago.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -187,7 +201,9 @@ document.addEventListener('DOMContentLoaded', () => {
             toast_id: opciones.toastId || '' // Enviamos el ID del toast para actualizarlo
           })
         });
+        console.log('📥 Respuesta recibida de TUU');
         dataPago = await responseTUU.json();
+        console.log('📊 Datos parseados:', dataPago);
       } else { // EFECTIVO
         const responseSalida = await fetch('./api/registrar-salida.php', {
           method: 'POST',
@@ -203,14 +219,29 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (dataPago.success) {
+        console.log('✅ Pago exitoso');
         if (metodo === 'TUU') {
           actualizarToast(opciones.toastId, `✅ Pago Aprobado para ${ticketCobroActual.patente}`, 'success');
         }
         await finalizarCobroExitoso(metodo, totalFinal, dataPago);
       } else {
+        console.error('❌ Pago rechazado por TUU');
+        console.error('📋 Detalles completos del error:', dataPago.details);
+        console.error('🔴 Error code:', dataPago.details?.error_code);
+        console.error('💬 Mensaje:', dataPago.details?.error);
+        console.error('📦 Response completo:', dataPago.details?.response);
+        
         const mensajeError = `❌ Pago Rechazado para ${ticketCobroActual.patente}: ${dataPago.error || 'Error desconocido'}`;
-        if (metodo === 'TUU') actualizarToast(opciones.toastId, mensajeError, 'danger');
-        else mostrarAlerta(mensajeError, 'danger');
+        const detalleError = dataPago.details?.error_code ? ` (Código: ${dataPago.details.error_code})` : '';
+        
+        if (metodo === 'TUU') {
+          actualizarToast(opciones.toastId, mensajeError + detalleError, 'danger');
+          // Mostrar alerta adicional con más detalles
+          mostrarAlerta(mensajeError + detalleError + '\n' + (dataPago.details?.error || ''), 'danger');
+        } else {
+          mostrarAlerta(mensajeError, 'danger');
+        }
+        
         btnCobrarTicket.disabled = false;
         btnPagarTuu.disabled = false;
       }
@@ -252,10 +283,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // Event listeners para los botones dentro del modal TUU
-  document.querySelectorAll('#modalPagoTUU [data-metodo]').forEach(button => {
-    button.addEventListener('click', (e) => {
-      const metodoTarjeta = e.currentTarget.getAttribute('data-metodo');
+  // Event listener para confirmar pago con TUU
+  const btnConfirmarPagoTUU = document.getElementById('btn-confirmar-pago-tuu');
+  console.log('🔍 Buscando botón btn-confirmar-pago-tuu:', btnConfirmarPagoTUU);
+  
+  if (btnConfirmarPagoTUU) {
+    console.log('✅ Botón TUU encontrado, agregando event listener');
+    btnConfirmarPagoTUU.addEventListener('click', () => {
+      console.log('🎯 Click en botón Confirmar Pago TUU');
+      console.log('📋 Ticket actual:', ticketCobroActual);
+      
+      // Obtener método de pago seleccionado
+      const metodoTarjetaElement = document.querySelector('input[name="metodoTarjeta"]:checked');
+      console.log('💳 Método de tarjeta seleccionado:', metodoTarjetaElement);
+      
+      if (!metodoTarjetaElement) {
+        mostrarAlerta('Por favor, seleccione un método de pago.', 'warning');
+        return;
+      }
+      const metodoTarjeta = metodoTarjetaElement.value;
+      console.log('✅ Método de pago:', metodoTarjeta);
+      
+      // Obtener tipo de documento
       const tipoDocumento = document.querySelector('input[name="tipoDocumento"]:checked').value;
       let rutCliente = null;
 
@@ -264,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rutCliente = document.getElementById('rut-factura').value.trim();
         if (!rutCliente) {
           mostrarAlerta('Por favor, ingrese el RUT para la factura.', 'warning');
-          return; // Detiene el proceso si el RUT es requerido y está vacío
+          return;
         }
         // Validar formato del RUT (ej: 12345678-9)
         if (!validarFormatoRut(rutCliente)) {
@@ -274,18 +323,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Ocultar el modal inmediatamente
-      if (modalPagoTUU) modalPagoTUU.hide();
+      // Mostrar spinner y deshabilitar botón
+      document.getElementById('spinner-pago-tuu').classList.remove('d-none');
+      btnConfirmarPagoTUU.disabled = true;
+      btnConfirmarPagoTUU.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+      // Ocultar el modal después de un momento
+      setTimeout(() => {
+        if (modalPagoTUU) modalPagoTUU.hide();
+      }, 500);
 
       // Crear un ID único para la notificación "toast"
       const toastId = `toast-${Date.now()}`;
-      const mensajeToast = `Esperando pago para patente <strong>${ticketCobroActual.patente}</strong> en la máquina TUU...`;
+      const mensajeToast = `⏳ Esperando pago para patente <strong>${ticketCobroActual.patente}</strong> en la máquina TUU...`;
       crearToast(toastId, mensajeToast);
 
       // Llama a la función de procesamiento de pago
+      console.log('📞 Llamando a procesarPago con:', { metodo: 'TUU', metodoTarjeta, tipoDocumento, rutCliente, toastId });
       procesarPago('TUU', { metodoTarjeta, tipoDocumento, rutCliente, toastId }); 
     });
-  });
+  } else {
+    console.error('❌ NO se encontró el botón btn-confirmar-pago-tuu');
+  }
 
   async function procesarPagoManual(metodoPago, motivoManual) {
     if (!ticketCobroActual) {
@@ -395,9 +454,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (metodoPagoManual) metodoPagoManual.value = 'EFECTIVO';
     
     // Resetear modal TUU
-    document.querySelectorAll('#modalPagoTUU [data-metodo]').forEach(btn => btn.disabled = false);
+    const btnConfirmarTUU = document.getElementById('btn-confirmar-pago-tuu');
+    if (btnConfirmarTUU) {
+      btnConfirmarTUU.disabled = false;
+      btnConfirmarTUU.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar y Pagar con TUU';
+    }
+    
     const spinner = document.getElementById('spinner-pago-tuu');
     if (spinner) spinner.classList.add('d-none');
+    
+    // Resetear radio buttons de método de pago a efectivo
+    const metodoEfectivo = document.getElementById('metodoEfectivoTUU');
+    if (metodoEfectivo) metodoEfectivo.checked = true;
+    
+    // Resetear tipo de documento a boleta
     const docBoleta = document.getElementById('docBoleta');
     if (docBoleta) docBoleta.checked = true;
     
