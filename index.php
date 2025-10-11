@@ -60,8 +60,11 @@ $rol = $_SESSION['rol'];
       </div>
 
       <div class="d-flex align-items-center">
-        <span class="badge bg-success fs-6 me-3">
+        <span class="badge bg-success fs-6 me-3" id="badge-precio-minuto">
           <i class="fas fa-dollar-sign"></i> $35/min
+        </span>
+        <span class="badge bg-info fs-6 me-3" id="badge-maquina-tuu" title="Máquina TUU activa">
+          <i class="fas fa-desktop"></i> <span id="nombre-maquina-tuu">Cargando...</span>
         </span>
         <span class="text-white me-3" id="fecha-hora"></span>
         <a href="./logout.php" class="btn btn-outline-light btn-sm">
@@ -510,6 +513,46 @@ $rol = $_SESSION['rol'];
     </div>
   </div>
 
+  <!-- Modal Emergencia TUU -->
+  <div class="modal fade" id="modalEmergenciaTUU" tabindex="-1" aria-labelledby="modalEmergenciaTUULabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="modalEmergenciaTUULabel">
+            <i class="fas fa-exclamation-triangle"></i> Cambiar Máquina TUU
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning">
+            <strong>⚠️ Función de Emergencia</strong><br>
+            Úsala solo si la máquina TUU principal no está funcionando.
+          </div>
+
+          <div id="estado-tuu-actual" class="mb-3">
+            <p><strong>Máquina Activa Actual:</strong></p>
+            <div class="d-flex align-items-center">
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              <span>Cargando...</span>
+            </div>
+          </div>
+
+          <div id="selector-maquinas-tuu" class="d-none">
+            <p><strong>Selecciona la máquina a usar:</strong></p>
+            <div class="list-group">
+              <!-- Se llenará dinámicamente -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times"></i> Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Pago TUU -->
   <div class="modal fade" id="modalPagoTUU" tabindex="-1" aria-labelledby="modalPagoTUULabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -604,5 +647,6 @@ $rol = $_SESSION['rol'];
   <script src="JS/reporte.js"></script>
   <script src="JS/modal-lavado.js"></script>
   <script src="JS/modal-modificar-ticket.js"></script>
+  <script src="JS/emergencia-tuu.js"></script>
 </body>
 </html>

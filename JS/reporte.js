@@ -3,6 +3,12 @@ document.addEventListener('DOMContentLoaded', function() {
   // Establecer fechas por defecto (últimos 7 días)
   establecerFechasPorDefecto();
   
+  // Establecer fecha de cierre de caja (hoy por defecto)
+  const fechaCierre = document.getElementById('fecha-cierre');
+  if (fechaCierre) {
+    fechaCierre.value = new Date().toISOString().split('T')[0];
+  }
+  
   // Actualizar cada 30 segundos
   setInterval(cargarReportesUnificados, 30000);
 });
@@ -241,4 +247,180 @@ function verDetallesCategoria(categoria) {
   
   // Scroll hacia los detalles
   container.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ============================================
+// CIERRE DE CAJA
+// ============================================
+
+let datoCierreCajaActual = null; // Variable global para guardar datos del cierre
+
+async function generarCierreCaja() {
+  const fechaCierre = document.getElementById('fecha-cierre').value;
+  
+  if (!fechaCierre) {
+    alert('Por favor, seleccione una fecha para el cierre de caja');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`../api/api_cierre_caja.php?fecha=${fechaCierre}`);
+    const result = await response.json();
+    
+    if (result.success) {
+      datoCierreCajaActual = result; // Guardar para imprimir
+      mostrarCierreCaja(result);
+    } else {
+      alert('Error al generar cierre de caja: ' + result.error);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error de conexión: ' + error.message);
+  }
+}
+
+function mostrarCierreCaja(data) {
+  // Mostrar contenedor
+  const contenedor = document.getElementById('contenedor-cierre-caja');
+  contenedor.classList.remove('d-none');
+  
+  // Actualizar título con fecha
+  const fechaFormateada = new Date(data.fecha + 'T00:00:00').toLocaleDateString('es-CL', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  document.getElementById('fecha-cierre-titulo').textContent = 
+    fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+  
+  // Resumen general
+  document.getElementById('cierre-total-servicios').textContent = data.resumen.total_servicios;
+  document.getElementById('cierre-total-ingresos').textContent = 
+    '$' + parseInt(data.resumen.total_ingresos).toLocaleString('es-CL');
+  
+  // Desglose por método de pago
+  const tbodyPago = document.getElementById('tabla-desglose-pago');
+  const desglose = data.desglose_pago;
+  
+  let html = '';
+  
+  // Efectivo Manual
+  if (desglose.efectivo_manual.total > 0) {
+    html += `
+      <tr>
+        <td><strong>💵 Efectivo (Pago Manual)</strong></td>
+        <td class="text-end"><strong>$${parseInt(desglose.efectivo_manual.total).toLocaleString('es-CL')}</strong></td>
+        <td class="text-muted text-end">${desglose.efectivo_manual.cantidad} servicios</td>
+      </tr>
+    `;
+  }
+  
+  // TUU Efectivo
+  if (desglose.tuu_efectivo.total > 0) {
+    html += `
+      <tr>
+        <td><strong>💵 Efectivo (TUU - Boleta Oficial)</strong></td>
+        <td class="text-end"><strong>$${parseInt(desglose.tuu_efectivo.total).toLocaleString('es-CL')}</strong></td>
+        <td class="text-muted text-end">${desglose.tuu_efectivo.cantidad} servicios</td>
+      </tr>
+    `;
+  }
+  
+  // TUU Débito
+  if (desglose.tuu_debito.total > 0) {
+    html += `
+      <tr>
+        <td><strong>💳 Débito (TUU)</strong></td>
+        <td class="text-end"><strong>$${parseInt(desglose.tuu_debito.total).toLocaleString('es-CL')}</strong></td>
+        <td class="text-muted text-end">${desglose.tuu_debito.cantidad} servicios</td>
+      </tr>
+    `;
+  }
+  
+  // TUU Crédito
+  if (desglose.tuu_credito.total > 0) {
+    html += `
+      <tr>
+        <td><strong>💳 Crédito (TUU)</strong></td>
+        <td class="text-end"><strong>$${parseInt(desglose.tuu_credito.total).toLocaleString('es-CL')}</strong></td>
+        <td class="text-muted text-end">${desglose.tuu_credito.cantidad} servicios</td>
+      </tr>
+    `;
+  }
+  
+  // Transferencia
+  if (desglose.transferencia.total > 0) {
+    html += `
+      <tr>
+        <td><strong>🏦 Transferencia</strong></td>
+        <td class="text-end"><strong>$${parseInt(desglose.transferencia.total).toLocaleString('es-CL')}</strong></td>
+        <td class="text-muted text-end">${desglose.transferencia.cantidad} servicios</td>
+      </tr>
+    `;
+  }
+  
+  tbodyPago.innerHTML = html;
+  
+  // Calcular totales
+  const efectivoEnCaja = desglose.efectivo_manual.total + desglose.tuu_efectivo.total;
+  const pagosElectronicos = desglose.tuu_debito.total + desglose.tuu_credito.total + desglose.transferencia.total;
+  
+  document.getElementById('efectivo-en-caja').textContent = 
+    '$' + parseInt(efectivoEnCaja).toLocaleString('es-CL');
+  
+  document.getElementById('pagos-electronicos').textContent = 
+    '$' + parseInt(pagosElectronicos).toLocaleString('es-CL');
+  
+  // Desglose por categorías
+  const tbodyCategorias = document.getElementById('tabla-categorias-cierre');
+  tbodyCategorias.innerHTML = data.categorias.map(cat => `
+    <tr>
+      <td><strong>${cat.categoria}</strong></td>
+      <td class="text-end"><strong>$${parseInt(cat.total).toLocaleString('es-CL')}</strong></td>
+      <td class="text-muted text-end">${cat.cantidad} servicios</td>
+    </tr>
+  `).join('');
+  
+  // Scroll al contenedor
+  contenedor.scrollIntoView({ behavior: 'smooth' });
+}
+
+async function imprimirCierreCaja() {
+  if (!datoCierreCajaActual) {
+    alert('Primero debe generar el cierre de caja');
+    return;
+  }
+  
+  const desglose = datoCierreCajaActual.desglose_pago;
+  
+  // Preparar datos para la impresora
+  const formData = new FormData();
+  formData.append('fecha', datoCierreCajaActual.fecha);
+  formData.append('total_servicios', datoCierreCajaActual.resumen.total_servicios);
+  formData.append('total_ingresos', datoCierreCajaActual.resumen.total_ingresos);
+  formData.append('efectivo_manual', desglose.efectivo_manual.total);
+  formData.append('tuu_efectivo', desglose.tuu_efectivo.total);
+  formData.append('tuu_debito', desglose.tuu_debito.total);
+  formData.append('tuu_credito', desglose.tuu_credito.total);
+  formData.append('transferencia', desglose.transferencia.total);
+  formData.append('categorias', JSON.stringify(datoCierreCajaActual.categorias));
+  
+  try {
+    const response = await fetch('http://localhost:8080/sistemaEstacionamiento/ImpresionTermica/cierre_caja.php', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const resultado = await response.text();
+    
+    if (resultado.trim() === '1') {
+      alert('✅ Cierre de caja impreso correctamente en la impresora térmica');
+    } else {
+      alert('⚠️ El cierre se generó pero hubo un problema con la impresión.\n\nVerifica que la impresora esté encendida y conectada.');
+    }
+  } catch (error) {
+    console.error('Error imprimiendo:', error);
+    alert('❌ Error al conectar con la impresora térmica.\n\nAsegúrate de que el servicio de impresión esté activo en el puerto 8080.');
+  }
 }

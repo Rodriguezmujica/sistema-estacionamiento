@@ -17,7 +17,6 @@ header('Content-Type: application/json');
 // Configuración según documentación oficial: https://developers.tuu.cl/docs/pago-remoto
 define('TUU_API_URL', 'https://integrations.payment.haulmer.com/RemotePayment/v2/Create'); // URL V2 con idempotencia
 define('TUU_API_KEY', 'uIAwXISF5Amug0O7QA16r72a07x10n6jdu4LNzjos3cdz736bGkHf7gM84bQ5CMsaeav0YSy8Y0qOlTdQy5pORoDE82m55HVDLybJFIuCKEwFeogRIBidkUU6nl6ux'); // API Key desde Espacio de Trabajo
-define('TUU_DEVICE_SERIAL', '6752d2805d5b1d86'); // Número de serie del dispositivo POS (device)
 define('TUU_TIMEOUT', 90); // Timeout de 90 segundos para dar tiempo al cliente a pagar
 define('TUU_MODO_PRUEBA', true); // Cambiar a false para procesar pagos reales
 
@@ -27,6 +26,28 @@ if ($conexion->connect_error) {
     echo json_encode(['success' => false, 'error' => 'Error de conexión: ' . $conexion->connect_error]);
     exit;
 }
+
+// Obtener device serial de la máquina activa desde la BD
+function obtenerDeviceSerialActivo($conexion) {
+    $sql = "SELECT device_serial, nombre FROM configuracion_tuu WHERE activa = 1 LIMIT 1";
+    $result = $conexion->query($sql);
+    
+    if ($result && $row = $result->fetch_assoc()) {
+        return [
+            'serial' => $row['device_serial'],
+            'nombre' => $row['nombre']
+        ];
+    }
+    
+    // Fallback: si no hay configuración, usar el serial por defecto
+    return [
+        'serial' => '6752d2805d5b1d86',
+        'nombre' => 'TUU Principal (default)'
+    ];
+}
+
+$tuuConfig = obtenerDeviceSerialActivo($conexion);
+define('TUU_DEVICE_SERIAL', $tuuConfig['serial']); // Device serial dinámico
 
 // Obtener datos del POST
 $id_ingreso = isset($_POST['id_ingreso']) ? intval($_POST['id_ingreso']) : 0;
