@@ -65,7 +65,7 @@ try {
     $printer->text("\n" . "INFORME DIARIO" . "\n");
     $printer->text("LAVADO DE AUTOS LOS RÍOS" . "\n");
     
-    date_default_timezone_set("Chile/Continental");
+    date_default_timezone_set("America/Santiago");
     $printer->text("Fecha: " . date("d-m-Y") . "\n");
     $printer->text("------------------------------------------" . "\n");
     

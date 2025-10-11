@@ -15,6 +15,7 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="../scss/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <title>Panel de Administración | Estacionamiento Los Ríos</title>
 </head>
 
@@ -51,8 +52,11 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
               </a>
             </li>
           </ul>
-          <div class="navbar-text">
-            <i class="fas fa-user-shield"></i> Panel Admin
+          <div class="d-flex align-items-center">
+            <span class="text-white me-3" id="fecha-hora"></span>
+            <a href="../logout.php" class="btn btn-outline-light btn-sm">
+              <i class="fas fa-sign-out-alt"></i> Salir
+            </a>
           </div>
         </div>
       </div>
@@ -98,6 +102,14 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
       <!-- ============ PESTAÑA: GESTIÓN DE CLIENTES ============ -->
       <div class="tab-pane fade show active" id="clientes-panel" role="tabpanel">
         
+        <div class="row mb-4">
+          <div class="col-12">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalCliente">
+              <i class="fas fa-plus"></i> Agregar Cliente Mensual
+            </button>
+          </div>
+        </div>
+
         <!-- Filtros y búsqueda -->
         <div class="row mb-4">
           <div class="col-md-4">
@@ -109,30 +121,21 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
           <div class="col-md-3">
             <select class="form-select" id="filtro-estado">
               <option value="">Todos los estados</option>
-              <option value="pagado">✅ Pagado</option>
-              <option value="pendiente">❌ Pendiente</option>
+              <option value="activo">✅ Activo</option>
+              <option value="vencido">❌ Vencido</option>
             </select>
           </div>
-          <div class="col-md-3">
-            <select class="form-select" id="filtro-mes">
-              <option value="">Todos los meses</option>
-              <option value="2024-01">Enero 2024</option>
-              <option value="2024-02">Febrero 2024</option>
-              <option value="2024-03">Marzo 2024</option>
-              <option value="2024-04">Abril 2024</option>
-              <option value="2024-05">Mayo 2024</option>
-              <option value="2024-06">Junio 2024</option>
-              <option value="2024-07">Julio 2024</option>
-              <option value="2024-08">Agosto 2024</option>
-              <option value="2024-09">Septiembre 2024</option>
-              <option value="2024-10">Octubre 2024</option>
-              <option value="2024-11">Noviembre 2024</option>
-              <option value="2024-12">Diciembre 2024</option>
-            </select>
+          <div class="col-md-5">
+            <div class="input-group">
+              <span class="input-group-text">Vencimiento entre</span>
+              <input type="date" class="form-control" id="filtro-fecha-desde">
+              <span class="input-group-text">y</span>
+              <input type="date" class="form-control" id="filtro-fecha-hasta">
+            </div>
           </div>
           <div class="col-md-2">
-            <button class="btn btn-outline-primary w-100" onclick="exportarClientes()">
-              <i class="fas fa-download"></i> Exportar
+            <button class="btn btn-outline-secondary w-100" id="btn-limpiar-filtros">
+              <i class="fas fa-times"></i> Limpiar
             </button>
           </div>
         </div>
@@ -144,8 +147,8 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
               <div class="card-body">
                 <div class="d-flex justify-content-between">
                   <div>
-                    <h6 class="card-title">Clientes al Día</h6>
-                    <h3 id="clientes-pagados">0</h3>
+                    <h6 class="card-title">Planes Activos</h6>
+                    <h3 id="clientes-activos">0</h3>
                   </div>
                   <div class="align-self-center">
                     <i class="fas fa-check-circle fa-2x"></i>
@@ -159,8 +162,8 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
               <div class="card-body">
                 <div class="d-flex justify-content-between">
                   <div>
-                    <h6 class="card-title">Pagos Pendientes</h6>
-                    <h3 id="clientes-pendientes">0</h3>
+                    <h6 class="card-title">Planes Vencidos</h6>
+                    <h3 id="clientes-vencidos">0</h3>
                   </div>
                   <div class="align-self-center">
                     <i class="fas fa-exclamation-circle fa-2x"></i>
@@ -174,8 +177,8 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
               <div class="card-body">
                 <div class="d-flex justify-content-between">
                   <div>
-                    <h6 class="card-title">Total Servicios</h6>
-                    <h3 id="total-servicios">0</h3>
+                    <h6 class="card-title">Total Clientes</h6>
+                    <h3 id="total-clientes">0</h3>
                   </div>
                   <div class="align-self-center">
                     <i class="fas fa-car fa-2x"></i>
@@ -189,7 +192,7 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
               <div class="card-body">
                 <div class="d-flex justify-content-between">
                   <div>
-                    <h6 class="card-title">Ingresos Mes</h6>
+                    <h6 class="card-title">Ingresos del Mes</h6>
                     <h3 id="ingresos-mes">$0</h3>
                   </div>
                   <div class="align-self-center">
@@ -217,8 +220,8 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
                     <th>Patente</th>
                     <th>Cliente</th>
                     <th>Vehículo</th>
-                    <th>Servicio</th>
-                    <th>Fecha</th>
+                    <th>Inicio Plan</th>
+                    <th>Próximo Vencimiento</th>
                     <th>Total</th>
                     <th>Acciones</th>
                   </tr>
@@ -242,7 +245,7 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
         <!-- Botón agregar servicio -->
         <div class="row mb-4">
           <div class="col-12">
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAgregarServicio">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalServicio">
               <i class="fas fa-plus"></i> Agregar Nuevo Servicio
             </button>
           </div>
@@ -266,7 +269,7 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
                         <th>Nombre del Servicio</th>
                         <th>Precio</th>
                         <th>Estado</th>
-                        <th>Última Actualización</th>
+                        <th>Descripción</th>
                         <th>Acciones</th>
                       </tr>
                     </thead>
@@ -321,43 +324,215 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
             </div>
           </div>
 
-          <!-- Configuración del sistema -->
+          <!-- Configuración de Meta Mensual -->
           <div class="col-md-6 mb-4">
             <div class="card">
-              <div class="card-header bg-secondary text-white">
+              <div class="card-header bg-info text-white">
                 <h5 class="mb-0">
-                  <i class="fas fa-cog"></i> Configuración del Sistema
+                  <i class="fas fa-bullseye"></i> Meta Mensual
                 </h5>
               </div>
               <div class="card-body">
-                <form id="form-sistema">
+                <form id="form-meta">
                   <div class="mb-3">
-                    <label class="form-label">Nombre del Negocio</label>
-                    <input type="text" class="form-control" id="nombre-negocio" value="Estacionamiento Los Ríos">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Horario de Atención</label>
-                    <div class="row">
-                      <div class="col-6">
-                        <input type="time" class="form-control" id="hora-apertura" value="08:00">
-                      </div>
-                      <div class="col-6">
-                        <input type="time" class="form-control" id="hora-cierre" value="20:00">
-                      </div>
+                    <label class="form-label">Meta de Ingresos del Mes</label>
+                    <div class="input-group">
+                      <span class="input-group-text">$</span>
+                      <input type="number" class="form-control" id="meta-mensual" placeholder="6750000" step="1">
                     </div>
+                    <small class="text-muted">Ejemplo: 6750000 = $6.750.000 (puedes ingresar cualquier monto)</small>
                   </div>
+                  
                   <div class="mb-3">
                     <div class="form-check">
-                      <input class="form-check-input" type="checkbox" id="fines-semana" checked>
-                      <label class="form-check-label" for="fines-semana">
-                        Abrir fines de semana
+                      <input class="form-check-input" type="checkbox" id="solo-dias-laborales" checked>
+                      <label class="form-check-label" for="solo-dias-laborales">
+                        <i class="fas fa-briefcase"></i> Solo contar días laborales (Lun-Vie)
                       </label>
                     </div>
+                    <small class="text-muted d-block">Excluye sábados y domingos del cálculo</small>
                   </div>
-                  <button type="submit" class="btn btn-secondary">
-                    <i class="fas fa-save"></i> Guardar Configuración
+                  
+                  <div class="mb-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="incluir-mensuales">
+                      <label class="form-check-label" for="incluir-mensuales">
+                        <i class="fas fa-calendar-alt"></i> Incluir clientes mensuales
+                      </label>
+                    </div>
+                    <small class="text-muted d-block">Suma los planes mensuales a la meta</small>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-info">
+                    <i class="fas fa-save"></i> Guardar Meta
                   </button>
                 </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESUMEN EJECUTIVO MENSUAL -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="card border-primary">
+              <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h4 class="mb-0">
+                    <i class="fas fa-chart-line"></i> Resumen Ejecutivo Mensual
+                  </h4>
+                  <div>
+                    <select class="form-select form-select-sm d-inline-block" id="selector-mes-resumen" style="width: auto;">
+                      <!-- Se llena con JavaScript -->
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                
+                <!-- Loading -->
+                <div id="resumen-loading" class="text-center py-5">
+                  <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                  <p class="mt-3 text-muted">Cargando resumen ejecutivo...</p>
+                </div>
+                
+                <!-- Contenido del resumen (oculto inicialmente) -->
+                <div id="resumen-contenido" class="d-none">
+                  
+                  <!-- KPIs Principales -->
+                  <div class="row text-center mb-4">
+                    <div class="col-md-3">
+                      <div class="card bg-success text-white">
+                        <div class="card-body">
+                          <h6 class="card-title">💰 Ingresos del Mes</h6>
+                          <h3 class="mb-0" id="kpi-ingresos-mes">$0</h3>
+                          <small id="kpi-variacion" class="d-block mt-2"></small>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="card bg-info text-white">
+                        <div class="card-body">
+                          <h6 class="card-title">🚗 Vehículos Atendidos</h6>
+                          <h3 class="mb-0" id="kpi-vehiculos">0</h3>
+                          <small class="d-block mt-2">Este mes</small>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="card bg-warning text-dark">
+                        <div class="card-body">
+                          <h6 class="card-title">📊 Ticket Promedio</h6>
+                          <h3 class="mb-0" id="kpi-ticket-promedio">$0</h3>
+                          <small class="d-block mt-2">Por servicio</small>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="card bg-primary text-white">
+                        <div class="card-body">
+                          <h6 class="card-title">👥 Clientes Mensuales</h6>
+                          <h3 class="mb-0" id="kpi-mensuales">$0</h3>
+                          <small class="d-block mt-2" id="kpi-mensuales-count">0 clientes</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Meta del Mes (solo visible para admin) -->
+                  <div class="row mb-4" id="seccion-meta">
+                    <div class="col-12">
+                      <div class="card border-warning">
+                        <div class="card-header bg-warning text-dark">
+                          <h5 class="mb-0"><i class="fas fa-bullseye"></i> Meta del Mes</h5>
+                        </div>
+                        <div class="card-body">
+                          <div class="row align-items-center">
+                            <div class="col-md-8">
+                              <h6>Progreso de la Meta:</h6>
+                              <div class="progress" style="height: 30px;">
+                                <div id="barra-meta" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%">
+                                  <span id="texto-barra-meta">0%</span>
+                                </div>
+                              </div>
+                              <div class="mt-2">
+                                <small class="text-muted">
+                                  <i class="fas fa-info-circle"></i>
+                                  <span id="info-meta"></span>
+                                </small>
+                              </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                              <p class="mb-1"><strong>Meta:</strong> <span id="meta-monto">$0</span></p>
+                              <p class="mb-1"><strong>Logrado:</strong> <span id="meta-logrado">$0</span></p>
+                              <p class="mb-0 text-danger"><strong>Falta:</strong> <span id="meta-falta">$0</span></p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Top 5 Servicios y Desglose de Pagos -->
+                  <div class="row mb-4">
+                    <div class="col-md-6">
+                      <div class="card">
+                        <div class="card-header bg-light">
+                          <h6 class="mb-0"><i class="fas fa-trophy"></i> Top 5 Servicios Más Vendidos</h6>
+                        </div>
+                        <div class="card-body">
+                          <div id="top-servicios" class="list-group list-group-flush">
+                            <div class="text-center text-muted py-3">
+                              <i class="fas fa-spinner fa-spin"></i> Cargando...
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="card">
+                        <div class="card-header bg-light">
+                          <h6 class="mb-0"><i class="fas fa-credit-card"></i> Desglose por Método de Pago</h6>
+                        </div>
+                        <div class="card-body">
+                          <div id="desglose-pagos">
+                            <div class="text-center text-muted py-3">
+                              <i class="fas fa-spinner fa-spin"></i> Cargando...
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Gráfico de Ingresos por Día -->
+                  <div class="row mb-4">
+                    <div class="col-12">
+                      <div class="card">
+                        <div class="card-header bg-light">
+                          <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Ingresos por Día del Mes</h6>
+                        </div>
+                        <div class="card-body">
+                          <canvas id="grafico-ingresos-mes" style="max-height: 300px;"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Botones de Exportación -->
+                  <div class="row">
+                    <div class="col-12 text-center">
+                      <button class="btn btn-danger" onclick="exportarResumenPDF()">
+                        <i class="fas fa-file-pdf"></i> Exportar a PDF
+                      </button>
+                      <button class="btn btn-success" onclick="exportarResumenExcel()">
+                        <i class="fas fa-file-excel"></i> Exportar a Excel
+                      </button>
+                    </div>
+                  </div>
+                  
+                </div>
               </div>
             </div>
           </div>
@@ -406,7 +581,7 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
   <!-- ============ MODALES ============ -->
   
   <!-- Modal Agregar/Editar Servicio -->
-  <div class="modal fade" id="modalAgregarServicio" tabindex="-1">
+  <div class="modal fade" id="modalServicio" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -447,60 +622,63 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
     </div>
   </div>
 
-  <!-- Modal Editar Cliente -->
-  <div class="modal fade" id="modalEditarCliente" tabindex="-1">
-    <div class="modal-dialog">
+  <!-- Modal Agregar/Editar Cliente Mensual -->
+  <div class="modal fade" id="modalCliente" tabindex="-1">
+    <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
-            <i class="fas fa-edit"></i> Editar Cliente
-          </h5>
+          <h5 class="modal-title" id="titulo-modal-cliente"></h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <form id="form-cliente">
-            <input type="hidden" id="cliente-id">
+          <form id="form-cliente-mensual">
+            <input type="hidden" id="cliente-id-mensual">
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label class="form-label">Patente</label>
-                <input type="text" class="form-control" id="cliente-patente" readonly style="background-color: #f8f9fa;">
+                <input type="text" class="form-control text-uppercase" id="cliente-patente-mensual" required>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Nombre del Cliente</label>
-                <input type="text" class="form-control" id="cliente-nombre">
+                <input type="text" class="form-control" id="cliente-nombre-mensual" required>
               </div>
             </div>
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label class="form-label">Tipo de Vehículo</label>
-                <select class="form-select" id="cliente-vehiculo">
-                  <option value="">Seleccionar...</option>
-                  <option value="Auto">Auto</option>
-                  <option value="Camioneta">Camioneta</option>
-                  <option value="SUV">SUV</option>
-                  <option value="Motocicleta">Motocicleta</option>
-                  <option value="Furgón">Furgón</option>
-                  <option value="Otro">Otro</option>
-                </select>
+                <input type="text" class="form-control" id="cliente-vehiculo-mensual" placeholder="Ej: Auto, Camioneta">
               </div>
               <div class="col-md-6 mb-3">
-                <label class="form-label">Estado de Pago</label>
-                <select class="form-select" id="cliente-estado">
-                  <option value="pendiente">❌ Pendiente</option>
-                  <option value="pagado">✅ Pagado</option>
-                </select>
+                <label class="form-label">Monto del Plan</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input type="number" class="form-control" id="cliente-monto-mensual" required min="0">
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Día de Pago Mensual (1-31)</label>
+                <input type="number" class="form-control" id="cliente-dia-pago-mensual" required min="1" max="31" value="5">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Fecha Próximo Vencimiento</label>
+                <input type="date" class="form-control" id="cliente-vencimiento-mensual" required>
+                <div class="form-text">
+                  Esta fecha se actualiza manualmente al recibir un pago para el siguiente mes.
+                </div>
               </div>
             </div>
             <div class="mb-3">
               <label class="form-label">Notas</label>
-              <textarea class="form-control" id="cliente-notas" rows="2" 
+              <textarea class="form-control" id="cliente-notas-mensual" rows="2" 
                         placeholder="Notas adicionales sobre el cliente..."></textarea>
             </div>
           </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-primary" onclick="guardarCliente()">
+          <button type="button" class="btn btn-primary" id="btn-guardar-cliente">
             <i class="fas fa-save"></i> Guardar Cambios
           </button>
         </div>
@@ -509,6 +687,7 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../JS/main.js"></script>
   <script src="../JS/admin.js"></script>
 </body>
 </html>

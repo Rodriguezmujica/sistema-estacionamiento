@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mostrarAlerta('✅ Ingreso registrado correctamente.', 'success');
         formIngreso.reset();
         patenteIngreso.focus();
+        imprimirTicketIngreso(data.id_ingreso, patente, servicioId, nombreCliente);
         // Opcional: actualizar alguna tabla de reportes si está visible
         if (typeof cargarReportesUnificados === 'function') {
           cargarReportesUnificados();
@@ -132,5 +133,36 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Error en registro simple:', error);
       mostrarAlerta('❌ Error de conexión al registrar el ingreso.', 'danger');
     });
+  }
+
+  async function imprimirTicketIngreso(idIngreso, patente, servicioId, cliente) {
+    console.log('🖨️ Intentando imprimir ticket de ingreso...');
+    try {
+      // Obtenemos el nombre del servicio para imprimirlo
+      const servicioTexto = servicioIdSelect.options[servicioIdSelect.selectedIndex].text;
+
+      const response = await fetch('./ImpresionTermica/ticket.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          patente: patente,
+          tipo_ingreso: idIngreso, // El ID del ingreso para el código de barras
+          servicio_cliente: servicioTexto,
+          nombre_cliente: cliente,
+          hora_ingreso: new Date().toLocaleTimeString('es-CL')
+        })
+      });
+
+      const resultado = await response.text();
+      if (resultado.trim() === '1') {
+        console.log('✅ Ticket de ingreso enviado a la impresora.');
+      } else {
+        console.warn('⚠️ La impresora respondió, pero hubo un problema:', resultado);
+        mostrarAlerta('Ingreso registrado, pero la impresión del ticket falló.', 'warning');
+      }
+    } catch (error) {
+      console.error('❌ Error de conexión con el servicio de impresión:', error);
+      mostrarAlerta('Ingreso registrado, pero el servicio de impresión no está disponible.', 'warning');
+    }
   }
 });

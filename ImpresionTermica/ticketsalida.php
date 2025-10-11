@@ -27,6 +27,12 @@ $hora_ingreso=$_POST["hora_ingreso"];
 $hora_egreso=$_POST["hora_egreso"];
 $total=$_POST["total"];
 $patente=$_POST["patente"];
+$metodo_pago = $_POST["metodo_pago"] ?? 'MANUAL';
+$motivo_manual = $_POST["motivo_manual"] ?? null;
+
+// Usar el nombre oficial de la zona horaria para evitar problemas con cambios de hora.
+date_default_timezone_set("America/Santiago");
+
 $connector = new WindowsPrintConnector($nombre_impresora);
 $printer = new Printer($connector);
 #Mando un numero de respuesta para saber que se conecto correctamente.
@@ -63,27 +69,24 @@ $printer->text("\n"."Inversiones Rosner" . "\n");
 $printer->text("Estacionamiento y lavado de autos" . "\n");
 $printer->text("Direccion: Perez Rosales #733-C" . "\n");
 $printer->text("Teléfono: 63 2 438535" . "\n");
-date_default_timezone_set("Chile/Continental");
- $printer->text("Fecha  ");
+$printer->text("Fecha  ");
 $printer->text(date("d-m-Y") . "\n");
 $printer->text("-----------------------------" . "\n");
 $printer->setJustification(Printer::JUSTIFY_LEFT);
-$printer->text("DETALLE INGRESO \n");
+$printer->text("COMPROBANTE DE SALIDA \n");
 $printer->text("-----------------------------"."\n\n");
 
-#La fecha también
-date_default_timezone_set("Chile/Continental");
- 
-/*
-	Ahora vamos a imprimir los
-	productos
-*/
 	$printer->setJustification(Printer::JUSTIFY_LEFT);
 	 
 		$printer->text("Hora ingreso: ".$hora_ingreso. " \n");
 	    $printer->text("Hora salida: ".$hora_egreso. " \n");
 	 	$printer->text("patente: ".$patente. " \n");
 		$printer->text("Total: $".$total. " \n");
+		$printer->text("Metodo Pago: ".$metodo_pago. " \n");
+		// Imprimir el motivo solo si existe (para pagos manuales)
+		if ($motivo_manual) {
+			$printer->text("Motivo: ".$motivo_manual. " \n");
+		}
 	     
 
 	 

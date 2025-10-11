@@ -42,11 +42,16 @@ document.addEventListener('DOMContentLoaded', () => {
   function cargarServiciosEnModal() {
     return fetch('./api/api_servicios_lavado.php')
       .then(response => response.json())
-      .then(servicios => {
-        serviciosLavadoModal = servicios;
+      .then(data => {
+        if (!data.success) {
+          throw new Error(data.error || 'La API de servicios devolvió un error.');
+        }
+        serviciosLavadoModal = data.data;
         if (tipoLavadoSelect) {
           tipoLavadoSelect.innerHTML = '<option value="">Seleccionar servicio...</option>';
-          servicios.forEach(servicio => {
+          // Filtrar solo los servicios activos
+          const serviciosActivos = serviciosLavadoModal.filter(s => parseInt(s.activo) === 1);
+          serviciosActivos.forEach(servicio => {
             const option = document.createElement('option');
             option.value = servicio.idtipo_ingresos;
             option.textContent = `${servicio.nombre_servicio} ($${parseInt(servicio.precio).toLocaleString('es-CL')})`;

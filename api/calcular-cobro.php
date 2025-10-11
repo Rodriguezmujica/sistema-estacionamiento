@@ -72,8 +72,18 @@ if ($row = $result->fetch_assoc()) {
         $minutos = ceil(($ahora->getTimestamp() - $ingreso->getTimestamp()) / 60);
         $minutos = max($minutos, 1); // Al menos 1 minuto
         
-        $precioPorMinuto = 35;
-        $precioMinimo = 500;
+        // Obtener precios desde la tabla de configuración
+        $sqlPrecios = "SELECT precio_minuto, precio_minuto_minimo FROM precios WHERE id = 1 LIMIT 1";
+        $resultPrecios = $conexion->query($sqlPrecios);
+        if ($resultPrecios && $rowPrecios = $resultPrecios->fetch_assoc()) {
+            $precioPorMinuto = intval($rowPrecios['precio_minuto']);
+            $precioMinimo = intval($rowPrecios['precio_minuto_minimo']);
+        } else {
+            // Valores por defecto si no existe la configuración
+            $precioPorMinuto = 35;
+            $precioMinimo = 500;
+        }
+        
         $total = max($minutos * $precioPorMinuto, $precioMinimo);
         $tipoCalculo = 'Por minuto';
         

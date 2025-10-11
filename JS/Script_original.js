@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="row mt-2">
               <div class="col-12">
                 <p><strong>Descripción:</strong> ${ultimo.descripcion || 'Sin descripción adicional'}</p>
-                ${ultimo.precio_extra > 0 ? `<p><strong>Precio extra:</strong> $${ultimo.precio_extra.toLocaleString('es-CL')}</p>` : ''}
+                ${ultimo.precio_extra > 0 ? `<p><strong>Precio extra:</strong> $${parseInt(ultimo.precio_extra).toLocaleString('es-CL')}</p>` : ''}
               </div>
             </div>
           `;
@@ -414,8 +414,8 @@ document.addEventListener('DOMContentLoaded', () => {
       Resumen del lavado:
       • Patente: ${patente}
       • Servicio: ${servicioSeleccionado?.nombre_servicio || 'N/A'}
-      • Precio base: $${precioBase.toLocaleString('es-CL')}
-      • Precio extra: $${precioExtra.toLocaleString('es-CL')}
+      • Precio base: $${parseInt(precioBase).toLocaleString('es-CL')}
+      • Precio extra: $${parseInt(precioExtra).toLocaleString('es-CL')}
       • Total: $${precioTotal.toLocaleString('es-CL')}
       • Motivos extra: ${motivos.length > 0 ? motivos.join(', ') : 'Ninguno'}
       • Cliente: ${nombreCliente || 'No registrado'}
@@ -518,8 +518,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${data.precio_extra > 0 ? `
                   <div class="mt-3 p-2 bg-warning bg-opacity-10 rounded">
                     <h6 class="text-warning">💰 Cobros Adicionales</h6>
-                    <p class="mb-1"><strong>Precio base:</strong> $${data.precio_base.toLocaleString('es-CL')}</p>
-                    <p class="mb-1"><strong>Precio extra:</strong> $${data.precio_extra.toLocaleString('es-CL')}</p>
+                    <p class="mb-1"><strong>Precio base:</strong> $${parseInt(data.precio_base).toLocaleString('es-CL')}</p>
+                    <p class="mb-1"><strong>Precio extra:</strong> $${parseInt(data.precio_extra).toLocaleString('es-CL')}</p>
                     ${data.motivos_extra && data.motivos_extra.length > 0 ? `
                       <p class="mb-1"><strong>Motivos:</strong> 
                         ${data.motivos_extra.map(motivo => `<span class="badge bg-warning text-dark me-1">${motivo}</span>`).join('')}

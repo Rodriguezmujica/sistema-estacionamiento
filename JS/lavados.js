@@ -105,21 +105,29 @@ function verificarTicketExistente(patente) {
 function cargarServicios() {
   fetch('../api/api_servicios_lavado.php')
     .then(response => response.json())
-    .then(servicios => {
-      serviciosDisponibles = servicios;
+    .then(data => {
+      if (!data.success) {
+        throw new Error(data.error || 'La API de servicios devolvió un error.');
+      }
+      
+      serviciosDisponibles = data.data;
       const select = document.getElementById('tipo-lavado');
       select.innerHTML = '<option value="">Seleccionar servicio...</option>';
       
-      servicios.forEach(servicio => {
+      // Filtrar solo los servicios activos para mostrarlos en la lista
+      const serviciosActivos = serviciosDisponibles.filter(s => parseInt(s.activo) === 1);
+
+      serviciosActivos.forEach(servicio => {
         const option = document.createElement('option');
         option.value = servicio.idtipo_ingresos;
-        option.textContent = `${servicio.nombre_servicio} ($${servicio.precio.toLocaleString('es-CL')})`;
+        const precio = parseFloat(servicio.precio) || 0;
+        option.textContent = `${servicio.nombre_servicio} ($${precio.toLocaleString('es-CL')})`;
         select.appendChild(option);
       });
     })
     .catch(error => {
       console.error('Error al cargar servicios:', error);
-      mostrarAlerta('Error al cargar servicios de lavado', 'danger');
+      mostrarAlerta(`Error al cargar servicios de lavado: ${error.message}`, 'danger');
     });
 }
 
@@ -186,9 +194,9 @@ function consultarHistorial() {
               ${ultimo.precio_extra > 0 ? `
                 <div class="alert alert-info mt-2">
                   <strong>Desglose del precio:</strong><br>
-                  • Precio base: $${ultimo.precio.toLocaleString('es-CL')}<br>
-                  • Precio extra: $${ultimo.precio_extra.toLocaleString('es-CL')}<br>
-                  • <strong>Total: $${(ultimo.total || (ultimo.precio + ultimo.precio_extra)).toLocaleString('es-CL')}</strong>
+                  • Precio base: $${parseInt(ultimo.precio).toLocaleString('es-CL')}<br>
+                  • Precio extra: $${parseInt(ultimo.precio_extra).toLocaleString('es-CL')}<br>
+                  • <strong>Total: $${parseInt(ultimo.total || (ultimo.precio + ultimo.precio_extra)).toLocaleString('es-CL')}</strong>
                 </div>
               ` : ''}
             </div>

@@ -59,7 +59,7 @@ try {
     $printer->text("Teléfono: [TU_TELEFONO]" . "\n");
     
     // Configurar zona horaria de Chile
-    date_default_timezone_set("Chile/Continental");
+    date_default_timezone_set("America/Santiago");
     $printer->text("Fecha: " . date("d-m-Y") . "\n");
     $printer->text("Hora: " . date("H:i:s") . "\n");
     $printer->text("-----------------------------" . "\n");

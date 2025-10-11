@@ -142,8 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
           ${data.precio_extra > 0 && !esErrorIngreso ? `
             <div class="mt-3 p-2 bg-light rounded">
               <h6 class="text-dark">💰 Cobros Adicionales</h6>
-              <p class="mb-1"><strong>Precio base:</strong> $${data.precio_base.toLocaleString('es-CL')}</p>
-              <p class="mb-1"><strong>Precio extra:</strong> $${data.precio_extra.toLocaleString('es-CL')}</p>
+              <p class="mb-1"><strong>Precio base:</strong> $${parseInt(data.precio_base).toLocaleString('es-CL')}</p>
+              <p class="mb-1"><strong>Precio extra:</strong> $${parseInt(data.precio_extra).toLocaleString('es-CL')}</p>
             </div>
           ` : ''}
           
@@ -349,10 +349,10 @@ document.addEventListener('DOMContentLoaded', () => {
       mostrarAlerta(mensaje, 'success');
     }
 
-    // Intentar imprimir ticket solo para pagos no manuales
-    if (metodo !== 'MANUAL') {
+    // Intentar imprimir comprobante interno solo para pagos MANUALES
+    if (metodo === 'MANUAL') {
       try {
-        const responseImprimir = await fetch('http://localhost:8080/sistemaEstacionamiento/ImpresionTermica/ticketsalida.php', {
+        const responseImprimir = await fetch('../ImpresionTermica/ticketsalida.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({
@@ -366,15 +366,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const dataImprimir = await responseImprimir.text();
         if (dataImprimir.trim() !== '1') {
-          mostrarAlerta('El cobro fue exitoso, pero la impresión del ticket falló.', 'warning');
+          mostrarAlerta('El cobro manual fue exitoso, pero la impresión del comprobante falló.', 'warning');
         }
       } catch (errorImprimir) {
-        console.warn('⚠️ No se pudo imprimir el ticket:', errorImprimir);
-        mostrarAlerta('El cobro fue exitoso, pero el servicio de impresión no está disponible.', 'warning');
+        console.warn('⚠️ No se pudo imprimir el comprobante:', errorImprimir);
+        mostrarAlerta('El cobro manual fue exitoso, pero el servicio de impresión no está disponible.', 'warning');
       }
     } else {
-      // Para pagos manuales, mostrar mensaje informativo
-      mostrarAlerta('💡 Comprobante interno generado. No se imprimió ticket en impresora térmica.', 'info');
+      // Para pagos con TUU (incluyendo efectivo), el POS imprime el voucher.
+      console.log(`ℹ️ Pago con ${metodo}. La impresión la maneja el terminal POS.`);
     }
 
     // Limpiar UI

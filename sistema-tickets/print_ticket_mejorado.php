@@ -55,7 +55,7 @@ try {
     $printer->text("Teléfono: [TU_TELEFONO]" . "\n");
     
     // Fecha y hora
-    date_default_timezone_set("Chile/Continental");
+    date_default_timezone_set("America/Santiago");
     $printer->text("Fecha: " . date("d-m-Y") . "\n");
     $printer->text("-----------------------------" . "\n");
     

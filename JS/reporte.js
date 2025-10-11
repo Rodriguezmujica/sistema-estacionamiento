@@ -1,10 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
   cargarReportesUnificados();
-  if (document.getElementById('fecha-hora')) {
-    actualizarFechaHora();
-    setInterval(actualizarFechaHora, 1000);
-  }
-  
   // Establecer fechas por defecto (últimos 7 días)
   establecerFechasPorDefecto();
   
@@ -246,22 +241,4 @@ function verDetallesCategoria(categoria) {
   
   // Scroll hacia los detalles
   container.scrollIntoView({ behavior: 'smooth' });
-}
-
-function actualizarFechaHora() {
-  const ahora = new Date();
-  const fechaHora = ahora.toLocaleString('es-CL', {
-    day: '2-digit',
-    month: '2-digit', 
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
-  });
-  
-  const elemento = document.getElementById('fecha-hora');
-  if (elemento) {
-    elemento.textContent = fechaHora;
-  }
 }

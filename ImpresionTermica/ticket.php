@@ -21,16 +21,14 @@ use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 $nombre_impresora = "POSESTACIONAMIENTO"; 
 
 //recibo parametros
-if(isset($_SESSION['nombreCliente'])){
-		$nombre_cliente=$_SESSION['nombreCliente'];
-}else{
-	$nombre_cliente="";
-}
-$servicio_cliente=$_POST["servicio_cliente"];
-$hora_ingreso=$_POST["hora_ingreso"];
+$nombre_cliente = $_POST["nombre_cliente"] ?? '';
+$servicio_cliente = $_POST["servicio_cliente"] ?? 'No especificado';
+$patente = $_POST["patente"] ?? '';
+$tipo_ingreso = $_POST["tipo_ingreso"] ?? ''; // Para el código de barras
 
-$tipo_ingreso=$_POST["tipo_ingreso"];
-$patente=$_POST["patente"];
+// Usar el nombre oficial de la zona horaria para evitar problemas con cambios de hora.
+date_default_timezone_set("America/Santiago");
+
 $connector = new WindowsPrintConnector($nombre_impresora);
 $printer = new Printer($connector);
 #Mando un numero de respuesta para saber que se conecto correctamente.
@@ -67,7 +65,7 @@ $printer->text("\n"."Inversiones Rosner" . "\n");
 $printer->text("Estacionamiento y lavado de autos" . "\n");
 $printer->text("Direccion: Perez Rosales #733-C" . "\n");
 $printer->text("Teléfono: 63 2 438535" . "\n");
-date_default_timezone_set("Chile/Continental");
+date_default_timezone_set("America/Santiago");
  $printer->text("Fecha  ");
 $printer->text(date("d-m-Y") . "\n");
 $printer->text("-----------------------------" . "\n");
@@ -76,7 +74,7 @@ $printer->text("DETALLE INGRESO \n");
 $printer->text("-----------------------------"."\n\n");
 
 #La fecha también
-date_default_timezone_set("Chile/Continental");
+date_default_timezone_set("America/Santiago");
 $printer->text("Hora de ingreso:  ");
 $printer->text(date("H:i:s") . "\n");
 /*
@@ -106,7 +104,7 @@ $printer->text("-----------------------------"."\n");
  
  $printer->setJustification(Printer::JUSTIFY_CENTER);
  $patente=strtoupper($patente);
-$printer->barcode($patente, Printer::BARCODE_CODE39);
+$printer->barcode($tipo_ingreso, Printer::BARCODE_CODE39);
  
 $printer->text("\n");
 $printer->text($patente." \n");

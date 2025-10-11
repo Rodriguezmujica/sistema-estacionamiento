@@ -1,44 +1,80 @@
 /**
  * main.js
- * Contiene la lógica compartida y utilidades para toda la aplicación.
+ * Contiene funciones globales y de inicialización para todo el sistema.
  */
 
-// Función para mostrar alertas reutilizable
-function mostrarAlerta(mensaje, tipo = 'info') {
-  const alertContainer = document.getElementById('alert-container') || document.querySelector('main') || document.body;
+document.addEventListener('DOMContentLoaded', () => {
+  // Inicializar el reloj en todas las páginas que tengan el elemento #fecha-hora
+  if (document.getElementById('fecha-hora')) {
+    actualizarFechaHora();
+    setInterval(actualizarFechaHora, 1000);
+  }
   
-  const alertDiv = document.createElement('div');
-  alertDiv.className = `alert alert-${tipo} alert-dismissible fade show m-3`;
-  alertDiv.style.position = 'fixed';
-  alertDiv.style.top = '20px';
-  alertDiv.style.right = '20px';
-  alertDiv.style.zIndex = '1056'; // Encima de los modales de Bootstrap
-  alertDiv.innerHTML = `
-    ${mensaje}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  `;
-  
-  alertContainer.appendChild(alertDiv);
-  
-  setTimeout(() => {
-    const alertInstance = bootstrap.Alert.getOrCreateInstance(alertDiv);
-    if (alertInstance) {
-      alertInstance.close();
-    }
-  }, 5000);
-}
+  // Cargar y actualizar precio por minuto en el navbar
+  cargarPrecioNavbar();
+});
 
-// Función para actualizar fecha y hora
+/**
+ * Actualiza el elemento de fecha y hora en la UI.
+ */
 function actualizarFechaHora() {
   const ahora = new Date();
-  const fechaHora = ahora.toLocaleString('es-CL', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const fechaHora = ahora.toLocaleString('es-CL', {
+    timeZone: 'America/Santiago', // ✅ Zona horaria de Chile con DST automático
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false // Formato 24 horas para consistencia
+  }).replace(',', ''); // Quita la coma entre fecha y hora
+
+  const elemento = document.getElementById('fecha-hora');
+  if (elemento) {
+    elemento.textContent = fechaHora;
+  }
   
-  const elementosFecha = document.querySelectorAll('.fecha-hora-dinamica');
-  elementosFecha.forEach(el => el.textContent = fechaHora);
+  // También actualizar fecha-sistema si existe (en footer)
+  const elementoSistema = document.getElementById('fecha-sistema');
+  if (elementoSistema) {
+    elementoSistema.textContent = ahora.toLocaleDateString('es-CL', {
+      timeZone: 'America/Santiago'
+    });
+  }
 }
 
-// Inicialización global
-document.addEventListener('DOMContentLoaded', () => {
-  actualizarFechaHora();
-  setInterval(actualizarFechaHora, 1000);
-});
+/**
+ * Muestra una alerta global usando Bootstrap.
+ * @param {string} mensaje - El mensaje a mostrar.
+ * @param {string} tipo - El tipo de alerta (e.g., 'success', 'warning', 'danger').
+ */
+function mostrarAlerta(mensaje, tipo = 'info') {
+  // Implementación de la alerta (ya existe en otros archivos, se puede centralizar aquí)
+  console.log(`ALERTA [${tipo}]: ${mensaje}`);
+}
+
+/**
+ * Carga el precio por minuto desde la configuración y actualiza el badge del navbar
+ */
+async function cargarPrecioNavbar() {
+  try {
+    const response = await fetch('../api/api_precios.php');
+    const result = await response.json();
+    
+    if (result.success) {
+      const precioMinuto = result.data.precio_minuto;
+      
+      // Actualizar el badge en el navbar
+      const badgePrecio = document.querySelector('.badge.bg-success');
+      if (badgePrecio && badgePrecio.textContent.includes('$')) {
+        badgePrecio.innerHTML = `<i class="fas fa-dollar-sign"></i> $${precioMinuto}/min`;
+      }
+      
+      console.log('✅ Precio por minuto cargado: $' + precioMinuto);
+    }
+  } catch (error) {
+    console.warn('⚠️ No se pudo cargar el precio desde configuración, usando valor por defecto');
+    // Si falla, mantiene el valor por defecto del HTML
+  }
+}
