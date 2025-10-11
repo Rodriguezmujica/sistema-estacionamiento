@@ -1,0 +1,28 @@
+<?php
+/*
+ * ARCHIVO DE EJEMPLO PARA LA CONEXIÓN A LA BASE DE DATOS
+ * ------------------------------------------------------
+ *
+ * INSTRUCCIONES:
+ * 1. Copia este archivo y renómbralo a "conexion.php".
+ * 2. Completa los datos de tu base de datos local.
+ * 3. El archivo "conexion.php" real NUNCA debe ser subido a Git.
+ *    Ya está incluido en el .gitignore.
+ */
+
+// Configuración para la conexión a la base de datos
+$servidor = "localhost";
+$usuario = "root";
+$password = ""; // <-- PON TU CONTRASEÑA AQUÍ SI TIENES UNA
+$basededatos = "estacionamiento";
+
+// Crear la conexión
+$conn = new mysqli($servidor, $usuario, $password, $basededatos);
+
+// Verificar la conexión
+if ($conn->connect_error) {
+    die("Conexión fallida: " . $conn->connect_error);
+}
+
+// Establecer el charset a utf8 para evitar problemas con tildes y caracteres especiales
+$conn->set_charset("utf8");

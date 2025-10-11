@@ -11,16 +11,3 @@ Thumbs.db
 
 # Dependencias de Composer (si las usaras en el futuro)
 /vendor/
-
-# Dependencias de Node.js (muy común en proyectos web)
-/node_modules/
-
-# Archivos de script y backups
-*.bat
-*.bak
-*.backup
-*_backup.*
-*_original.*
-
-# Scripts de ejecución única de la base deatos
-/sql/ejecutar_*.php

@@ -1,0 +1,17 @@
+{
+    "name": "estacionamiento-lavado/ticket-system",
+    "description": "Sistema de impresión de tickets para estacionamiento y lavado de autos",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "mike42/escpos-php": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Estacionamiento\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
