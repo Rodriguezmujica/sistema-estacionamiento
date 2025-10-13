@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejemplos de Integración - Servicio de Impresión</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        body {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        .btn-print {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+        }
+        .btn-print:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-online {
+            background-color: #28a745;
+            box-shadow: 0 0 10px #28a745;
+        }
+        .status-offline {
+            background-color: #dc3545;
+            box-shadow: 0 0 10px #dc3545;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h1 class="mb-3">🖨️ Servicio de Impresión Térmica</h1>
+                        <p class="mb-2">
+                            Estado del servicio: 
+                            <span id="status-indicator" class="status-indicator status-offline"></span>
+                            <span id="status-text">Verificando...</span>
+                        </p>
+                        <p class="text-muted mb-0">
+                            Impresoras conectadas: <span id="printer-count">-</span>
+                        </p>
+                        <button class="btn btn-sm btn-outline-primary mt-2" onclick="verificarServicio()">
+                            🔄 Refrescar Estado
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Ejemplo 1: Ticket de Ingreso -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">📥 Ticket de Ingreso</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="form-ingreso">
+                            <div class="mb-3">
+                                <label class="form-label">Ticket ID</label>
+                                <input type="text" class="form-control" id="ingreso-ticket" value="12345">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Patente</label>
+                                <input type="text" class="form-control" id="ingreso-patente" value="ABC123">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Tipo Vehículo</label>
+                                <select class="form-select" id="ingreso-tipo">
+                                    <option value="Auto">Auto</option>
+                                    <option value="Moto">Moto</option>
+                                    <option value="Camioneta">Camioneta</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-print w-100">
+                                🖨️ Imprimir Ticket de Ingreso
+                            </button>
+                        </form>
+
+                        <hr>
+                        <h6>Código de ejemplo:</h6>
+                        <pre><code>await PrintService.imprimirTicketIngreso(
+  '12345',
+  'ABC123',
+  'Auto',
+  '2025-10-13',
+  '10:30:00'
+);</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ejemplo 2: Ticket de Salida -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">📤 Ticket de Salida</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="form-salida">
+                            <div class="mb-3">
+                                <label class="form-label">Ticket ID</label>
+                                <input type="text" class="form-control" id="salida-ticket" value="12345">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Patente</label>
+                                <input type="text" class="form-control" id="salida-patente" value="ABC123">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Tiempo Estadía</label>
+                                <input type="text" class="form-control" id="salida-tiempo" value="4h 15min">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Monto</label>
+                                <input type="number" class="form-control" id="salida-monto" value="500">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Método de Pago</label>
+                                <select class="form-select" id="salida-metodo">
+                                    <option value="Efectivo">Efectivo</option>
+                                    <option value="TUU">TUU</option>
+                                    <option value="Tarjeta">Tarjeta</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-print w-100">
+                                🖨️ Imprimir Ticket de Salida
+                            </button>
+                        </form>
+
+                        <hr>
+                        <h6>Código de ejemplo:</h6>
+                        <pre><code>await PrintService.imprimirTicketSalida({
+  ticket_id: '12345',
+  patente: 'ABC123',
+  fecha_ingreso: '2025-10-13 10:30',
+  fecha_salida: '2025-10-13 14:45',
+  tiempo_estadia: '4h 15min',
+  monto: '500',
+  metodo_pago: 'Efectivo'
+});</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ejemplo 3: Ticket de Lavado -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">🚿 Ticket de Lavado</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="form-lavado">
+                            <div class="mb-3">
+                                <label class="form-label">Ticket ID</label>
+                                <input type="text" class="form-control" id="lavado-ticket" value="LAV001">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Patente</label>
+                                <input type="text" class="form-control" id="lavado-patente" value="XYZ789">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Servicio</label>
+                                <select class="form-select" id="lavado-servicio">
+                                    <option value="Lavado Simple">Lavado Simple</option>
+                                    <option value="Lavado Premium">Lavado Premium</option>
+                                    <option value="Lavado Completo">Lavado Completo</option>
+                                    <option value="Encerado">Encerado</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Monto</label>
+                                <input type="number" class="form-control" id="lavado-monto" value="300">
+                            </div>
+                            <button type="submit" class="btn btn-print w-100">
+                                🖨️ Imprimir Ticket de Lavado
+                            </button>
+                        </form>
+
+                        <hr>
+                        <h6>Código de ejemplo:</h6>
+                        <pre><code>await PrintService.imprimirTicketLavado(
+  'LAV001',
+  'XYZ789',
+  'Lavado Simple',
+  '300',
+  '2025-10-13 15:00'
+);</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ejemplo 4: Ticket de Prueba -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0">🧪 Ticket de Prueba</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="form-test">
+                            <div class="mb-3">
+                                <label class="form-label">Mensaje</label>
+                                <textarea class="form-control" id="test-mensaje" rows="3">Impresora Star BSC10 funcionando correctamente!</textarea>
+                            </div>
+                            <button type="submit" class="btn btn-print w-100">
+                                🖨️ Imprimir Ticket de Prueba
+                            </button>
+                        </form>
+
+                        <hr>
+                        <h6>Código de ejemplo:</h6>
+                        <pre><code>await PrintService.imprimirTest(
+  'Prueba de impresión'
+);</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integración con código existente -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">💻 Integración con tu código existente</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>1. Incluir el script en tu HTML:</h6>
+                        <pre><code>&lt;script src="JS/print-service-client.js"&gt;&lt;/script&gt;</code></pre>
+
+                        <h6>2. Modificar tu función de registro de ingreso:</h6>
+                        <pre><code>// En tu archivo JS/ingreso.js, después de registrar el ingreso:
+async function registrarIngreso() {
+    // ... tu código existente ...
+    
+    const response = await fetch('api/registrar-ingreso.php', { ... });
+    const resultado = await response.json();
+    
+    if (resultado.success) {
+        // 🆕 AGREGAR ESTA LÍNEA:
+        await PrintService.imprimirTicketIngreso(
+            resultado.ticket_id,
+            patente,
+            tipoVehiculo,
+            resultado.fecha,
+            resultado.hora
+        );
+        
+        // ... resto de tu código ...
+    }
+}</code></pre>
+
+                        <h6>3. Modificar tu función de cobro/salida:</h6>
+                        <pre><code>// En tu archivo JS/cobro.js, después de procesar el cobro:
+async function procesarCobro() {
+    // ... tu código existente ...
+    
+    const response = await fetch('api/registrar-salida.php', { ... });
+    const resultado = await response.json();
+    
+    if (resultado.success) {
+        // 🆕 AGREGAR ESTA LÍNEA:
+        await PrintService.imprimirTicketSalida({
+            ticket_id: ticketId,
+            patente: patente,
+            fecha_ingreso: fechaIngreso,
+            fecha_salida: resultado.fecha_salida,
+            tiempo_estadia: resultado.tiempo,
+            monto: resultado.monto,
+            metodo_pago: metodoPago,
+            fecha_pago: resultado.fecha_pago
+        });
+        
+        // ... resto de tu código ...
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="JS/print-service-client.js"></script>
+    
+    <script>
+        // Verificar estado del servicio al cargar
+        async function verificarServicio() {
+            const estado = await PrintService.verificarEstado();
+            const indicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            
+            if (estado.disponible) {
+                indicator.className = 'status-indicator status-online';
+                statusText.textContent = `Online (v${estado.version})`;
+                
+                // Obtener impresoras
+                const impresoras = await PrintService.listarImpresoras();
+                document.getElementById('printer-count').textContent = 
+                    impresoras.success ? impresoras.printers.length : '0';
+            } else {
+                indicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'Offline';
+                document.getElementById('printer-count').textContent = '0';
+            }
+        }
+
+        // Formulario de ingreso
+        document.getElementById('form-ingreso').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const ticketId = document.getElementById('ingreso-ticket').value;
+            const patente = document.getElementById('ingreso-patente').value;
+            const tipoVehiculo = document.getElementById('ingreso-tipo').value;
+            const ahora = new Date();
+            const fecha = ahora.toISOString().split('T')[0];
+            const hora = ahora.toTimeString().split(' ')[0];
+            
+            await PrintService.imprimirTicketIngreso(
+                ticketId, patente, tipoVehiculo, fecha, hora
+            );
+        });
+
+        // Formulario de salida
+        document.getElementById('form-salida').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            await PrintService.imprimirTicketSalida({
+                ticket_id: document.getElementById('salida-ticket').value,
+                patente: document.getElementById('salida-patente').value,
+                fecha_ingreso: '2025-10-13 10:30:00',
+                fecha_salida: new Date().toLocaleString('es-AR'),
+                tiempo_estadia: document.getElementById('salida-tiempo').value,
+                monto: document.getElementById('salida-monto').value,
+                metodo_pago: document.getElementById('salida-metodo').value,
+                fecha_pago: new Date().toLocaleString('es-AR')
+            });
+        });
+
+        // Formulario de lavado
+        document.getElementById('form-lavado').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const ticketId = document.getElementById('lavado-ticket').value;
+            const patente = document.getElementById('lavado-patente').value;
+            const servicio = document.getElementById('lavado-servicio').value;
+            const monto = document.getElementById('lavado-monto').value;
+            const fecha = new Date().toLocaleString('es-AR');
+            
+            await PrintService.imprimirTicketLavado(
+                ticketId, patente, servicio, monto, fecha
+            );
+        });
+
+        // Formulario de prueba
+        document.getElementById('form-test').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const mensaje = document.getElementById('test-mensaje').value;
+            await PrintService.imprimirTest(mensaje);
+        });
+
+        // Verificar estado inicial
+        verificarServicio();
+    </script>
+</body>
+</html>
+

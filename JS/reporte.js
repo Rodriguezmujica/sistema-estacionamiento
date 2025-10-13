@@ -394,7 +394,38 @@ async function imprimirCierreCaja() {
   
   const desglose = datoCierreCajaActual.desglose_pago;
   
-  // Preparar datos para la impresora
+  // 🆕 INTENTAR CON NUEVO SERVICIO PRIMERO
+  if (typeof PrintService !== 'undefined') {
+    try {
+      console.log('🆕 Imprimiendo cierre de caja con nuevo servicio...');
+      
+      // Preparar datos para el nuevo servicio
+      const datosCierre = {
+        fecha: datoCierreCajaActual.fecha,
+        hora: new Date().toLocaleTimeString('es-AR'),
+        usuario: 'Usuario', // Ajustar si tienes la info del usuario
+        efectivo_estacionamiento: desglose.efectivo_manual.total,
+        tuu_estacionamiento: desglose.tuu_efectivo.total + desglose.tuu_debito.total + desglose.tuu_credito.total,
+        efectivo_lavado: 0, // Ajustar según tu estructura de datos
+        tuu_lavado: 0, // Ajustar según tu estructura de datos
+        total: datoCierreCajaActual.resumen.total_ingresos
+      };
+      
+      const resultado = await PrintService.imprimirCierreCaja(datosCierre);
+      
+      if (resultado.success) {
+        alert('✅ Cierre de caja impreso correctamente');
+        return;
+      } else {
+        console.warn('⚠️ Nuevo servicio falló, intentando método antiguo...');
+        throw new Error('Fallback al método antiguo');
+      }
+    } catch (errorNuevo) {
+      console.warn('Usando método antiguo de impresión...');
+    }
+  }
+  
+  // 🔄 FALLBACK: Método antiguo
   const formData = new FormData();
   formData.append('fecha', datoCierreCajaActual.fecha);
   formData.append('total_servicios', datoCierreCajaActual.resumen.total_servicios);

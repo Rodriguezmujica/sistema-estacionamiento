@@ -1,0 +1,88 @@
+═══════════════════════════════════════════════════════════════════
+  INSTRUCCIONES PARA PRUEBA SEGURA SIN AFECTAR PRODUCCIÓN
+═══════════════════════════════════════════════════════════════════
+
+OPCIÓN 1: PROBAR EN CARPETA SEPARADA (RECOMENDADO)
+───────────────────────────────────────────────────
+
+1. En la PC Windows 7, crear carpeta:
+   C:\xampp\htdocs\test-impresora\
+
+2. Copiar estos archivos/carpetas:
+   
+   DESDE tu carpeta actual:
+   C:\xampp\htdocs\sistemaEstacionamiento\ImpresionTermica\
+   
+   COPIAR A:
+   C:\xampp\htdocs\test-impresora\ImpresionTermica\
+
+3. Copiar archivos nuevos desde USB a:
+   C:\xampp\htdocs\test-impresora\
+   
+   - print-service-php\
+   - JS\print-service-client-win7.js
+   - test-imprimir-win7.html
+
+4. Ajustar la ruta en test-imprimir-win7.html:
+   Abrir el archivo y buscar:
+   baseURL: 'http://localhost/sistemaEstacionamiento/...'
+   
+   Cambiar a:
+   baseURL: 'http://localhost/test-impresora/...'
+
+5. Probar:
+   http://localhost/test-impresora/test-imprimir-win7.html
+
+6. Si funciona, entonces copiar a la carpeta real después de hora.
+
+
+OPCIÓN 2: PROBAR DESPUÉS DE HORA (MÁS SEGURO)
+───────────────────────────────────────────────
+
+1. Esperar a que termine la jornada laboral
+
+2. Hacer backup:
+   - Copiar carpeta completa sistemaEstacionamiento
+   - Pegar como sistemaEstacionamiento-backup
+   - O comprimir en .zip
+
+3. Agregar los archivos nuevos:
+   - print-service-php\imprimir.php (nuevo)
+   - JS\print-service-client-win7.js (nuevo)
+   - test-imprimir-win7.html (nuevo)
+
+4. Probar:
+   http://localhost/sistemaEstacionamiento/test-imprimir-win7.html
+
+5. Si funciona: ¡Perfecto! Dejar así
+   Si falla: Eliminar los 3 archivos nuevos o restaurar backup
+
+
+IMPORTANTE: LOS ARCHIVOS NUEVOS NO AFECTAN LOS EXISTENTES
+──────────────────────────────────────────────────────────
+
+Los archivos que vamos a agregar son NUEVOS:
+✅ print-service-php\        - Carpeta nueva
+✅ print-service-client-win7.js - Archivo nuevo
+✅ test-imprimir-win7.html   - Archivo nuevo
+
+NO modificamos ningún archivo existente de tu sistema actual.
+El sistema actual seguirá funcionando exactamente igual.
+
+
+VERIFICACIÓN DESPUÉS DE COPIAR
+───────────────────────────────
+
+1. Abrir el sistema actual: http://localhost/sistemaEstacionamiento/
+2. Probar que todo funcione igual (registrar ingreso, cobro, etc.)
+3. Si algo falla, simplemente eliminar los archivos nuevos
+
+
+¿DUDAS O PROBLEMAS?
+────────────────────
+
+Si tienes cualquier duda antes de hacer cambios, pregunta primero.
+Es mejor prevenir que lamentar.
+
+═══════════════════════════════════════════════════════════════════
+

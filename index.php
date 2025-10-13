@@ -688,6 +688,9 @@ $rol = $_SESSION['rol'];
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
   <!-- main.js siempre primero para funciones globales como el reloj y las alertas -->
   <script src="JS/main.js"></script> 
+  
+  <!-- 🖨️ Servicio de impresión térmica (Windows 7 compatible) -->
+  <script src="JS/print-service-client-win7.js"></script>
 
   <!-- Módulos específicos para el Dashboard -->
   <script src="JS/ingreso.js"></script>

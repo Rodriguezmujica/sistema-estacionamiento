@@ -1,145 +1,186 @@
 ﻿<?php
+// filepath: c:\xampp\htdocs\sistemaEstacionamiento\ImpresionTermica\ticket.php
 session_start();
 
-require __DIR__ . '/ticket/autoload.php'; //Nota: si renombraste la carpeta a algo diferente de "ticket" cambia el nombre en esta línea
+require __DIR__ . '/ticket/autoload.php';
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\EscposImage;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
+use Mike42\Escpos\PrintConnectors\FilePrintConnector;
 
-/*
-	Este ejemplo imprime un
-	ticket de venta desde una impresora térmica
-*/
+// 🔧 SUPRIMIR WARNINGS INNECESARIOS
+error_reporting(E_ERROR | E_PARSE);
 
-
-/*
-    Aquí, en lugar de "POS" (que es el nombre de mi impresora)
-	escribe el nombre de la tuya. Recuerda que debes compartirla
-	desde el panel de control
-*/
-
-$nombre_impresora = "POSESTACIONAMIENTO"; 
-
-//recibo parametros
+// 🔧 VALIDACIÓN Y SANITIZACIÓN DE DATOS
 $nombre_cliente = $_POST["nombre_cliente"] ?? '';
-$servicio_cliente = $_POST["servicio_cliente"] ?? 'No especificado';
-$patente = $_POST["patente"] ?? '';
-$tipo_ingreso = $_POST["tipo_ingreso"] ?? ''; // Para el código de barras
+$servicio_cliente = $_POST["servicio_cliente"] ?? 'Estacionamiento';
+$patente = strtoupper(trim($_POST["patente"] ?? ''));
+$tipo_ingreso = $_POST["tipo_ingreso"] ?? '';
 
-// Usar el nombre oficial de la zona horaria para evitar problemas con cambios de hora.
+if (empty($patente)) {
+    $patente = 'SIN-PATENTE';
+}
+
+// 🔧 GENERAR CÓDIGO DE BARRAS VÁLIDO
+$codigo_barras = '';
+if (!empty($tipo_ingreso) && $tipo_ingreso !== 'undefined' && $tipo_ingreso !== 'null') {
+    $codigo_limpio = strtoupper(preg_replace('/[^0-9A-Z\s\$\%\+\-\.\/]/', '', $tipo_ingreso));
+    $codigo_barras = !empty($codigo_limpio) ? $codigo_limpio : 'ID' . date('YmdHis');
+} else {
+    $codigo_barras = 'ID' . date('YmdHis');
+}
+
 date_default_timezone_set("America/Santiago");
 
-$connector = new WindowsPrintConnector($nombre_impresora);
-$printer = new Printer($connector);
-#Mando un numero de respuesta para saber que se conecto correctamente.
-echo 1;
-/*
-	Vamos a imprimir un logotipo
-	opcional. Recuerda que esto
-	no funcionará en todas las
-	impresoras
+// 🖨️ MÉTODOS DE CONEXIÓN MÚLTIPLES
+$printer = null;
+$impresora_usada = '';
 
-	Pequeña nota: Es recomendable que la imagen no sea
-	transparente (aunque sea png hay que quitar el canal alfa)
-	y que tenga una resolución baja. En mi caso
-	la imagen que uso es de 250 x 250
-*/
+// 1️⃣ MÉTODO 1: Conexión por puerto directo (basado en wmic)
+$puertos_directos = [
+    "USB003",  // El puerto real de POSESTACIONAMIENTO
+    "USB004",  // Star BSC10
+    "USB005",  // Star BSC10 (Copiar 1)
+    "USB006",  // Star BSC10 (Copiar 2)
+    "LPT1:",   // Puerto paralelo
+    "COM1:",   // Puerto serie
+];
 
-# Vamos a alinear al centro lo próximo que imprimamos
-$printer->setJustification(Printer::JUSTIFY_CENTER);
+foreach ($puertos_directos as $puerto) {
+    try {
+        $connector = new FilePrintConnector($puerto);
+        $printer = new Printer($connector);
+        $impresora_usada = "Puerto $puerto";
+        break;
+    } catch (Exception $e) {
+        continue;
+    }
+}
 
-/*
-	Intentaremos cargar e imprimir
-	el logo
-*/
-try{
-	$logo = EscposImage::load("geek.png", false);
-   $printer->bitImage($logo);
-}catch(Exception $e){/*No hacemos nada si hay error*/}
+// 2️⃣ MÉTODO 2: Nombres de impresora exactos (sin espacios)
+if (!$printer) {
+    $nombres_exactos = [
+        "POSESTACIONAMIENTO",
+        "Star BSC10",
+        "POS4",
+        "POS3", 
+        "POS2",
+        "POS1"
+    ];
+    
+    foreach ($nombres_exactos as $nombre) {
+        try {
+            $connector = new WindowsPrintConnector($nombre);
+            $printer = new Printer($connector);
+            $impresora_usada = $nombre;
+            break;
+        } catch (Exception $e) {
+            continue;
+        }
+    }
+}
 
-/*
-	Ahora vamos a imprimir un encabezado
-*/
+// 3️⃣ MÉTODO 3: Crear archivo temporal y enviarlo a la impresora
+if (!$printer) {
+    try {
+        $temp_file = tempnam(sys_get_temp_dir(), 'ticket_');
+        $connector = new FilePrintConnector($temp_file);
+        $printer = new Printer($connector);
+        $impresora_usada = "archivo temporal: $temp_file";
+    } catch (Exception $e) {
+        echo "Error: No se pudo conectar a ninguna impresora.";
+        exit;
+    }
+}
 
-$printer->text("\n"."Inversiones Rosner" . "\n");
-$printer->text("Estacionamiento y lavado de autos" . "\n");
-$printer->text("Direccion: Perez Rosales #733-C" . "\n");
-$printer->text("Teléfono: 63 2 438535" . "\n");
-date_default_timezone_set("America/Santiago");
- $printer->text("Fecha  ");
-$printer->text(date("d-m-Y") . "\n");
-$printer->text("-----------------------------" . "\n");
-$printer->setJustification(Printer::JUSTIFY_LEFT);
-$printer->text("DETALLE INGRESO \n");
-$printer->text("-----------------------------"."\n\n");
-
-#La fecha también
-date_default_timezone_set("America/Santiago");
-$printer->text("Hora de ingreso:  ");
-$printer->text(date("H:i:s") . "\n");
-/*
-	Ahora vamos a imprimir los
-	productos
-*/
-	$printer->setJustification(Printer::JUSTIFY_LEFT);
-	if($nombre_cliente!=""){
-		
-		$printer->text("Nombre cliente: ".$nombre_cliente. " \n");
-	    $printer->text("Servicio: ".$servicio_cliente. " \n");
-	}else{
-		$printer->text("Servicio: ".$servicio_cliente. " \n");
-	     
-
-	}
-	/*Alinear a la izquierda para la cantidad y el nombre*/
-	 
-/*
-	Terminamos de imprimir
-	los productos, ahora va el total
-*/
-$printer->text("-----------------------------"."\n");
- 
- 
-
- 
- $printer->setJustification(Printer::JUSTIFY_CENTER);
- $patente=strtoupper($patente);
-$printer->barcode($tipo_ingreso, Printer::BARCODE_CODE39);
- 
-$printer->text("\n");
-$printer->text($patente." \n");
-
-$printer->text("\n");
-/*
-	Podemos poner también un pie de página
-*/
- 
-$printer->text("Muchas gracias por su preferencia\n");
-
-
-
-/*Alimentamos el papel 3 veces*/
-$printer->feed(3);
-
-/*
-	Cortamos el papel. Si nuestra impresora
-	no tiene soporte para ello, no generará
-	ningún error
-*/
-$printer->cut();
-
-/*
-	Por medio de la impresora mandamos un pulso.
-	Esto es útil cuando la tenemos conectada
-	por ejemplo a un cajón
-*/
-//$printer->pulse();
-
-/*
-	Para imprimir realmente, tenemos que "cerrar"
-	la conexión con la impresora. Recuerda incluir esto al final de todos los archivos
-*/
-$printer->close();
-unset($_SESSION['nombreCliente']);
-unset($_SESSION['nombre_servicio']);
+// 📄 IMPRIMIR TICKET
+try {
+    // Configurar formato
+    $printer->setJustification(Printer::JUSTIFY_CENTER);
+    
+    // Encabezado más simple
+    $printer->text("\n");
+    $printer->text("INVERSIONES ROSNER\n");
+    $printer->text("Estacionamiento y Lavado\n");
+    $printer->text("Perez Rosales #733-C\n");
+    $printer->text("Tel: 63 2 438535\n");
+    $printer->text("======================\n");
+    $printer->text("Fecha: " . date("d-m-Y H:i:s") . "\n");
+    $printer->text("======================\n");
+    
+    // Detalles del servicio
+    $printer->setJustification(Printer::JUSTIFY_LEFT);
+    $printer->text("INGRESO:\n");
+    
+    if (!empty($nombre_cliente)) {
+        $printer->text("Cliente: " . $nombre_cliente . "\n");
+    }
+    
+    $printer->text("Servicio: " . $servicio_cliente . "\n");
+    $printer->text("Patente: " . $patente . "\n");
+    $printer->text("ID: " . $codigo_barras . "\n");
+    
+    // Código de barras (simplificado)
+    $printer->setJustification(Printer::JUSTIFY_CENTER);
+    $printer->text("\n");
+    
+    if (!empty($codigo_barras) && strlen($codigo_barras) >= 3) {
+        try {
+            // Solo usar números para el código de barras
+            $codigo_numerico = preg_replace('/[^0-9]/', '', $codigo_barras);
+            if (strlen($codigo_numerico) >= 3) {
+                $printer->barcode($codigo_numerico, Printer::BARCODE_CODE39);
+            }
+            $printer->text("\n");
+        } catch (Exception $e) {
+            // Si falla, continuar sin código de barras
+        }
+    }
+    
+    // Pie de página
+    $printer->text("\n");
+    $printer->text("GRACIAS POR SU PREFERENCIA\n");
+    $printer->text("======================\n");
+    
+    // Finalizar
+    $printer->feed(3);
+    
+    // Cerrar sin errores
+    @$printer->cut();
+    @$printer->close();
+    
+    // 🔧 Si usamos archivo temporal, enviarlo a la impresora
+    if (strpos($impresora_usada, 'archivo temporal') !== false) {
+        $archivo = str_replace('archivo temporal: ', '', $impresora_usada);
+        
+        // Intentar enviar el archivo a diferentes impresoras
+        $comandos = [
+            "copy /b \"$archivo\" POSESTACIONAMIENTO",
+            "copy /b \"$archivo\" \"Star BSC10\"",
+            "copy /b \"$archivo\" USB003",
+            "type \"$archivo\" > POSESTACIONAMIENTO"
+        ];
+        
+        foreach ($comandos as $comando) {
+            exec($comando . " 2>nul", $output, $returnCode);
+            if ($returnCode === 0) {
+                $impresora_usada .= " -> enviado con: $comando";
+                break;
+            }
+        }
+        
+        // Limpiar archivo temporal
+        @unlink($archivo);
+    }
+    
+    // ✅ Respuesta exitosa
+    echo "1";
+    
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
+    
+    if (isset($printer)) {
+        @$printer->close();
+    }
+}
 ?>

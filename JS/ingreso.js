@@ -141,19 +141,54 @@ document.addEventListener('DOMContentLoaded', () => {
       // Obtenemos el nombre del servicio para imprimirlo
       const servicioTexto = servicioIdSelect.options[servicioIdSelect.selectedIndex].text;
 
+      // 🔧 VALIDAR QUE idIngreso SEA VÁLIDO
+      const codigoParaImpresion = idIngreso && idIngreso !== 'undefined' ? idIngreso.toString() : Date.now().toString();
+      
+      console.log('📝 Datos para impresión:', {
+        patente,
+        idIngreso,
+        codigoParaImpresion,
+        servicioTexto,
+        cliente
+      });
+
+      // 🆕 INTENTAR USAR EL NUEVO SERVICIO DE IMPRESIÓN PRIMERO
+      if (typeof PrintService !== 'undefined') {
+        console.log('🆕 Usando nuevo servicio de impresión...');
+        const fechaActual = new Date();
+        const resultado = await PrintService.imprimirTicketIngreso(
+          codigoParaImpresion,
+          patente || 'SIN-PATENTE',
+          servicioTexto || 'Estacionamiento',
+          fechaActual.toLocaleDateString('es-AR'),
+          fechaActual.toLocaleTimeString('es-AR')
+        );
+        
+        if (resultado.success) {
+          console.log('✅ Ticket impreso con nuevo servicio.');
+          return; // Salir si funcionó
+        } else {
+          console.warn('⚠️ Nuevo servicio falló, intentando método antiguo...');
+        }
+      }
+
+      // 🔄 FALLBACK: Usar método antiguo si el nuevo no está disponible o falló
+      console.log('📄 Usando método de impresión antiguo (ticket.php)...');
       const response = await fetch('./ImpresionTermica/ticket.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
-          patente: patente,
-          tipo_ingreso: idIngreso, // El ID del ingreso para el código de barras
-          servicio_cliente: servicioTexto,
-          nombre_cliente: cliente,
+          patente: patente || 'SIN-PATENTE',
+          tipo_ingreso: codigoParaImpresion, // 🔧 USAR CÓDIGO VALIDADO
+          servicio_cliente: servicioTexto || 'Estacionamiento',
+          nombre_cliente: cliente || '',
           hora_ingreso: new Date().toLocaleTimeString('es-CL')
         })
       });
 
       const resultado = await response.text();
+      console.log('📄 Respuesta de impresión:', resultado);
+      
       if (resultado.trim() === '1') {
         console.log('✅ Ticket de ingreso enviado a la impresora.');
       } else {

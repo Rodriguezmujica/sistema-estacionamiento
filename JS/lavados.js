@@ -295,30 +295,47 @@ function cargarLavadosPendientes() {
 }
 
 // Función para cobrar un lavado
-function cobrarLavado(idIngreso, patente) {
+async function cobrarLavado(idIngreso, patente) {
   if (confirm(`¿Confirmar el cobro del lavado para la patente ${patente}?`)) {
     const formData = new FormData();
     formData.append('id_ingreso', idIngreso);
     formData.append('patente', patente);
     formData.append('metodo_pago', 'EFECTIVO');
     
-    fetch('/sistemaEstacionamiento/api/cobrar-lavado.php', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
+    try {
+      const response = await fetch('/sistemaEstacionamiento/api/cobrar-lavado.php', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await response.json();
+      
       if (data.success) {
         mostrarAlerta('✅ Lavado cobrado correctamente', 'success');
+        
+        // 🖨️ INTENTAR IMPRIMIR COMPROBANTE
+        if (typeof PrintService !== 'undefined' && data.datos_lavado) {
+          try {
+            console.log('🆕 Imprimiendo comprobante de lavado cobrado...');
+            await PrintService.imprimirTicketLavado(
+              idIngreso,
+              patente,
+              data.datos_lavado.servicio || 'Lavado',
+              data.datos_lavado.total || data.datos_lavado.monto || 0,
+              new Date().toLocaleString('es-AR')
+            );
+          } catch (errorImprimir) {
+            console.warn('⚠️ No se pudo imprimir el comprobante:', errorImprimir);
+          }
+        }
+        
         cargarLavadosPendientes();
       } else {
         mostrarAlerta('❌ Error al cobrar lavado: ' + data.error, 'danger');
       }
-    })
-    .catch(error => {
+    } catch (error) {
       console.error('Error:', error);
       mostrarAlerta('❌ Error al cobrar lavado: ' + error.message, 'danger');
-    });
+    }
   }
 }
 
@@ -417,12 +434,32 @@ function realizarRegistroLavado(patente, tipoLavado, nombreCliente, precioExtra,
     body: formData
   })
   .then(response => response.json())
-  .then(data => {
+  .then(async data => {
     if (data.success) {
       const mensaje = ticketExistenteData 
         ? '✅ Ticket modificado a lavado correctamente' 
         : '✅ Lavado registrado correctamente';
       mostrarAlerta(mensaje, 'success');
+      
+      // 🖨️ INTENTAR IMPRIMIR TICKET DE LAVADO
+      if (typeof PrintService !== 'undefined') {
+        try {
+          console.log('🆕 Imprimiendo ticket de lavado con nuevo servicio...');
+          const servicioSeleccionado = serviciosDisponibles.find(s => s.idtipo_ingresos == tipoLavado);
+          const nombreServicio = servicioSeleccionado ? servicioSeleccionado.nombre_servicio : 'Lavado';
+          const ahora = new Date();
+          
+          await PrintService.imprimirTicketLavado(
+            data.id_ingreso || 'LAV-' + Date.now(),
+            patente,
+            nombreServicio,
+            precioTotal,
+            ahora.toLocaleString('es-AR')
+          );
+        } catch (errorImprimir) {
+          console.warn('⚠️ No se pudo imprimir el ticket:', errorImprimir);
+        }
+      }
       
       // Limpiar formulario y estado
       if (event) event.target.reset();

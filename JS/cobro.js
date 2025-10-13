@@ -377,25 +377,62 @@ document.addEventListener('DOMContentLoaded', () => {
     // Intentar imprimir comprobante interno solo para pagos MANUALES
     if (metodo === 'MANUAL') {
       try {
-        const responseImprimir = await fetch('../ImpresionTermica/ticketsalida.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            id_ingreso: ticketCobroActual.id,
-            hora_ingreso: ticketCobroActual.fecha_ingreso.split(' ')[1],
-            hora_egreso: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-            total: total,
+        // 🆕 INTENTAR CON NUEVO SERVICIO PRIMERO
+        if (typeof PrintService !== 'undefined') {
+          console.log('🆕 Imprimiendo ticket de salida con nuevo servicio...');
+          const ahora = new Date();
+          
+          // Calcular tiempo transcurrido
+          const fechaIngreso = new Date(ticketCobroActual.fecha_ingreso);
+          const minutosTranscurridos = Math.floor((ahora - fechaIngreso) / 60000);
+          const horas = Math.floor(minutosTranscurridos / 60);
+          const minutos = minutosTranscurridos % 60;
+          const tiempoTexto = horas > 0 ? `${horas}h ${minutos}min` : `${minutos}min`;
+          
+          const resultado = await PrintService.imprimirTicketSalida({
+            ticket_id: ticketCobroActual.id,
             patente: ticketCobroActual.patente,
-            metodo_pago: metodo
-          })
-        });
-        const dataImprimir = await responseImprimir.text();
-        if (dataImprimir.trim() !== '1') {
-          mostrarAlerta('El cobro manual fue exitoso, pero la impresión del comprobante falló.', 'warning');
+            fecha_ingreso: ticketCobroActual.fecha_ingreso,
+            fecha_salida: ahora.toLocaleString('es-AR'),
+            tiempo_estadia: tiempoTexto,
+            monto: total,
+            metodo_pago: metodo,
+            fecha_pago: ahora.toLocaleString('es-AR')
+          });
+          
+          if (resultado.success) {
+            console.log('✅ Ticket de salida impreso con nuevo servicio.');
+          } else {
+            console.warn('⚠️ Nuevo servicio falló, intentando método antiguo...');
+            throw new Error('Fallback al método antiguo');
+          }
+        } else {
+          throw new Error('PrintService no disponible');
         }
-      } catch (errorImprimir) {
-        console.warn('⚠️ No se pudo imprimir el comprobante:', errorImprimir);
-        mostrarAlerta('El cobro manual fue exitoso, pero el servicio de impresión no está disponible.', 'warning');
+      } catch (errorNuevo) {
+        // 🔄 FALLBACK: Método antiguo
+        try {
+          console.log('📄 Usando método de impresión antiguo (ticketsalida.php)...');
+          const responseImprimir = await fetch('../ImpresionTermica/ticketsalida.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              id_ingreso: ticketCobroActual.id,
+              hora_ingreso: ticketCobroActual.fecha_ingreso.split(' ')[1],
+              hora_egreso: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+              total: total,
+              patente: ticketCobroActual.patente,
+              metodo_pago: metodo
+            })
+          });
+          const dataImprimir = await responseImprimir.text();
+          if (dataImprimir.trim() !== '1') {
+            mostrarAlerta('El cobro manual fue exitoso, pero la impresión del comprobante falló.', 'warning');
+          }
+        } catch (errorImprimir) {
+          console.warn('⚠️ No se pudo imprimir el comprobante:', errorImprimir);
+          mostrarAlerta('El cobro manual fue exitoso, pero el servicio de impresión no está disponible.', 'warning');
+        }
       }
     } else {
       // Para pagos con TUU (incluyendo efectivo), el POS imprime el voucher.
