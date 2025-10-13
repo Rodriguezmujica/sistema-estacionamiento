@@ -125,6 +125,13 @@ const PrintServiceWin7 = {
     },
 
     /**
+     * Imprimir cierre de caja
+     */
+    async imprimirCierreCaja(datosCierre) {
+        return await this.imprimir('cierre_caja', datosCierre);
+    },
+
+    /**
      * Imprimir ticket de prueba
      */
     async imprimirTest(mensaje = 'Prueba de impresión') {

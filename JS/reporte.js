@@ -398,31 +398,39 @@ async function imprimirCierreCaja() {
   if (typeof PrintService !== 'undefined') {
     try {
       console.log('🆕 Imprimiendo cierre de caja con nuevo servicio...');
+      console.log('📊 Datos del cierre:', datoCierreCajaActual);
       
       // Preparar datos para el nuevo servicio
       const datosCierre = {
         fecha: datoCierreCajaActual.fecha,
         hora: new Date().toLocaleTimeString('es-AR'),
         usuario: 'Usuario', // Ajustar si tienes la info del usuario
-        efectivo_estacionamiento: desglose.efectivo_manual.total,
-        tuu_estacionamiento: desglose.tuu_efectivo.total + desglose.tuu_debito.total + desglose.tuu_credito.total,
+        efectivo_estacionamiento: desglose.efectivo_manual.total || 0,
+        tuu_estacionamiento: (desglose.tuu_efectivo.total || 0) + (desglose.tuu_debito.total || 0) + (desglose.tuu_credito.total || 0),
         efectivo_lavado: 0, // Ajustar según tu estructura de datos
         tuu_lavado: 0, // Ajustar según tu estructura de datos
-        total: datoCierreCajaActual.resumen.total_ingresos
+        total: datoCierreCajaActual.resumen.total_ingresos || 0
       };
       
+      console.log('📝 Datos preparados para impresión:', datosCierre);
+      
       const resultado = await PrintService.imprimirCierreCaja(datosCierre);
+      
+      console.log('📄 Resultado de impresión:', resultado);
       
       if (resultado.success) {
         alert('✅ Cierre de caja impreso correctamente');
         return;
       } else {
-        console.warn('⚠️ Nuevo servicio falló, intentando método antiguo...');
-        throw new Error('Fallback al método antiguo');
+        console.warn('⚠️ Nuevo servicio respondió con error:', resultado.message);
+        throw new Error('Fallback al método antiguo: ' + resultado.message);
       }
     } catch (errorNuevo) {
-      console.warn('Usando método antiguo de impresión...');
+      console.error('❌ Error en nuevo servicio:', errorNuevo);
+      console.warn('🔄 Usando método antiguo de impresión...');
     }
+  } else {
+    console.warn('⚠️ PrintService no está definido, usando método antiguo directamente');
   }
   
   // 🔄 FALLBACK: Método antiguo
@@ -438,7 +446,7 @@ async function imprimirCierreCaja() {
   formData.append('categorias', JSON.stringify(datoCierreCajaActual.categorias));
   
   try {
-    const response = await fetch('http://localhost:8080/sistemaEstacionamiento/ImpresionTermica/cierre_caja.php', {
+    const response = await fetch('../ImpresionTermica/cierre_caja.php', {
       method: 'POST',
       body: formData
     });

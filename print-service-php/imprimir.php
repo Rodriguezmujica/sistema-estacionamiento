@@ -152,6 +152,72 @@ function imprimirTicketLavado($datos, $nombreImpresora) {
 }
 
 /**
+ * Función para imprimir cierre de caja
+ */
+function imprimirCierreCaja($datos, $nombreImpresora) {
+    try {
+        $connector = new WindowsPrintConnector($nombreImpresora);
+        $printer = new Printer($connector);
+        
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->setEmphasis(true);
+        $printer->setTextSize(2, 2);
+        $printer->text("CIERRE DE CAJA\n");
+        $printer->setTextSize(1, 1);
+        $printer->setEmphasis(false);
+        $printer->text("--------------------------------\n");
+        
+        $printer->setJustification(Printer::JUSTIFY_LEFT);
+        $printer->text("Fecha: " . ($datos['fecha'] ?? date('Y-m-d')) . "\n");
+        $printer->text("Hora: " . ($datos['hora'] ?? date('H:i:s')) . "\n");
+        $printer->text("Usuario: " . ($datos['usuario'] ?? 'N/A') . "\n");
+        $printer->text("--------------------------------\n");
+        
+        $printer->setEmphasis(true);
+        $printer->text("INGRESOS ESTACIONAMIENTO\n");
+        $printer->setEmphasis(false);
+        $printer->setJustification(Printer::JUSTIFY_RIGHT);
+        $printer->text("Efectivo: $" . number_format($datos['efectivo_estacionamiento'] ?? 0, 0, ',', '.') . "\n");
+        $printer->text("TUU: $" . number_format($datos['tuu_estacionamiento'] ?? 0, 0, ',', '.') . "\n");
+        
+        $printer->setJustification(Printer::JUSTIFY_LEFT);
+        $printer->text("--------------------------------\n");
+        
+        $printer->setEmphasis(true);
+        $printer->text("INGRESOS LAVADO\n");
+        $printer->setEmphasis(false);
+        $printer->setJustification(Printer::JUSTIFY_RIGHT);
+        $printer->text("Efectivo: $" . number_format($datos['efectivo_lavado'] ?? 0, 0, ',', '.') . "\n");
+        $printer->text("TUU: $" . number_format($datos['tuu_lavado'] ?? 0, 0, ',', '.') . "\n");
+        
+        $printer->setJustification(Printer::JUSTIFY_LEFT);
+        $printer->text("--------------------------------\n");
+        
+        $printer->setEmphasis(true);
+        $printer->text("TOTALES\n");
+        $printer->setEmphasis(false);
+        $printer->setJustification(Printer::JUSTIFY_RIGHT);
+        $printer->setTextSize(2, 2);
+        $printer->text("$" . number_format($datos['total'] ?? 0, 0, ',', '.') . "\n");
+        $printer->setTextSize(1, 1);
+        $printer->setJustification(Printer::JUSTIFY_LEFT);
+        $printer->text("--------------------------------\n");
+        
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->text("\n");
+        $printer->text("Firma: ___________________\n");
+        $printer->text("\n");
+        $printer->feed(2);
+        $printer->cut();
+        $printer->close();
+        
+        return ['success' => true, 'message' => 'Cierre de caja impreso correctamente'];
+    } catch (Exception $e) {
+        return ['success' => false, 'message' => 'Error al imprimir: ' . $e->getMessage()];
+    }
+}
+
+/**
  * Función para imprimir ticket de prueba
  */
 function imprimirTest($datos, $nombreImpresora) {
@@ -206,6 +272,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
         case 'lavado':
             $resultado = imprimirTicketLavado($datos, $nombreImpresora);
+            break;
+        case 'cierre_caja':
+            $resultado = imprimirCierreCaja($datos, $nombreImpresora);
             break;
         case 'test':
             $resultado = imprimirTest($datos, $nombreImpresora);
