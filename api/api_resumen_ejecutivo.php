@@ -106,8 +106,13 @@ function obtenerResumenMensual($conn, $mes, $anio) {
     
     // 4. TOP 5 SERVICIOS MÁS VENDIDOS
     // Incluye todos los servicios cobrados
+    // 🔧 CORRECCIÓN: Se separa 'Estacionamiento x Minuto' para que no se agrupe con otros.
     $sqlTop5 = "SELECT 
-                    ti.nombre_servicio,
+                    CASE 
+                        WHEN ti.nombre_servicio LIKE '%estacionamiento%minuto%' THEN 'Estacionamiento x Minuto'
+                        WHEN ti.nombre_servicio LIKE '%lavado%' THEN 'Lavados'
+                        ELSE ti.nombre_servicio
+                    END as nombre_servicio_agrupado,
                     COUNT(i.idautos_estacionados) as cantidad,
                     SUM(COALESCE(s.total, ti.precio, 0)) as total_vendido
                 FROM ingresos i
@@ -116,7 +121,7 @@ function obtenerResumenMensual($conn, $mes, $anio) {
                 WHERE i.salida = 1
                 AND i.fecha_ingreso >= ?
                 AND i.fecha_ingreso <= ?
-                GROUP BY ti.nombre_servicio
+                GROUP BY nombre_servicio_agrupado
                 ORDER BY total_vendido DESC
                 LIMIT 5";
     
@@ -127,7 +132,7 @@ function obtenerResumenMensual($conn, $mes, $anio) {
     $top5Servicios = [];
     while ($row = $resultTop5->fetch_assoc()) {
         $top5Servicios[] = [
-            'servicio' => $row['nombre_servicio'],
+            'servicio' => $row['nombre_servicio_agrupado'],
             'cantidad' => intval($row['cantidad']),
             'total' => floatval($row['total_vendido'])
         ];
@@ -333,4 +338,3 @@ function guardarMetaMensual($conn, $data) {
 }
 
 ?>
-
