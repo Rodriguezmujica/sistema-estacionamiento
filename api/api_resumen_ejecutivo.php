@@ -56,10 +56,7 @@ function obtenerResumenMensual($conn, $mes, $anio) {
     $ultimoDiaAnterior = date('Y-m-t', strtotime($primerDiaAnterior)) . " 23:59:59";
     
     // 1. INGRESOS TOTALES DEL MES (sin mensuales)
-    // LÓGICA MEJORADA: Igual que api_consulta_fechas.php
-    // - LEFT JOIN para incluir registros sin salida
-    // - COALESCE para usar precio si no hay total
-    // - EXCLUYE solo ERROR DE INGRESO (ID 19)
+    // Incluye TODOS los ingresos con salida=1 (cobrados)
     $sqlIngresosMes = "SELECT 
                         COUNT(i.idautos_estacionados) as total_servicios,
                         SUM(COALESCE(s.total, ti.precio, 0)) as total_ingresos
@@ -67,13 +64,8 @@ function obtenerResumenMensual($conn, $mes, $anio) {
                        LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
                        JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                        WHERE i.salida = 1
-                       AND CASE 
-                           WHEN s.fecha_salida IS NULL 
-                           THEN i.fecha_ingreso 
-                           ELSE s.fecha_salida 
-                       END BETWEEN ? AND ?
-                       AND ti.es_plan = 0
-                       AND ti.idtipo_ingresos NOT IN (19)";
+                       AND i.fecha_ingreso >= ? 
+                       AND i.fecha_ingreso <= ?";
     
     $stmt = $conn->prepare($sqlIngresosMes);
     $stmt->bind_param('ss', $primerDia, $ultimoDia);
@@ -113,7 +105,7 @@ function obtenerResumenMensual($conn, $mes, $anio) {
     }
     
     // 4. TOP 5 SERVICIOS MÁS VENDIDOS
-    // LÓGICA MEJORADA: Igual que api_consulta_fechas.php
+    // Incluye todos los servicios cobrados
     $sqlTop5 = "SELECT 
                     ti.nombre_servicio,
                     COUNT(i.idautos_estacionados) as cantidad,
@@ -122,14 +114,9 @@ function obtenerResumenMensual($conn, $mes, $anio) {
                 LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
                 JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                 WHERE i.salida = 1
-                AND CASE 
-                    WHEN s.fecha_salida IS NULL 
-                    THEN i.fecha_ingreso 
-                    ELSE s.fecha_salida 
-                END BETWEEN ? AND ?
-                AND ti.es_plan = 0
-                AND ti.idtipo_ingresos NOT IN (19)
-                GROUP BY ti.idtipo_ingresos, ti.nombre_servicio
+                AND i.fecha_ingreso >= ?
+                AND i.fecha_ingreso <= ?
+                GROUP BY ti.nombre_servicio
                 ORDER BY total_vendido DESC
                 LIMIT 5";
     
@@ -157,13 +144,8 @@ function obtenerResumenMensual($conn, $mes, $anio) {
                        LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
                        JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                        WHERE i.salida = 1
-                       AND CASE 
-                           WHEN s.fecha_salida IS NULL 
-                           THEN i.fecha_ingreso 
-                           ELSE s.fecha_salida 
-                       END BETWEEN ? AND ?
-                       AND ti.es_plan = 0
-                       AND ti.idtipo_ingresos NOT IN (19)
+                       AND i.fecha_ingreso >= ?
+                       AND i.fecha_ingreso <= ?
                        GROUP BY s.metodo_pago, s.tipo_pago";
     
     $stmt = $conn->prepare($sqlMetodosPago);
@@ -200,29 +182,16 @@ function obtenerResumenMensual($conn, $mes, $anio) {
     
     // 6. INGRESOS POR DÍA DEL MES (para el gráfico)
     $sqlPorDia = "SELECT 
-                    DATE(CASE 
-                        WHEN s.fecha_salida IS NULL 
-                        THEN i.fecha_ingreso 
-                        ELSE s.fecha_salida 
-                    END) as fecha,
+                    DATE(i.fecha_ingreso) as fecha,
                     SUM(COALESCE(s.total, ti.precio, 0)) as total_dia,
                     COUNT(i.idautos_estacionados) as servicios_dia
                   FROM ingresos i
                   LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
                   JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                   WHERE i.salida = 1
-                  AND CASE 
-                      WHEN s.fecha_salida IS NULL 
-                      THEN i.fecha_ingreso 
-                      ELSE s.fecha_salida 
-                  END BETWEEN ? AND ?
-                  AND ti.es_plan = 0
-                  AND ti.idtipo_ingresos NOT IN (19)
-                  GROUP BY DATE(CASE 
-                      WHEN s.fecha_salida IS NULL 
-                      THEN i.fecha_ingreso 
-                      ELSE s.fecha_salida 
-                  END)
+                  AND i.fecha_ingreso >= ?
+                  AND i.fecha_ingreso <= ?
+                  GROUP BY DATE(i.fecha_ingreso)
                   ORDER BY fecha ASC";
     
     $stmt = $conn->prepare($sqlPorDia);
@@ -266,18 +235,9 @@ function obtenerResumenMensual($conn, $mes, $anio) {
                          LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
                          JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                          WHERE i.salida = 1
-                         AND CASE 
-                             WHEN s.fecha_salida IS NULL 
-                             THEN i.fecha_ingreso 
-                             ELSE s.fecha_salida 
-                         END BETWEEN ? AND ?
-                         AND WEEKDAY(CASE 
-                             WHEN s.fecha_salida IS NULL 
-                             THEN i.fecha_ingreso 
-                             ELSE s.fecha_salida 
-                         END) < 5
-                         AND ti.es_plan = 0
-                         AND ti.idtipo_ingresos NOT IN (19)";
+                         AND i.fecha_ingreso >= ?
+                         AND i.fecha_ingreso <= ?
+                         AND WEEKDAY(i.fecha_ingreso) < 5";
         
         $stmt = $conn->prepare($sqlLaborales);
         $stmt->bind_param('ss', $primerDia, $ultimoDia);
@@ -292,6 +252,29 @@ function obtenerResumenMensual($conn, $mes, $anio) {
     }
     
     $porcentajeMeta = $metaMonto > 0 ? ($totalParaMeta / $metaMonto) * 100 : 0;
+    
+    // 🎯 CALCULAR METAS ALCANZADAS (PROGRESIVAS)
+    $metasAlcanzadas = 0;
+    $metasSobrantes = 0;
+    $porcentajeMetaSobrante = 0;
+    
+    if ($metaMonto > 0 && $totalParaMeta >= $metaMonto) {
+        // Se alcanzó la meta base
+        $metasAlcanzadas = 1;
+        
+        // Calcular excedente sobre la meta base
+        $excedente = floatval($totalParaMeta - $metaMonto);
+        
+        // Por cada millón adicional, sumar una meta más
+        if ($excedente > 0) {
+            $metasAdicionales = floor($excedente / 1000000);
+            $metasAlcanzadas += intval($metasAdicionales);
+            
+            // Calcular progreso hacia la siguiente meta (lo que sobra del último millón)
+            $metasSobrantes = $excedente % 1000000;
+            $porcentajeMetaSobrante = ($metasSobrantes / 1000000) * 100;
+        }
+    }
     
     // RETORNAR TODO
     return [
@@ -313,7 +296,10 @@ function obtenerResumenMensual($conn, $mes, $anio) {
             'incluir_mensuales' => $incluirMensuales,
             'total_para_meta' => $totalParaMeta,
             'porcentaje_cumplido' => round($porcentajeMeta, 2),
-            'falta' => max($metaMonto - $totalParaMeta, 0)
+            'falta' => max($metaMonto - $totalParaMeta, 0),
+            'metas_alcanzadas' => $metasAlcanzadas,
+            'metas_sobrantes' => $metasSobrantes,
+            'porcentaje_meta_sobrante' => round($porcentajeMetaSobrante, 2)
         ]
     ];
 }

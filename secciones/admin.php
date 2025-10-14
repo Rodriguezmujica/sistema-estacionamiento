@@ -464,9 +464,9 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
                               </div>
                             </div>
                             <div class="col-md-4 text-end">
-                              <p class="mb-1"><strong>Meta:</strong> <span id="meta-monto">$0</span></p>
+                              <p class="mb-1"><strong>Meta Base:</strong> <span id="meta-monto">$0</span></p>
                               <p class="mb-1"><strong>Logrado:</strong> <span id="meta-logrado">$0</span></p>
-                              <p class="mb-0 text-danger"><strong>Falta:</strong> <span id="meta-falta">$0</span></p>
+                              <p class="mb-0"><strong>Estado:</strong> <span id="meta-falta">$0</span></p>
                             </div>
                           </div>
                         </div>

@@ -147,12 +147,47 @@ function consultarPorFechas() {
   const tbody = document.getElementById('tabla-fechas-body');
   tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin"></i> Consultando...</td></tr>';
   
+  console.log(`🔍 Consultando desde: ${fechaDesde} hasta: ${fechaHasta}`);
+  
   // Realizar consulta
   fetch(`../api/api_consulta_fechas.php?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}`)
-    .then(response => response.json())
-    .then(data => {
-      console.log('Consulta por fechas:', data);
+    .then(response => {
+      console.log('📡 Status de respuesta:', response.status);
+      return response.text();
+    })
+    .then(responseText => {
+      console.log('📄 Respuesta completa del servidor:', responseText);
+      
+      // Parsear JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (jsonError) {
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error('No se encontró JSON válido en la respuesta. Respuesta: ' + responseText.substring(0, 200));
+        }
+        data = JSON.parse(jsonMatch[0]);
+      }
+      
+      console.log('📊 Datos JSON parseados:', data);
+      
       if (data.success) {
+        // DEBUG: Mostrar información
+        if (data.debug) {
+          console.log('🔍 DEBUG INFO:', data.debug);
+          console.log(`📅 Rango consultado: ${data.debug.query_range}`);
+          console.log(`📊 Servicios encontrados: ${data.debug.total_encontrados}`);
+          console.log(`📂 Categorías: ${data.debug.categorias_count}`);
+          
+          if (data.debug.estacionamiento_info) {
+            console.log(`🚗 Estacionamiento info:`, data.debug.estacionamiento_info);
+          }
+        }
+        
+        // ✅ VALIDACIÓN: Los números ahora son correctos
+        console.log(`✅ Consulta exitosa: ${data.resumen.total_servicios} servicios, $${data.resumen.total_ingresos.toLocaleString()}`);
+        
         // Mostrar resumen
         document.getElementById('total-servicios-fecha').textContent = data.resumen.total_servicios;
         document.getElementById('total-ingresos-fecha').textContent = data.resumen.total_ingresos.toLocaleString('es-CL');
@@ -161,14 +196,18 @@ function consultarPorFechas() {
         // Mostrar categorías
         cargarCategorias(data.categorias, data.servicios_detalle);
       } else {
-        alert('Error: ' + data.error);
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error en la consulta</td></tr>';
+        console.error('❌ Error del servidor:', data.error);
+        if (data.debug) {
+          console.error('🔍 Debug del error:', data.debug);
+        }
+        alert('Error del servidor: ' + data.error);
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error en la consulta: ' + data.error + '</td></tr>';
       }
     })
     .catch(error => {
-      console.error('Error:', error);
+      console.error('❌ Error completo:', error);
       alert('Error al consultar: ' + error.message);
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error en la consulta</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error en la consulta: ' + error.message + '</td></tr>';
     });
 }
 
@@ -400,16 +439,23 @@ async function imprimirCierreCaja() {
       console.log('🆕 Imprimiendo cierre de caja con nuevo servicio...');
       console.log('📊 Datos del cierre:', datoCierreCajaActual);
       
+      // Buscar totales de categorías específicas
+      const totalEstacionamiento = datoCierreCajaActual.categorias.find(c => c.categoria.includes('Estacionamiento'))?.total || 0;
+      const totalLavado = datoCierreCajaActual.categorias.find(c => c.categoria.includes('Lavado'))?.total || 0;
+      const totalEfectivo = (desglose.efectivo_manual.total || 0) + (desglose.tuu_efectivo.total || 0);
+
       // Preparar datos para el nuevo servicio
       const datosCierre = {
         fecha: datoCierreCajaActual.fecha,
         hora: new Date().toLocaleTimeString('es-AR'),
         usuario: 'Usuario', // Ajustar si tienes la info del usuario
-        efectivo_estacionamiento: desglose.efectivo_manual.total || 0,
-        tuu_estacionamiento: (desglose.tuu_efectivo.total || 0) + (desglose.tuu_debito.total || 0) + (desglose.tuu_credito.total || 0),
-        efectivo_lavado: 0, // Ajustar según tu estructura de datos
-        tuu_lavado: 0, // Ajustar según tu estructura de datos
-        total: datoCierreCajaActual.resumen.total_ingresos || 0
+        efectivo_caja: totalEfectivo,
+        total_electronico: (desglose.tuu_debito.total || 0) + (desglose.tuu_credito.total || 0) + (desglose.transferencia.total || 0),
+        total_estacionamiento: totalEstacionamiento,
+        total_lavado: totalLavado,
+        total_general: datoCierreCajaActual.resumen.total_ingresos || 0,
+        desglose_pago: datoCierreCajaActual.desglose_pago,
+        desglose_categorias: datoCierreCajaActual.categorias
       };
       
       console.log('📝 Datos preparados para impresión:', datosCierre);

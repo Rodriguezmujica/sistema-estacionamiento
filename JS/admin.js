@@ -661,8 +661,25 @@ function renderizarResumenEjecutivo(data) {
   document.getElementById('meta-logrado').textContent = 
     '$' + parseInt(meta.total_para_meta).toLocaleString('es-CL');
   
-  document.getElementById('meta-falta').textContent = 
-    '$' + parseInt(meta.falta).toLocaleString('es-CL');
+  // 🎯 MOSTRAR METAS ALCANZADAS
+  const metasAlcanzadas = meta.metas_alcanzadas || 0;
+  if (metasAlcanzadas > 0) {
+    // Generar iconos de metas (trofeos)
+    let iconosMetas = '🎯'.repeat(metasAlcanzadas);
+    document.getElementById('meta-falta').innerHTML = 
+      `<span class="text-success">${iconosMetas} ${metasAlcanzadas} meta(s) alcanzada(s)!</span>`;
+    
+    // Mostrar progreso hacia la siguiente meta
+    const metasSobrantes = meta.metas_sobrantes || 0;
+    const porcentajeSobrante = meta.porcentaje_meta_sobrante || 0;
+    if (metasSobrantes > 0) {
+      document.getElementById('meta-falta').innerHTML += 
+        `<br><small class="text-muted">+$${parseInt(metasSobrantes).toLocaleString('es-CL')} hacia siguiente meta (${porcentajeSobrante.toFixed(1)}%)</small>`;
+    }
+  } else {
+    document.getElementById('meta-falta').innerHTML = 
+      '<span class="text-danger">$' + parseInt(meta.falta).toLocaleString('es-CL') + '</span>';
+  }
   
   const porcentajeMeta = meta.porcentaje_cumplido;
   const barraMeta = document.getElementById('barra-meta');

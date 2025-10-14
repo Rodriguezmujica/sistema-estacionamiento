@@ -66,7 +66,7 @@ if ($row = $result->fetch_assoc()) {
         $precioExtra = 0; // Ignorar precio extra
     }
     // Si es estacionamiento por minuto
-    else if (stripos($nombreServicio, 'estacionamiento') !== false && stripos($nombreServicio, 'minuto') !== false) {
+    else if ($idTipoIngreso == 18) { // ID 18 es Estacionamiento x Minuto
         $ahora = new DateTime('now', new DateTimeZone('America/Santiago'));
         $ingreso = new DateTime($fechaIngreso, new DateTimeZone('America/Santiago'));
         $minutos = ceil(($ahora->getTimestamp() - $ingreso->getTimestamp()) / 60);
@@ -86,6 +86,15 @@ if ($row = $result->fetch_assoc()) {
         
         $total = max($minutos * $precioPorMinuto, $precioMinimo);
         $tipoCalculo = 'Por minuto';
+
+        // ❗ CORRECCIÓN CLAVE: Actualizar el tipo de ingreso en la BD a 'Estacionamiento por minuto' (ID 18)
+        // Esto asegura que los reportes futuros lo clasifiquen correctamente.
+        $sqlUpdate = "UPDATE ingresos SET idtipo_ingreso = 18 WHERE idautos_estacionados = ?";
+        $stmtUpdate = $conexion->prepare($sqlUpdate);
+        $stmtUpdate->bind_param('i', $id);
+        $stmtUpdate->execute();
+        $stmtUpdate->close();
+        $nombreServicio = 'Estacionamiento por minuto'; // CORRECCIÓN: Actualizar el nombre del servicio
         
     } 
     // Si es un plan (cliente con suscripción)
