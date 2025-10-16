@@ -312,3 +312,4 @@ Esto permite cambiar la meta base sin perder historial.
 **Fecha de Implementación:** 13 de Octubre, 2025  
 **Versión:** 2.1 - Metas Progresivas
 
+

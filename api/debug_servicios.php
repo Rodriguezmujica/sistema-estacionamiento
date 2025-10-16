@@ -114,3 +114,4 @@ $conn->close();
 echo "<p><a href='../secciones/admin.php'>← Volver al Panel</a></p>";
 ?>
 
+

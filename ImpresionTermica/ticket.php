@@ -21,10 +21,12 @@ if (empty($patente)) {
     $patente = 'SIN-PATENTE';
 }
 
-// 🔧 GENERAR CÓDIGO DE BARRAS VÁLIDO
+// 🔧 GENERAR CÓDIGO DE BARRAS VÁLIDO PARA CODE39
+// CODE39 soporta: 0-9, A-Z, espacios y los caracteres especiales: $ % + - . /
 $codigo_barras = '';
 if (!empty($tipo_ingreso) && $tipo_ingreso !== 'undefined' && $tipo_ingreso !== 'null') {
-    $codigo_limpio = strtoupper(preg_replace('/[^0-9A-Z\s\$\%\+\-\.\/]/', '', $tipo_ingreso));
+    // Limpiar pero mantener letras y números (CODE39 los soporta)
+    $codigo_limpio = strtoupper(preg_replace('/[^0-9A-Z]/', '', $tipo_ingreso));
     $codigo_barras = !empty($codigo_limpio) ? $codigo_limpio : 'ID' . date('YmdHis');
 } else {
     $codigo_barras = 'ID' . date('YmdHis');
@@ -95,52 +97,107 @@ if (!$printer) {
 
 // 📄 IMPRIMIR TICKET
 try {
-    // Configurar formato
+    // ========================================
+    // 🖼️ LOGO DEL NEGOCIO
+    // ========================================
     $printer->setJustification(Printer::JUSTIFY_CENTER);
     
-    // Encabezado más simple
-    $printer->text("\n");
-    $printer->text("INVERSIONES ROSNER\n");
-    $printer->text("Estacionamiento y Lavado\n");
-    $printer->text("Perez Rosales #733-C\n");
-    $printer->text("Tel: 63 2 438535\n");
-    $printer->text("======================\n");
-    $printer->text("Fecha: " . date("d-m-Y H:i:s") . "\n");
-    $printer->text("======================\n");
-    
-    // Detalles del servicio
-    $printer->setJustification(Printer::JUSTIFY_LEFT);
-    $printer->text("INGRESO:\n");
-    
-    if (!empty($nombre_cliente)) {
-        $printer->text("Cliente: " . $nombre_cliente . "\n");
+    // Intentar cargar e imprimir el logo
+    try {
+        $logo = EscposImage::load(__DIR__ . "/geek.png", false);
+        $printer->bitImage($logo);
+    } catch(Exception $e) {
+        // Si no hay logo, continuar sin él
     }
     
-    $printer->text("Servicio: " . $servicio_cliente . "\n");
-    $printer->text("Patente: " . $patente . "\n");
-    $printer->text("ID: " . $codigo_barras . "\n");
-    
-    // Código de barras (simplificado)
-    $printer->setJustification(Printer::JUSTIFY_CENTER);
+    // ========================================
+    // 📋 ENCABEZADO DEL NEGOCIO
+    // ========================================
     $printer->text("\n");
+    $printer->setEmphasis(true);
+    $printer->text("INVERSIONES ROSNER\n");
+    $printer->setEmphasis(false);
+    $printer->text("Estacionamiento y Lavado\n");
+    $printer->text("================================\n");
+    $printer->text("Perez Rosales #733-C\n");
+    $printer->text("Los Rios, Chile\n");
+    $printer->text("Tel:+56 9 3395 8739 \n");
+    $printer->text("Instagram: lavadodeautoslosrios\n");
+    $printer->text("================================\n");
+    
+    // ========================================
+    // 📅 FECHA Y HORA DE INGRESO
+    // ========================================
+    $printer->text("\n");
+    $printer->setEmphasis(true);
+    $printer->text("** TICKET DE INGRESO **\n");
+    $printer->setEmphasis(false);
+    $printer->text("Fecha: " . date("d-m-Y") . "\n");
+    $printer->text("Hora:  " . date("H:i:s") . "\n");
+    $printer->text("================================\n");
+    
+    // ========================================
+    // 🚗 DETALLES DEL SERVICIO
+    // ========================================
+    $printer->setJustification(Printer::JUSTIFY_LEFT);
+    $printer->text("\n");
+    
+    if (!empty($nombre_cliente)) {
+        $printer->text("CLIENTE:\n");
+        $printer->setEmphasis(true);
+        $printer->text("  " . $nombre_cliente . "\n");
+        $printer->setEmphasis(false);
+        $printer->text("\n");
+    }
+    
+    $printer->text("SERVICIO:\n");
+    $printer->setEmphasis(true);
+    $printer->text("  " . $servicio_cliente . "\n");
+    $printer->setEmphasis(false);
+    $printer->text("\n");
+    
+    $printer->text("PATENTE:\n");
+    $printer->setEmphasis(true);
+    $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+    $printer->text("  " . $patente . "\n");
+    $printer->selectPrintMode(); // Reset
+    $printer->setEmphasis(false);
+    $printer->text("\n");
+    
+    $printer->text("TICKET ID:\n");
+    $printer->text("  " . $codigo_barras . "\n");
+    $printer->text("\n");
+    
+    // ========================================
+    // 📊 CÓDIGO DE BARRAS
+    // ========================================
+    $printer->setJustification(Printer::JUSTIFY_CENTER);
+    $printer->text("================================\n");
     
     if (!empty($codigo_barras) && strlen($codigo_barras) >= 3) {
         try {
-            // Solo usar números para el código de barras
-            $codigo_numerico = preg_replace('/[^0-9]/', '', $codigo_barras);
-            if (strlen($codigo_numerico) >= 3) {
-                $printer->barcode($codigo_numerico, Printer::BARCODE_CODE39);
-            }
+            // CODE39 soporta letras y números
+            $printer->barcode($codigo_barras, Printer::BARCODE_CODE39);
             $printer->text("\n");
+            $printer->text($codigo_barras . "\n");
         } catch (Exception $e) {
-            // Si falla, continuar sin código de barras
+            // Si falla el código de barras, mostrar solo el ID
+            $printer->text("ID: " . $codigo_barras . "\n");
         }
     }
     
-    // Pie de página
+    // ========================================
+    // 👋 PIE DE PÁGINA
+    // ========================================
+    $printer->text("================================\n");
     $printer->text("\n");
+    $printer->setEmphasis(true);
     $printer->text("GRACIAS POR SU PREFERENCIA\n");
-    $printer->text("======================\n");
+    $printer->setEmphasis(false);
+    $printer->text("\n");
+    $printer->text("Conserve este ticket\n");
+    $printer->text("para retirar su vehiculo\n");
+    $printer->text("================================\n");
     
     // Finalizar
     $printer->feed(3);

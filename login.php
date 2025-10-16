@@ -22,10 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = $stmt->get_result();
 
     if ($row = $result->fetch_assoc()) {
+        // Se usa password_verify para comparar la contraseña ingresada con el hash guardado
         if (password_verify($password, $row['password_hash'])) {
             // Login correcto
             $_SESSION['usuario'] = $row['usuario'];
-            $_SESSION['rol'] = $row['rol'];
+            // 🔧 CORRECCIÓN: Unificar 'cajero' como 'operador' para el sistema
+            $_SESSION['rol'] = ($row['rol'] === 'cajero') ? 'operador' : $row['rol'];
+            $_SESSION['id_usuario'] = $row['id']; // Guardar ID de usuario en sesión
             header("Location: index.php");
             exit();
         } else {

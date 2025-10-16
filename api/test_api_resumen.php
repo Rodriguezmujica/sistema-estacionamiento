@@ -123,3 +123,4 @@ echo "<h3>✅ Todas las pruebas completadas</h3>";
 echo "<p><a href='../secciones/admin.php'>← Volver al Panel</a></p>";
 ?>
 
+

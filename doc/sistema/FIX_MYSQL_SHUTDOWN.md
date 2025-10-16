@@ -202,3 +202,4 @@ Guardar `backup_estacionamiento.sql` en lugar seguro.
 **Última actualización:** Octubre 2025  
 **Efectividad:** 95% con Método 1
 
+

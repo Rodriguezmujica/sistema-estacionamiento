@@ -5,12 +5,18 @@ document.addEventListener('DOMContentLoaded', function() {
   const modalServicioElement = document.getElementById('modalServicio');
   const modalServicio = new bootstrap.Modal(modalServicioElement);
 
+  const modalUsuarioElement = document.getElementById('modalUsuario');
+  if (modalUsuarioElement) {
+    const modalUsuario = new bootstrap.Modal(modalUsuarioElement);
+  }
+
   // Variable global para almacenar los servicios cargados
   let serviciosCargados = [];
 
   // Carga inicial
   cargarDatosAdmin();
   cargarPrecios();
+  cargarUsuarios();
 
   // Actualización periódica
   setInterval(cargarDatosAdmin, 60000); // Cada 60 segundos
@@ -51,6 +57,26 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   document.querySelector('#modalServicio .btn-primary').addEventListener('click', guardarServicio);
 
+  // Eventos para el modal de usuarios
+  if (modalUsuarioElement) {
+    modalUsuarioElement.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      
+      // Solo limpiar si NO es edición (si no tiene data-editar)
+      if (!modalUsuarioElement.hasAttribute('data-editar')) {
+        const form = document.getElementById('form-usuario');
+        form.reset();
+        document.getElementById('usuario-id').value = '';
+        document.getElementById('password-help').style.display = 'none';
+        document.getElementById('usuario-password').required = true;
+        document.getElementById('titulo-modal-usuario').innerText = 'Agregar Nuevo Usuario';
+      }
+      // Quitar el atributo después de usarlo
+      modalUsuarioElement.removeAttribute('data-editar');
+    });
+    document.querySelector('#modalUsuario .btn-primary').addEventListener('click', guardarUsuario);
+  }
+
   // Eventos para los filtros
   document.getElementById('buscar-cliente').addEventListener('input', aplicarFiltros);
   document.getElementById('filtro-estado').addEventListener('change', aplicarFiltros);
@@ -68,6 +94,171 @@ document.addEventListener('DOMContentLoaded', function() {
 function cargarDatosAdmin() {
   cargarClientesMensuales();
   cargarServicios();
+  cargarUsuarios();
+}
+
+// ============================================
+// GESTIÓN DE USUARIOS (SOLO ADMIN)
+// ============================================
+
+let todosLosUsuarios = [];
+
+function cargarUsuarios() {
+  const tablaUsuarios = document.getElementById('tabla-usuarios');
+  if (!tablaUsuarios) return; // Si no existe la tabla, no hacer nada
+
+  fetch('/sistemaEstacionamiento/api/api_usuarios.php')
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        throw new Error(data.error);
+      }
+      todosLosUsuarios = data.data;
+      renderizarTablaUsuarios(todosLosUsuarios);
+    })
+    .catch(error => {
+      console.error('Error cargando usuarios:', error);
+      tablaUsuarios.innerHTML = 
+        `<tr><td colspan="4" class="text-center text-danger py-4">Error al cargar usuarios: ${error.message}</td></tr>`;
+    });
+}
+
+function renderizarTablaUsuarios(usuarios) {
+  const tbody = document.getElementById('tabla-usuarios');
+  if (!tbody) return;
+
+  if (usuarios.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No hay usuarios registrados.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = usuarios.map(usuario => {
+    const rolBadge = usuario.rol === 'admin' 
+      ? '<span class="badge bg-primary">Administrador</span>' 
+      : '<span class="badge bg-secondary">Operador</span>';
+
+    return `
+      <tr>
+        <td>#${usuario.id}</td>
+        <td><strong>${usuario.usuario}</strong></td>
+        <td>${rolBadge}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary" data-id="${usuario.id}" onclick="editarUsuario(this)">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="eliminarUsuario(${usuario.id})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function editarUsuario(button) {
+  const id = button.getAttribute('data-id');
+  const usuario = todosLosUsuarios.find(u => u.id == id);
+
+  if (usuario) {
+    // Marcar el modal como edición ANTES de abrirlo
+    const modalElement = document.getElementById('modalUsuario');
+    modalElement.setAttribute('data-editar', 'true');
+    
+    // Llenar el formulario
+    document.getElementById('titulo-modal-usuario').innerText = 'Editar Usuario';
+    document.getElementById('usuario-id').value = usuario.id;
+    document.getElementById('usuario-nombre').value = usuario.usuario;
+    
+    // 🔧 CORRECCIÓN: Asegurarse de que el rol se seleccione correctamente.
+    // El rol en la BD puede ser 'cajero' pero en el select es 'operador'.
+    const rolSelect = document.getElementById('usuario-rol');
+    const rolValue = (usuario.rol === 'cajero') ? 'operador' : usuario.rol;
+    rolSelect.value = rolValue;
+
+    document.getElementById('usuario-password').value = '';
+    document.getElementById('usuario-password').required = false;
+    document.getElementById('password-help').style.display = 'block';
+
+    // Abrir el modal
+    new bootstrap.Modal(modalElement).show();
+  }
+}
+
+async function guardarUsuario() {
+  const idValue = document.getElementById('usuario-id').value;
+  const password = document.getElementById('usuario-password').value;
+  
+  // Convertir el ID correctamente: si está vacío o es cadena vacía, no lo incluyas
+  const usuarioData = {
+    usuario: document.getElementById('usuario-nombre').value.trim(),
+    rol: document.getElementById('usuario-rol').value,
+  };
+
+  // Solo agregar id si existe (modo edición)
+  if (idValue && idValue.trim() !== '') {
+    usuarioData.id = parseInt(idValue);
+  }
+
+  // Solo agregar password si tiene valor (para crear nuevo o cambiar contraseña)
+  if (password && password.trim() !== '') {
+    usuarioData.password = password.trim();
+  }
+
+  // Validaciones
+  if (!usuarioData.usuario) {
+    alert('Por favor, ingrese el nombre de usuario.');
+    return;
+  }
+
+  // Si es un nuevo usuario (sin id), la contraseña es obligatoria
+  if (!usuarioData.id && !usuarioData.password) {
+    alert('Por favor, ingrese una contraseña para el nuevo usuario.');
+    return;
+  }
+
+  // 🐛 DEBUG temporal
+  console.log('🔍 DEBUG - Datos a enviar:', usuarioData);
+  console.log('🔍 DEBUG - ID original del input:', idValue);
+  console.log('🔍 DEBUG - ¿Es edición?', !!usuarioData.id);
+
+  try {
+    const response = await fetch('/sistemaEstacionamiento/api/api_usuarios.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(usuarioData)
+    });
+    const result = await response.json();
+    if (result.success) {
+      alert(result.message);
+      bootstrap.Modal.getInstance(document.getElementById('modalUsuario')).hide();
+      cargarUsuarios();
+      // Limpiar el formulario
+      document.getElementById('form-usuario').reset();
+      document.getElementById('usuario-id').value = '';
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    alert('Error al guardar el usuario: ' + error.message);
+    console.error('Error completo:', error);
+  }
+}
+
+async function eliminarUsuario(id) {
+  if (!confirm('¿Está seguro de que desea eliminar este usuario? Esta acción no se puede deshacer.')) return;
+
+  try {
+    const response = await fetch(`/sistemaEstacionamiento/api/api_usuarios.php?id=${id}`, { method: 'DELETE' });
+    const result = await response.json();
+    if (result.success) {
+      alert(result.message);
+      cargarUsuarios();
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    alert('Error al eliminar el usuario: ' + error.message);
+  }
 }
 
 // Evento para guardar precios

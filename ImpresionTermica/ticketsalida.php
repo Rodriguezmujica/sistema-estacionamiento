@@ -65,13 +65,16 @@ try{
 	Ahora vamos a imprimir un encabezado
 */
 
-$printer->text("\n"."Inversiones Rosner" . "\n");
-$printer->text("Estacionamiento y lavado de autos" . "\n");
-$printer->text("Direccion: Perez Rosales #733-C" . "\n");
-$printer->text("Teléfono: 63 2 438535" . "\n");
-$printer->text("Fecha  ");
+$printer->text("\n"."INVERSIONES ROSNER" . "\n");
+$printer->text("Estacionamiento y Lavado" . "\n");
+$printer->text("Perez Rosales #733-C" . "\n");
+$printer->text("Los Rios, Chile" . "\n");
+$printer->text("Tel: +56 9 3395 8739" . "\n");
+$printer->text("Instagram: lavadodeautoslosrios" . "\n");
+$printer->text("================================" . "\n");
+$printer->text("Fecha: ");
 $printer->text(date("d-m-Y") . "\n");
-$printer->text("-----------------------------" . "\n");
+$printer->text("================================" . "\n");
 $printer->setJustification(Printer::JUSTIFY_LEFT);
 $printer->text("COMPROBANTE DE SALIDA \n");
 $printer->text("-----------------------------"."\n\n");

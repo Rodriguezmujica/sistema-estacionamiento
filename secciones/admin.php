@@ -94,6 +94,14 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
           <i class="fas fa-cog"></i> Configuración
         </button>
       </li>
+      <?php if ($rol == 'admin'): ?>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="usuarios-tab" data-bs-toggle="tab" data-bs-target="#usuarios-panel" 
+                type="button" role="tab">
+          <i class="fas fa-user-shield"></i> Gestión de Usuarios
+        </button>
+      </li>
+      <?php endif; ?>
     </ul>
 
     <!-- Contenido de las pestañas -->
@@ -575,6 +583,56 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
           </div>
         </div>
       </div>
+
+      <!-- ============ PESTAÑA: GESTIÓN DE USUARIOS (SOLO ADMIN) ============ -->
+      <?php if ($rol == 'admin'): ?>
+      <div class="tab-pane fade" id="usuarios-panel" role="tabpanel">
+        
+        <!-- Botón agregar usuario -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalUsuario">
+              <i class="fas fa-user-plus"></i> Agregar Usuario
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista de usuarios -->
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header bg-light">
+                <h5 class="mb-0">
+                  <i class="fas fa-users-cog"></i> Usuarios del Sistema
+                </h5>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                      <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabla-usuarios">
+                      <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                          <i class="fas fa-spinner fa-spin"></i> Cargando usuarios...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <?php endif; ?>
+
     </div>
   </main>
 
@@ -680,6 +738,47 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
           <button type="button" class="btn btn-primary" id="btn-guardar-cliente">
             <i class="fas fa-save"></i> Guardar Cambios
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal Agregar/Editar Usuario -->
+  <div class="modal fade" id="modalUsuario" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-user-edit"></i> <span id="titulo-modal-usuario">Agregar Nuevo Usuario</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="form-usuario">
+            <input type="hidden" id="usuario-id">
+            <div class="mb-3">
+              <label class="form-label">Nombre de Usuario *</label>
+              <input type="text" class="form-control" id="usuario-nombre" required autocomplete="off">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Contraseña *</label>
+              <input type="password" class="form-control" id="usuario-password" autocomplete="new-password">
+              <small class="form-text text-muted" id="password-help">Dejar en blanco para no cambiar la contraseña existente.</small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Rol *</label>
+              <select class="form-select" id="usuario-rol" required>
+                <option value="operador">Operador</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" onclick="guardarUsuario()">
+            <i class="fas fa-save"></i> Guardar Usuario
           </button>
         </div>
       </div>
