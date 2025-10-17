@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Activar Extensión GD en XAMPP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .card-custom {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 2rem;
+        }
+        .step-box {
+            background: #f8f9fa;
+            border-left: 5px solid #667eea;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+        .step-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        code {
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #d63384;
+        }
+        .alert-custom {
+            border-left: 5px solid;
+            border-radius: 5px;
+        }
+        .screenshot-box {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            background: #f8f9fa;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center text-white mb-4">
+            <i class="fas fa-image fa-4x mb-3"></i>
+            <h1 class="display-4">Activar Extensión GD en XAMPP</h1>
+            <p class="lead">Necesaria para procesar imágenes y logos en tickets</p>
+        </div>
+
+        <!-- Qué es GD -->
+        <div class="card-custom">
+            <div class="card-body p-4">
+                <h3 class="mb-3"><i class="fas fa-question-circle text-info"></i> ¿Qué es GD?</h3>
+                <p class="lead">
+                    <strong>GD</strong> es una extensión de PHP que permite procesar imágenes 
+                    (PNG, JPG, GIF). Es necesaria para:
+                </p>
+                <ul class="lead">
+                    <li>✅ Imprimir <strong>logos</strong> en los tickets térmicos</li>
+                    <li>✅ Procesar imágenes en el sistema</li>
+                    <li>✅ Crear códigos de barras con imágenes</li>
+                </ul>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> <strong>Buena noticia:</strong> 
+                    GD ya está incluida en XAMPP, solo necesitas activarla (toma 2 minutos).
+                </div>
+            </div>
+        </div>
+
+        <!-- Método 1: Desde XAMPP Panel (MÁS FÁCIL) -->
+        <div class="card-custom">
+            <div class="card-header bg-success text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-star"></i> Método 1: Desde XAMPP Control Panel 
+                    <span class="badge bg-warning text-dark">MÁS FÁCIL</span>
+                </h3>
+            </div>
+            <div class="card-body p-4">
+                
+                <div class="step-box">
+                    <h4>
+                        <span class="step-number">1</span>
+                        Abre XAMPP Control Panel
+                    </h4>
+                    <p>Busca en tu escritorio o en el menú inicio: <strong>"XAMPP Control Panel"</strong></p>
+                    <div class="screenshot-box">
+                        <i class="fas fa-desktop fa-3x text-primary mb-2"></i>
+                        <p class="text-muted mb-0">Icono de XAMPP en tu escritorio</p>
+                    </div>
+                </div>
+
+                <div class="step-box">
+                    <h4>
+                        <span class="step-number">2</span>
+                        Ve a Config de Apache
+                    </h4>
+                    <p>En la línea de <strong>Apache</strong>, haz clic en el botón <strong>"Config"</strong></p>
+                    <div class="screenshot-box">
+                        <p><strong>Apache</strong> → <button class="btn btn-sm btn-secondary disabled">Config</button> → <strong>PHP (php.ini)</strong></p>
+                    </div>
+                </div>
+
+                <div class="step-box">
+                    <h4>
+                        <span class="step-number">3</span>
+                        Busca la línea de GD
+                    </h4>
+                    <p>Se abrirá el archivo <code>php.ini</code> en el Bloc de notas.</p>
+                    <p>Presiona <kbd>Ctrl + F</kbd> y busca: <code>;extension=gd</code></p>
+                    <div class="alert alert-warning alert-custom">
+                        <strong>⚠️ Importante:</strong> Busca la línea que tiene el punto y coma <strong>;</strong> al inicio
+                    </div>
+                </div>
+
+                <div class="step-box">
+                    <h4>
+                        <span class="step-number">4</span>
+                        Quita el punto y coma
+                    </h4>
+                    <p><strong>Antes:</strong></p>
+                    <pre class="bg-light p-3 rounded"><code>;extension=gd</code></pre>
+                    
+                    <p><strong>Después:</strong></p>
+                    <pre class="bg-light p-3 rounded"><code>extension=gd</code></pre>
+                    
+                    <div class="alert alert-success alert-custom">
+                        <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> 
+                        El punto y coma <code>;</code> significa "comentario" en PHP. 
+                        Al quitarlo, activamos la extensión.
+                    </div>
+                </div>
+
+                <div class="step-box">
+                    <h4>
+                        <span class="step-number">5</span>
+                        Guarda el archivo
+                    </h4>
+                    <p>En el Bloc de notas: <strong>Archivo → Guardar</strong> (o <kbd>Ctrl + S</kbd>)</p>
+                </div>
+
+                <div class="step-box">
+                    <h4>
+                        <span class="step-number">6</span>
+                        Reinicia Apache
+                    </h4>
+                    <p>En XAMPP Control Panel:</p>
+                    <ol>
+                        <li>Haz clic en <button class="btn btn-sm btn-danger disabled">Stop</button> en la línea de Apache</li>
+                        <li>Espera 2 segundos</li>
+                        <li>Haz clic en <button class="btn btn-sm btn-success disabled">Start</button></li>
+                    </ol>
+                </div>
+
+                <div class="step-box">
+                    <h4>
+                        <span class="step-number">7</span>
+                        ¡Verifica que funciona!
+                    </h4>
+                    <p>Abre este link para verificar:</p>
+                    <a href="debug_panel.php" class="btn btn-primary" target="_blank">
+                        <i class="fas fa-check-circle"></i> Verificar GD
+                    </a>
+                    <p class="mt-2 text-muted">
+                        Busca la sección "Estado del Servidor PHP" y verifica que GD ahora diga ✅
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Método 2: Manual -->
+        <div class="card-custom">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-code"></i> Método 2: Edición Manual
+                </h3>
+            </div>
+            <div class="card-body p-4">
+                <p>Si prefieres editar el archivo directamente:</p>
+                
+                <div class="step-box">
+                    <h4>
+                        <span class="step-number">1</span>
+                        Abre el archivo php.ini
+                    </h4>
+                    <p>Ubicación típica en XAMPP:</p>
+                    <pre class="bg-light p-3 rounded"><code>C:\xampp\php\php.ini</code></pre>
+                </div>
+
+                <div class="step-box">
+                    <h4>
+                        <span class="step-number">2</span>
+                        Busca y descomenta estas líneas
+                    </h4>
+                    <p>Busca (<kbd>Ctrl + F</kbd>) y quita el <code>;</code> de estas líneas:</p>
+                    <pre class="bg-light p-3 rounded"><code>;extension=gd           → extension=gd
+;extension=gd2          → extension=gd2  (si existe)</code></pre>
+                </div>
+
+                <div class="step-box">
+                    <h4>
+                        <span class="step-number">3</span>
+                        Guarda y reinicia Apache
+                    </h4>
+                    <p>Guarda el archivo y reinicia Apache desde XAMPP Control Panel</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verificación -->
+        <div class="card-custom">
+            <div class="card-header bg-warning text-dark">
+                <h3 class="mb-0">
+                    <i class="fas fa-check-double"></i> Verificación Final
+                </h3>
+            </div>
+            <div class="card-body p-4">
+                <h4>Después de activar GD, verifica con estos métodos:</h4>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-tachometer-alt fa-3x text-primary mb-3"></i>
+                                <h5>Panel de Debug</h5>
+                                <p>Ve si GD aparece como ✅</p>
+                                <a href="debug_panel.php" class="btn btn-primary" target="_blank">
+                                    Abrir Panel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-info-circle fa-3x text-info mb-3"></i>
+                                <h5>PHP Info</h5>
+                                <p>Busca "gd" en la página</p>
+                                <a href="debug_panel.php?phpinfo=1" class="btn btn-info" target="_blank">
+                                    Ver PHP Info
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-success alert-custom mt-4">
+                    <h5><i class="fas fa-check-circle"></i> ¿Cómo sé que funcionó?</h5>
+                    <p class="mb-0">
+                        Si ves <code>✅ Extensión GD (imágenes) está cargada</code> en el panel de debug, 
+                        <strong>¡está todo listo!</strong> Ahora podrás imprimir logos en tus tickets.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Problemas Comunes -->
+        <div class="card-custom">
+            <div class="card-header bg-danger text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Problemas Comunes
+                </h3>
+            </div>
+            <div class="card-body p-4">
+                
+                <h5>❌ No encuentro el archivo php.ini</h5>
+                <p>Busca en estas ubicaciones:</p>
+                <ul>
+                    <li><code>C:\xampp\php\php.ini</code></li>
+                    <li><code>C:\xampp\apache\bin\php.ini</code></li>
+                </ul>
+                <p>O desde XAMPP Control Panel: <strong>Apache → Config → PHP (php.ini)</strong></p>
+
+                <hr>
+
+                <h5>❌ Guardé pero no funciona</h5>
+                <p><strong>Solución:</strong></p>
+                <ul>
+                    <li>Verifica que guardaste el archivo correcto</li>
+                    <li><strong>Reinicia Apache</strong> (Stop → Start)</li>
+                    <li>Refresca la página del panel de debug (<kbd>F5</kbd>)</li>
+                </ul>
+
+                <hr>
+
+                <h5>❌ La línea ya está sin punto y coma</h5>
+                <p>Si la línea ya está como <code>extension=gd</code> pero no funciona:</p>
+                <ul>
+                    <li>Verifica que estés editando el php.ini correcto</li>
+                    <li>En XAMPP Control Panel → Apache → Config → PHP (php.ini)</li>
+                    <li>Reinicia Apache completamente</li>
+                    <li>Reinicia XAMPP si es necesario</li>
+                </ul>
+
+                <hr>
+
+                <h5>❌ Apache no arranca después de los cambios</h5>
+                <p><strong>Causas posibles:</strong></p>
+                <ul>
+                    <li>Error de sintaxis en php.ini (verifica que no hayas borrado nada más)</li>
+                    <li>Vuelve a poner el <code>;</code> y reinicia Apache</li>
+                    <li>Busca otra línea de gd (puede haber varias)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Alternativa: Sin GD -->
+        <div class="card-custom">
+            <div class="card-header bg-secondary text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-lightbulb"></i> Alternativa: Trabajar sin GD
+                </h3>
+            </div>
+            <div class="card-body p-4">
+                <p>
+                    Si no puedes activar GD ahora, tu sistema <strong>seguirá funcionando</strong>. 
+                    Solo no se imprimirá el logo en los tickets.
+                </p>
+                <p>El código ya está preparado para esto:</p>
+                <pre class="bg-light p-3 rounded"><code>// En ticket.php (ya incluido)
+try {
+    $logo = EscposImage::load(__DIR__ . "/geek.png", false);
+    $printer->bitImage($logo);
+} catch(Exception $e) {
+    // Si no hay logo, continuar sin él ✅
+}</code></pre>
+                <p class="text-success">
+                    <i class="fas fa-check-circle"></i> 
+                    Los tickets se imprimirán normalmente, solo sin logo.
+                </p>
+            </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="text-center">
+            <a href="debug_panel.php" class="btn btn-primary btn-lg">
+                <i class="fas fa-check-circle"></i> Verificar GD Ahora
+            </a>
+            <a href="index_debug.html" class="btn btn-secondary btn-lg">
+                <i class="fas fa-arrow-left"></i> Volver al Centro Debug
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-white mt-4">
+            <p>
+                <small>
+                    💡 <strong>Tip:</strong> Después de activar GD, podrás usar logos e imágenes en todo el sistema
+                </small>
+            </p>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+

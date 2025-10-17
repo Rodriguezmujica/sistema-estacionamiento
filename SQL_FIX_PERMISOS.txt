@@ -1,0 +1,29 @@
+-- ========================================
+-- SOLUCIÓN: Crear usuario con permisos
+-- ========================================
+-- Ejecuta estos comandos en phpMyAdmin (pestaña SQL)
+
+-- 1. Crear/actualizar usuario root para localhost
+CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY '';
+
+-- 2. Dar todos los permisos
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;
+
+-- 3. También para 127.0.0.1 por si acaso
+CREATE USER IF NOT EXISTS 'root'@'127.0.0.1' IDENTIFIED BY '';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' WITH GRANT OPTION;
+
+-- 4. Para conexiones desde cualquier host (opcional, más permisivo)
+-- CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '';
+-- GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+
+-- 5. Aplicar cambios
+FLUSH PRIVILEGES;
+
+-- ========================================
+-- VERIFICAR que funcionó:
+-- ========================================
+-- Después de ejecutar, recarga:
+-- http://localhost:8080/sistemaEstacionamiento/test_conexion_simple.php
+
+

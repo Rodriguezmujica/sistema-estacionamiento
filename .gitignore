@@ -22,5 +22,32 @@ Thumbs.db
 *_backup.*
 *_original.*
 
-# Scripts de ejecución única de la base deatos
+# Scripts de ejecución única de la base de datos
 /sql/ejecutar_*.php
+
+# ============================================
+# 🔒 ARCHIVOS DE SEGURIDAD Y CREDENCIALES
+# ============================================
+# ⚠️ NUNCA subir estos archivos a GitHub
+
+# Archivos de configuración privada
+config.private.php
+config_seguridad.php
+.env
+*.secret
+*.private
+
+# Documentación de accesos (contiene credenciales)
+ACCESOS.private.md
+credenciales.txt
+passwords.txt
+
+# Logs del sistema (pueden contener info sensible)
+/logs/*.log
+/logs/*.bak
+debug.log
+
+# Backups de base de datos
+*.sql.gz
+*.sql.zip
+backup_*.sql
