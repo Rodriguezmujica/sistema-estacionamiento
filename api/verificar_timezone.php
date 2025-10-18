@@ -5,7 +5,7 @@
  */
 
 header('Content-Type: text/html; charset=utf-8');
-require_once '../conexion.php';
+require_once __DIR__ . '/../conexion.php';
 
 echo "<h1>🌍 Verificación de Zona Horaria del Sistema</h1>";
 echo "<hr>";

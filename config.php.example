@@ -1,0 +1,57 @@
+<?php
+/**
+ * 🔐 ARCHIVO DE CONFIGURACIÓN - EJEMPLO
+ * 
+ * INSTRUCCIONES:
+ * 1. Copia este archivo como "config.php"
+ * 2. Cambia las credenciales según tu entorno
+ * 3. NUNCA subas config.php a Git (ya está en .gitignore)
+ */
+
+// ============================================
+// CONFIGURACIÓN DE BASE DE DATOS
+// ============================================
+
+// Para Windows (XAMPP)
+if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+    define('DB_HOST', 'localhost');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');  // XAMPP por defecto no tiene contraseña
+    define('DB_NAME', 'estacionamiento');
+    define('DB_PORT', 3306);
+}
+// Para Linux (Producción)
+else {
+    define('DB_HOST', 'localhost');
+    define('DB_USER', 'estacionamiento_user');  // 🔧 CAMBIAR: Usuario específico
+    define('DB_PASS', 'TU_CONTRASEÑA_SEGURA');  // 🔧 CAMBIAR: Contraseña fuerte
+    define('DB_NAME', 'estacionamiento');
+    define('DB_PORT', 3306);
+}
+
+// ============================================
+// CONFIGURACIÓN GENERAL
+// ============================================
+
+// Zona horaria
+define('TIMEZONE', 'America/Santiago');
+
+// Modo debug (cambiar a false en producción)
+define('DEBUG_MODE', true);
+
+// ============================================
+// EJEMPLO DE CONTRASEÑA SEGURA
+// ============================================
+/*
+Para generar una contraseña segura en Linux:
+    openssl rand -base64 32
+
+Ejemplo de contraseña fuerte:
+    xK9m#Lp2$vN8qR@5wT7&jF4!aB6^dG1
+
+Para crear el usuario en MySQL:
+    CREATE USER 'estacionamiento_user'@'localhost' IDENTIFIED BY 'xK9m#Lp2$vN8qR@5wT7&jF4!aB6^dG1';
+    GRANT ALL PRIVILEGES ON estacionamiento.* TO 'estacionamiento_user'@'localhost';
+    FLUSH PRIVILEGES;
+*/
+

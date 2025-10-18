@@ -1,7 +1,7 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-require_once '../conexion.php';
+require_once __DIR__ . '/../conexion.php';
 
 // Solo los administradores pueden gestionar usuarios
 if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {
@@ -16,7 +16,7 @@ try {
     switch ($method) {
         case 'GET':
             // Obtener todos los usuarios (sin la contraseña)
-            // 🤫 Ocultar al super admin de la lista
+            //  Ocultar al super admin de la lista
             $sql = "SELECT id, usuario, rol FROM usuarios WHERE usuario != 'evelyn_dev' ORDER BY usuario ASC";
             $result = $conn->query($sql);
             $usuarios = [];

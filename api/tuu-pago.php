@@ -21,12 +21,7 @@ define('TUU_API_KEY', 'uIAwXISF5Amug0O7QA16r72a07x10n6jdu4LNzjos3cdz736bGkHf7gM8
 define('TUU_TIMEOUT', 90); // Timeout de 90 segundos para dar tiempo al cliente a pagar
 define('TUU_MODO_PRUEBA', false); // ✅ MODO PRODUCCIÓN ACTIVADO
 
-// Conexión a la base de datos
-$conexion = new mysqli("localhost", "root", "", "estacionamiento");
-if ($conexion->connect_error) {
-    echo json_encode(['success' => false, 'error' => 'Error de conexión: ' . $conexion->connect_error]);
-    exit;
-}
+require_once __DIR__ . '/../conexion.php';
 
 // Device serial FIJO - Número de serie real de la app TUU
 define('TUU_DEVICE_SERIAL', '6010B232511900353'); // ✅ CORREGIDO según panel TUU (era 6010B232519... y es 6010B232511...)
@@ -173,16 +168,19 @@ function procesarPagoTUU($monto, $idTransaccion, $patente, $extraData = [], $met
             ];
         }
 
-        // ✅ PaymentMethod: NO enviar para que la máquina muestre todas las opciones
-        // Según documentación TUU: "Si no se envía, la máquina muestra todas las opciones (incluyendo efectivo)"
-        // Esto evita el error RP-032: "Device settings do not support the payment method entered"
+        // ✅ PaymentMethod: Configurar según el método seleccionado (API v2 usa strings)
+        // Referencia: https://developers.tuu.cl/docs/pago-remoto
+        // - API v1 (antigua): usaba int (1 = crédito, 2 = débito)
+        // - API v2 (actual): usa string ("CREDIT", "DEBIT")
+        // - Si es efectivo o no se especifica: NO enviar el campo (la máquina muestra todas las opciones)
         
-        // COMENTADO: No enviar paymentMethod para evitar errores de configuración del dispositivo
-        // if ($metodo_tarjeta === 'credito') {
-        //     $datosTransaccion['paymentMethod'] = 1;
-        // } elseif ($metodo_tarjeta === 'debito') {
-        //     $datosTransaccion['paymentMethod'] = 2;
-        // }
+        if ($metodo_tarjeta === 'credito') {
+            $datosTransaccion['paymentMethod'] = 'CREDIT';
+        } elseif ($metodo_tarjeta === 'debito') {
+            $datosTransaccion['paymentMethod'] = 'DEBIT';
+        }
+        // Si es 'efectivo' o 'desconocido', no agregamos paymentMethod
+        // Esto permite que la máquina muestre todas las opciones disponibles
         
         // Iniciar cURL para comunicación con TUU
         $ch = curl_init(TUU_API_URL_CREATE);

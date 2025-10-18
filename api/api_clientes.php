@@ -1,20 +1,6 @@
 <?php
-// filepath: c:\xampp\htdocs\api_clientes.php
-
 header('Content-Type: application/json');
-
-$host = "localhost";
-$user = "root";
-$pass = ""; // Por defecto en XAMPP
-$db = "estacionamiento";
-
-$conn = new mysqli($host, $user, $pass, $db);
-
-if ($conn->connect_error) {
-    http_response_code(500);
-    echo json_encode(["error" => "Conexión fallida"]);
-    exit;
-}
+require_once __DIR__ . '/../conexion.php';
 
 $sql = "SELECT patente, nombres, apellidos FROM clientes";
 $result = $conn->query($sql);

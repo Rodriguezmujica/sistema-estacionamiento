@@ -1,7 +1,7 @@
 <?php
 // filepath: c:\xampp\htdocs\sistemaEstacionamiento\api\verificar_estructura.php
 header('Content-Type: text/plain; charset=utf-8');
-require_once '../conexion.php';
+require_once __DIR__ . '/../conexion.php';
 
 echo "🔍 VERIFICACIÓN DE ESTRUCTURA DE TABLAS\n";
 echo "=====================================\n\n";

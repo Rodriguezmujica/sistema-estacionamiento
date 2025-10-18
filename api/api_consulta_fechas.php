@@ -1,7 +1,7 @@
 <?php
 // filepath: c:\xampp\htdocs\sistemaEstacionamiento\api\api_consulta_fechas.php
 header('Content-Type: application/json');
-require_once '../conexion.php';
+require_once __DIR__ . '/../conexion.php';
 
 // 🔧 MANEJO DE ERRORES
 error_reporting(E_ALL);

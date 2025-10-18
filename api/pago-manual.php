@@ -15,12 +15,7 @@ header('Content-Type: application/json');
  * Genera un comprobante interno sin boleta oficial
  */
 
-// Conexión a la base de datos
-$conexion = new mysqli("localhost", "root", "", "estacionamiento");
-if ($conexion->connect_error) {
-    echo json_encode(['success' => false, 'error' => 'Error de conexión: ' . $conexion->connect_error]);
-    exit;
-}
+require_once __DIR__ . '/../conexion.php';
 
 // Obtener datos del POST
 $id_ingreso = isset($_POST['id_ingreso']) ? intval($_POST['id_ingreso']) : 0;

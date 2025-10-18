@@ -1,19 +1,7 @@
 <?php
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
-
-$host = "localhost";
-$user = "root";
-$pass = "";
-$db = "estacionamiento";
-
-$conn = new mysqli($host, $user, $pass, $db);
-
-if ($conn->connect_error) {
-    http_response_code(500);
-    echo json_encode(["error" => "Conexión fallida"]);
-    exit;
-}
+require_once __DIR__ . '/../conexion.php';
 
 // TODOS los servicios (lavado + estacionamiento)
 $sql = "SELECT idtipo_ingresos, nombre_servicio, precio FROM tipo_ingreso WHERE nombre_servicio <> '' ORDER BY CASE WHEN nombre_servicio LIKE '%estacionamiento%' THEN 1 ELSE 2 END, precio";

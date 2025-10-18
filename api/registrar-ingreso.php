@@ -3,18 +3,7 @@
 error_reporting(E_ERROR | E_PARSE);
 ini_set('display_errors', '0');
 header('Content-Type: application/json');
-
-// Configuración de conexión (ajusta según tu entorno)
-$host = 'localhost';
-$user = 'root';
-$pass = '';
-$db = 'estacionamiento';
-
-$conn = new mysqli($host, $user, $pass, $db);
-if ($conn->connect_error) {
-    echo json_encode(['success' => false, 'error' => 'Error de conexión a la base de datos']);
-    exit;
-}
+require_once __DIR__ . '/../conexion.php';
 
 $patente = strtoupper(trim($_POST['patente'] ?? ''));
 $idtipo_ingreso = intval($_POST['tipo_servicio'] ?? 0);

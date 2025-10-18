@@ -1,11 +1,6 @@
 <?php
 header('Content-Type: application/json');
-
-// Conexión a la base de datos
-$conexion = new mysqli("localhost", "root", "", "estacionamiento");
-if ($conexion->connect_error) {
-    die(json_encode(["error" => "Conexión fallida: " . $conexion->connect_error]));
-}
+require_once __DIR__ . '/../conexion.php';
 
 // Consulta para obtener ingresos activos (sin salida registrada) con información de lavados
 $sql = "

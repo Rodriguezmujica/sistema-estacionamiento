@@ -258,4 +258,3 @@ Si tienes problemas:
 ---
 
 **¡Todo listo para servidor actual Y migración a Ubuntu!** 🎉
-

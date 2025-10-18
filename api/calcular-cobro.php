@@ -2,13 +2,7 @@
 error_reporting(E_ERROR | E_PARSE);
 ini_set('display_errors', '0');
 header('Content-Type: application/json');
-
-// Conexión a la base de datos
-$conexion = new mysqli("localhost", "root", "", "estacionamiento");
-if ($conexion->connect_error) {
-    echo json_encode(['success' => false, 'error' => 'Error de conexión: ' . $conexion->connect_error]);
-    exit;
-}
+require_once __DIR__ . '/../conexion.php';
 
 $patente = isset($_POST['patente']) ? strtoupper(trim($_POST['patente'])) : '';
 

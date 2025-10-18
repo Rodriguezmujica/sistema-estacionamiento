@@ -15,7 +15,7 @@
 
 header('Content-Type: text/html; charset=utf-8');
 
-$conexion = new mysqli("localhost", "root", "", "estacionamiento");
+require_once __DIR__ . '/../conexion.php';
 
 if ($conexion->connect_error) {
     die("<h2>❌ Error de conexión: " . $conexion->connect_error . "</h2>");

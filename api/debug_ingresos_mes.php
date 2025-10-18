@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: text/html; charset=utf-8');
-require_once '../conexion.php';
+require_once __DIR__ . '/../conexion.php';
 
 $mes = isset($_GET['mes']) ? intval($_GET['mes']) : 2; // Febrero por defecto
 $anio = isset($_GET['anio']) ? intval($_GET['anio']) : 2025;

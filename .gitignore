@@ -1,5 +1,5 @@
-# Archivo de conexión a la base de datos. ¡NUNCA SUBIR A GIT!
-conexion.php
+# Archivo de configuración con credenciales. ¡NUNCA SUBIR A GIT!
+config.php
 
 # Archivos de configuración de editores de código
 .vscode/

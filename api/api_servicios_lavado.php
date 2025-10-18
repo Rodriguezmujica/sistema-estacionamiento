@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once '../conexion.php';
+require_once __DIR__ . '/../conexion.php';
 
 if ($conn->connect_error) {
     http_response_code(500);
