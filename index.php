@@ -15,7 +15,7 @@ $rol = $_SESSION['rol'];
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="./scss/main.css">
-  <link rel="shortcut icon" href="./imagenes/Mi proyecto.png">
+  <link rel="shortcut icon" href="./imagenes/Logo_sin_fondo.png">
   <title>Dashboard | Estacionamiento Los Ríos</title>
 </head>
 
@@ -24,7 +24,7 @@ $rol = $_SESSION['rol'];
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
     <div class="container-fluid">
       <a class="navbar-brand fw-bold d-flex align-items-center" href="./index.php">
-        <img src="./imagenes/los rios.jpg" alt="Logo" height="35" class="me-2 rounded">
+        <img src="./imagenes/Logo_sin_fondo.png" alt="Logo" height="40" class="me-2">
         Estacionamiento Los Ríos
       </a>
 

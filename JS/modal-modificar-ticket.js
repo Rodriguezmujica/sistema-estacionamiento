@@ -1,6 +1,14 @@
 // Script dedicado solo para el modal de modificar ticket
 console.log('🔧 Script modal-modificar-ticket.js cargado');
 
+// --- CONFIGURACIÓN DE RUTAS ---
+const getBasePath = () => {
+  const path = window.location.pathname;
+  const baseMatch = path.match(/^(.*?sistemaEstacionamiento)/);
+  return baseMatch ? baseMatch[1] : '';
+};
+const BASE_PATH = getBasePath();
+
 // Función para mostrar alertas elegantes
 function mostrarAlerta(mensaje, tipo = 'info') {
   const alertDiv = document.createElement('div');
@@ -80,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Buscar en la API
-      fetch('./api/api_reporte.php')
+      fetch(`${BASE_PATH}/api/api_reporte.php`)
         .then(res => res.json())
         .then(data => {
           console.log('📊 Datos de API:', data);
@@ -160,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Procedemos a guardar en la base de datos
       console.log('📤 Enviando:', { patente, idServicio: valorSeleccionado });
       
-      fetch('./api/modificar_ticket.php', {
+      fetch(`${BASE_PATH}/api/modificar_ticket.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ 

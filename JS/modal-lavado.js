@@ -37,10 +37,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- CONFIGURACIÓN DE RUTAS ---
+  const getBasePath = () => {
+    const path = window.location.pathname;
+    const baseMatch = path.match(/^(.*?sistemaEstacionamiento)/);
+    return baseMatch ? baseMatch[1] : '';
+  };
+  const BASE_PATH = getBasePath();
+
   // --- FUNCIONES AUXILIARES ---
 
   function cargarServiciosEnModal() {
-    return fetch('./api/api_servicios_lavado.php')
+    return fetch(`${BASE_PATH}/api/api_servicios_lavado.php`)
       .then(response => response.json())
       .then(data => {
         if (!data.success) {

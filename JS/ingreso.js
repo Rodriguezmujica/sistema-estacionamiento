@@ -48,10 +48,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // --- CONFIGURACIÓN DE RUTAS ---
+  // Detectar la ruta base automáticamente
+  const getBasePath = () => {
+    const path = window.location.pathname;
+    const baseMatch = path.match(/^(.*?sistemaEstacionamiento)/);
+    return baseMatch ? baseMatch[1] : '';
+  };
+  const BASE_PATH = getBasePath();
+
   // --- FUNCIONES AUXILIARES ---
 
   function verificarPatenteDuplicada(patente) {
-    return fetch('./api/verificar-patente.php', {
+    return fetch(`${BASE_PATH}/api/verificar-patente.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ patente })
@@ -110,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     formData.append('tipo_servicio', servicioId); // Usar el ID directamente
     formData.append('nombre_cliente', nombreCliente);
 
-    fetch('./api/registrar-ingreso.php', {
+    fetch(`${BASE_PATH}/api/registrar-ingreso.php`, {
       method: 'POST',
       body: formData
     })

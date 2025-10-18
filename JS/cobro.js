@@ -83,11 +83,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- CONFIGURACIÓN DE RUTAS ---
+  const getBasePath = () => {
+    const path = window.location.pathname;
+    const baseMatch = path.match(/^(.*?sistemaEstacionamiento)/);
+    return baseMatch ? baseMatch[1] : '';
+  };
+  const BASE_PATH = getBasePath();
+
   // --- FUNCIONES AUXILIARES ---
 
   async function buscarTicketParaCobro(patente) {
     try { 
-      const response = await fetch('./api/calcular-cobro.php', {
+      const response = await fetch(`${BASE_PATH}/api/calcular-cobro.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ patente })
@@ -174,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       let dataPago;
       if (metodo === 'TUU') {
-        const responseTUU = await fetch('./api/tuu-pago.php', {
+        const responseTUU = await fetch(`${BASE_PATH}/api/tuu-pago.php`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({
@@ -189,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         dataPago = await responseTUU.json();
       } else { // EFECTIVO
-        const responseSalida = await fetch('./api/registrar-salida.php', {
+        const responseSalida = await fetch(`${BASE_PATH}/api/registrar-salida.php`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({
@@ -326,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnPagarTuu.disabled = true;
 
     try {
-      const response = await fetch('./api/pago-manual.php', {
+      const response = await fetch(`${BASE_PATH}/api/pago-manual.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({

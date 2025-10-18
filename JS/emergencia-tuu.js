@@ -5,6 +5,14 @@
  * Permite cambiar entre máquinas TUU en caso de falla
  */
 
+// --- CONFIGURACIÓN DE RUTAS ---
+const getBasePath = () => {
+    const path = window.location.pathname;
+    const baseMatch = path.match(/^(.*?sistemaEstacionamiento)/);
+    return baseMatch ? baseMatch[1] : '';
+};
+const BASE_PATH = getBasePath();
+
 // Variables globales
 let modalEmergenciaTUU;
 let maquinasDisponibles = [];
@@ -41,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 async function cargarEstadoTUU() {
     try {
-        const response = await fetch('./api/api_config_tuu.php');
+        const response = await fetch(`${BASE_PATH}/api/api_config_tuu.php`);
         const data = await response.json();
 
         if (data.success && data.activa) {
@@ -96,7 +104,7 @@ async function abrirModalEmergencia() {
     modalEmergenciaTUU.show();
 
     try {
-        const response = await fetch('./api/api_config_tuu.php');
+        const response = await fetch(`${BASE_PATH}/api/api_config_tuu.php`);
         const data = await response.json();
 
         if (data.success) {
@@ -182,7 +190,7 @@ async function cambiarMaquinaTUU(maquina) {
     }
 
     try {
-        const response = await fetch('./api/api_config_tuu.php', {
+        const response = await fetch(`${BASE_PATH}/api/api_config_tuu.php`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
