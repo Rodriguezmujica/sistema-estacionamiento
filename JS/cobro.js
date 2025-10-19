@@ -211,11 +211,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- CONFIGURACIÓN DE RUTAS ---
-  const getBasePath = () => {
-    const path = window.location.pathname;
-    const baseMatch = path.match(/^(.*?sistemaEstacionamiento)/);
-    return baseMatch ? baseMatch[1] : '';
-  };
+  if (typeof getBasePath === 'undefined') {
+    window.getBasePath = () => {
+      const path = window.location.pathname;
+      const baseMatch = path.match(/^(.*?sistemaEstacionamiento)/);
+      return baseMatch ? baseMatch[1] : '';
+    };
+  }
   const BASE_PATH = getBasePath();
 
   // --- FUNCIONES AUXILIARES ---
@@ -420,14 +422,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (btnConfirmarPagoTUU) {
     btnConfirmarPagoTUU.addEventListener('click', () => {
-      // Obtener método de pago seleccionado
-      const metodoTarjetaElement = document.querySelector('input[name="metodoTarjeta"]:checked');
-      
-      if (!metodoTarjetaElement) {
-        mostrarAlerta('Por favor, seleccione un tipo de tarjeta.', 'warning');
-        return;
-      }
-      const metodoTarjeta = metodoTarjetaElement.value;
+      // No necesitamos método de tarjeta ya que la máquina TUU maneja todo
+      const metodoTarjeta = 'desconocido'; // Valor por defecto ya que no se envía a TUU
       
       // Obtener tipo de documento
       const tipoDocumentoElement = document.querySelector('input[name="tipoDocumento"]:checked');
@@ -470,11 +466,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Debug: verificar valores antes de enviar a TUU
       console.log('🔍 Valores que se enviarán a TUU:', {
-        metodoTarjeta,
-        tipoDocumento,
+        tipoDocumento, // Solo importante: boleta o factura
         rutCliente,
         patente: ticketCobroActual.patente,
-        total: ticketCobroActual.total
+        total: ticketCobroActual.total,
+        nota: 'metodoTarjeta no relevante - TUU maneja métodos internamente'
       });
 
       // Llama a la función de procesamiento de pago
