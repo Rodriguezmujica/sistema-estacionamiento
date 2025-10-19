@@ -95,7 +95,7 @@ const PrintService = {
 
             if (result.success) {
                 if (mostrarAlerta) {
-                    this.mostrarNotificacion('Ticket impreso correctamente', 'success');
+                    this.mostrarNotificacion('✅ ¡Ticket impreso con éxito!', 'success');
                 }
                 console.log(`✅ Ticket de ${tipo} impreso`);
             } else {
@@ -190,8 +190,12 @@ const PrintService = {
                 toast: true,
                 position: 'top-end',
                 showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
+                timer: 2500,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
             });
             return;
         }
@@ -200,20 +204,32 @@ const PrintService = {
         if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
             // Crear elemento toast
             const toastHTML = `
-                <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="2500">
                     <div class="toast-header bg-${tipo === 'success' ? 'success' : tipo === 'error' ? 'danger' : 'info'} text-white">
-                        <strong class="me-auto">Impresión</strong>
-                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                        <i class="fa fa-${tipo === 'success' ? 'check-circle' : tipo === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                        <strong class="me-auto">${tipo === 'success' ? 'Éxito' : tipo === 'error' ? 'Error' : 'Información'}</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
                     </div>
                     <div class="toast-body">${mensaje}</div>
                 </div>
             `;
             
-            // Agregar al DOM y mostrar
-            const container = document.querySelector('.toast-container') || document.body;
+            // Crear contenedor si no existe
+            let container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container position-fixed top-0 end-0 p-3';
+                container.style.zIndex = '9999';
+                document.body.appendChild(container);
+            }
+            
+            // Agregar toast y mostrar
             container.insertAdjacentHTML('beforeend', toastHTML);
             const toastElement = container.lastElementChild;
-            const toast = new bootstrap.Toast(toastElement);
+            const toast = new bootstrap.Toast(toastElement, {
+                autohide: true,
+                delay: 2500
+            });
             toast.show();
             
             // Eliminar después de ocultar
@@ -223,8 +239,65 @@ const PrintService = {
             return;
         }
 
-        // Fallback: alert simple
-        alert(mensaje);
+        // Fallback mejorado: crear un toast personalizado simple
+        this.crearToastPersonalizado(mensaje, tipo);
+    },
+
+    /**
+     * Crea un toast personalizado como fallback cuando no hay Bootstrap o SweetAlert
+     */
+    crearToastPersonalizado(mensaje, tipo) {
+        const toast = document.createElement('div');
+        toast.className = `toast-personalizado toast-${tipo}`;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${tipo === 'success' ? '#28a745' : tipo === 'error' ? '#dc3545' : '#17a2b8'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 9999;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            min-width: 250px;
+            max-width: 350px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        `;
+        
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center;">
+                    <span style="margin-right: 8px; font-size: 16px;">
+                        ${tipo === 'success' ? '✅' : tipo === 'error' ? '❌' : 'ℹ️'}
+                    </span>
+                    <span>${mensaje}</span>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" 
+                        style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; margin-left: 10px; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">
+                    ×
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Animar entrada
+        setTimeout(() => {
+            toast.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Auto ocultar después de 2.5 segundos
+        setTimeout(() => {
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 300);
+        }, 2500);
     },
 
     /**

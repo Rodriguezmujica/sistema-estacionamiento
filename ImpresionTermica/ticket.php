@@ -13,9 +13,14 @@ error_reporting(E_ERROR | E_PARSE);
 
 // 🔧 VALIDACIÓN Y SANITIZACIÓN DE DATOS
 $nombre_cliente = $_POST["nombre_cliente"] ?? '';
-$servicio_cliente = $_POST["servicio_cliente"] ?? 'Estacionamiento';
+$servicio_cliente = trim($_POST["servicio_cliente"] ?? 'Estacionamiento');
 $patente = strtoupper(trim($_POST["patente"] ?? ''));
 $tipo_ingreso = $_POST["tipo_ingreso"] ?? '';
+
+// Debug: Verificar que se recibe el servicio correctamente
+if (empty($servicio_cliente) || $servicio_cliente === '') {
+    $servicio_cliente = 'Estacionamiento';
+}
 
 if (empty($patente)) {
     $patente = 'SIN-PATENTE';
@@ -104,10 +109,16 @@ try {
     
     // Intentar cargar e imprimir el logo
     try {
-        $logo = EscposImage::load(__DIR__ . "/geek.png", false);
-        $printer->bitImage($logo);
+        $logo_path = __DIR__ . "/geek.png";
+        // Verificar que el archivo existe
+        if (file_exists($logo_path)) {
+            $logo = EscposImage::load($logo_path, false);
+            $printer->bitImage($logo);
+            $printer->text("\n"); // Espacio después del logo
+        }
     } catch(Exception $e) {
         // Si no hay logo, continuar sin él
+        error_log("Error cargando logo: " . $e->getMessage());
     }
     
     // ========================================
@@ -118,61 +129,38 @@ try {
     $printer->text("INVERSIONES ROSNER\n");
     $printer->setEmphasis(false);
     $printer->text("Estacionamiento y Lavado\n");
-    $printer->text("================================\n");
     $printer->text("Perez Rosales #733-C\n");
     $printer->text("Los Rios, Chile\n");
-    $printer->text("Tel:+56 9 3395 8739 \n");
-    $printer->text("Instagram: lavadodeautoslosrios\n");
-    $printer->text("================================\n");
+    $printer->text("Tel:+56 9 3395 8739\n");
     
     // ========================================
-    // 📅 FECHA Y HORA DE INGRESO
+    // 📅 ENCABEZADO PRINCIPAL
     // ========================================
-    $printer->text("\n");
     $printer->setEmphasis(true);
-    $printer->text("** TICKET DE INGRESO **\n");
+    $printer->setTextSize(2, 1);
+    $printer->text("ESTACIONAMIENTO\n");
+    $printer->text("TICKET DE INGRESO\n");
+    $printer->setTextSize(1, 1);
     $printer->setEmphasis(false);
-    $printer->text("Fecha: " . date("d-m-Y") . "\n");
-    $printer->text("Hora:  " . date("H:i:s") . "\n");
-    $printer->text("================================\n");
+    $printer->text("--------------------------------\n");
     
     // ========================================
     // 🚗 DETALLES DEL SERVICIO
     // ========================================
     $printer->setJustification(Printer::JUSTIFY_LEFT);
-    $printer->text("\n");
     
-    if (!empty($nombre_cliente)) {
-        $printer->text("CLIENTE:\n");
-        $printer->setEmphasis(true);
-        $printer->text("  " . $nombre_cliente . "\n");
-        $printer->setEmphasis(false);
-        $printer->text("\n");
-    }
-    
-    $printer->text("SERVICIO:\n");
-    $printer->setEmphasis(true);
-    $printer->text("  " . $servicio_cliente . "\n");
-    $printer->setEmphasis(false);
-    $printer->text("\n");
-    
-    $printer->text("PATENTE:\n");
-    $printer->setEmphasis(true);
-    $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
-    $printer->text("  " . $patente . "\n");
-    $printer->selectPrintMode(); // Reset
-    $printer->setEmphasis(false);
-    $printer->text("\n");
-    
-    $printer->text("TICKET ID:\n");
-    $printer->text("  " . $codigo_barras . "\n");
-    $printer->text("\n");
+    // Formato que coincide con la imagen
+    $printer->text("Ticket: " . $codigo_barras . "\n");
+    $printer->text("Patente: " . $patente . "\n");
+    $printer->text("Tipo: " . $servicio_cliente . "\n");
+    $printer->text("Entrada: " . date("d/m/Y") . "\n");
+    $printer->text("Hora: " . date("H:i:s") . "\n");
+    $printer->text("--------------------------------\n");
     
     // ========================================
     // 📊 CÓDIGO DE BARRAS
     // ========================================
     $printer->setJustification(Printer::JUSTIFY_CENTER);
-    $printer->text("================================\n");
     
     if (!empty($codigo_barras) && strlen($codigo_barras) >= 3) {
         try {
@@ -189,15 +177,8 @@ try {
     // ========================================
     // 👋 PIE DE PÁGINA
     // ========================================
-    $printer->text("================================\n");
-    $printer->text("\n");
-    $printer->setEmphasis(true);
-    $printer->text("GRACIAS POR SU PREFERENCIA\n");
-    $printer->setEmphasis(false);
-    $printer->text("\n");
     $printer->text("Conserve este ticket\n");
-    $printer->text("para retirar su vehiculo\n");
-    $printer->text("================================\n");
+    $printer->text("Gracias por su visita\n");
     
     // Finalizar
     $printer->feed(3);

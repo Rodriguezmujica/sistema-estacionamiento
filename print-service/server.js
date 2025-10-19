@@ -154,24 +154,59 @@ app.post('/print', async (req, res) => {
  * Función para imprimir ticket de ingreso
  */
 function imprimirTicketIngreso(printer, datos) {
+    // Intentar imprimir logo primero (si está disponible)
+    try {
+        const path = require('path');
+        const logoPath = path.join(__dirname, '../ImpresionTermica/geek.png');
+        const fs = require('fs');
+        if (fs.existsSync(logoPath)) {
+            printer.image(logoPath, 'D8');
+            printer.align('ct').text('\n');
+        }
+    } catch (e) {
+        console.log('Logo no disponible:', e.message);
+    }
+    
     printer
         .font('a')
         .align('ct')
-        .style('bu')
+        .style('normal')
         .size(1, 1)
+        .text('INVERSIONES ROSNER')
+        .style('bu')
+        .text('Estacionamiento y Lavado')
+        .style('normal')
+        .text('Perez Rosales #733-C')
+        .text('Los Rios, Chile')
+        .text('Tel:+56 9 3395 8739')
+        .text('')
+        .style('bu')
+        .size(2, 1)
         .text('ESTACIONAMIENTO')
         .text('TICKET DE INGRESO')
-        .text('--------------------------------')
         .style('normal')
+        .size(1, 1)
+        .text('--------------------------------')
         .align('lt')
-        .size(0, 0)
         .text(`Ticket: ${datos.ticket_id || 'N/A'}`)
         .text(`Patente: ${datos.patente || 'N/A'}`)
-        .text(`Tipo: ${datos.tipo_vehiculo || 'Auto'}`)
+        .text(`Tipo: ${datos.tipo_vehiculo || 'Estacionamiento'}`)
         .text(`Entrada: ${datos.fecha_ingreso || ''}`)
         .text(`Hora: ${datos.hora_ingreso || ''}`)
         .text('--------------------------------')
-        .align('ct')
+        .align('ct');
+    
+    // Intentar imprimir código de barras
+    if (datos.ticket_id && datos.ticket_id.length >= 3) {
+        try {
+            printer.barcode(datos.ticket_id, 'CODE39');
+            printer.text(datos.ticket_id);
+        } catch (e) {
+            printer.text(`ID: ${datos.ticket_id}`);
+        }
+    }
+    
+    printer
         .text('Conserve este ticket')
         .text('Gracias por su visita')
         .feed(2)
@@ -183,17 +218,44 @@ function imprimirTicketIngreso(printer, datos) {
  * Función para imprimir ticket de salida/cobro
  */
 function imprimirTicketSalida(printer, datos) {
+    // Intentar imprimir logo primero (si está disponible)
+    try {
+        const path = require('path');
+        const logoPath = path.join(__dirname, '../ImpresionTermica/geek.png');
+        const fs = require('fs');
+        if (fs.existsSync(logoPath)) {
+            printer.image(logoPath, 'D8');
+            printer.align('ct').text('\n');
+        }
+    } catch (e) {
+        console.log('Logo no disponible:', e.message);
+    }
+    
     printer
         .font('a')
         .align('ct')
         .style('bu')
         .size(1, 1)
+        .text('Los Ríos')
+        .style('normal')
+        .text('Lavado de Autos')
+        .text('')
+        .style('bu')
+        .text('INVERSIONES ROSNER')
+        .style('normal')
+        .text('Estacionamiento y Lavado')
+        .text('Perez Rosales #733-C')
+        .text('Los Rios, Chile')
+        .text('Tel:+56 9 3395 8739')
+        .text('')
+        .style('bu')
+        .size(2, 1)
         .text('ESTACIONAMIENTO')
         .text('COMPROBANTE DE PAGO')
-        .text('--------------------------------')
         .style('normal')
+        .size(1, 1)
+        .text('--------------------------------')
         .align('lt')
-        .size(0, 0)
         .text(`Ticket: ${datos.ticket_id || 'N/A'}`)
         .text(`Patente: ${datos.patente || 'N/A'}`)
         .text(`Entrada: ${datos.fecha_ingreso || ''}`)
@@ -201,15 +263,16 @@ function imprimirTicketSalida(printer, datos) {
         .text(`Tiempo: ${datos.tiempo_estadia || ''}`)
         .text('--------------------------------')
         .align('rt')
-        .size(1, 1)
+        .size(2, 1)
         .text(`TOTAL: $${datos.monto || '0'}`)
-        .size(0, 0)
+        .size(1, 1)
         .text('--------------------------------')
         .align('lt')
         .text(`Método: ${datos.metodo_pago || 'Efectivo'}`)
         .text(`Fecha: ${datos.fecha_pago || ''}`)
         .text('--------------------------------')
         .align('ct')
+        .text('Conserve este ticket')
         .text('Gracias por su visita')
         .feed(2)
         .cut()
@@ -220,27 +283,62 @@ function imprimirTicketSalida(printer, datos) {
  * Función para imprimir ticket de lavado
  */
 function imprimirTicketLavado(printer, datos) {
+    // Intentar imprimir logo primero (si está disponible)
+    try {
+        const path = require('path');
+        const logoPath = path.join(__dirname, '../ImpresionTermica/geek.png');
+        const fs = require('fs');
+        if (fs.existsSync(logoPath)) {
+            printer.image(logoPath, 'D8');
+            printer.align('ct').text('\n');
+        }
+    } catch (e) {
+        console.log('Logo no disponible:', e.message);
+    }
+    
     printer
         .font('a')
         .align('ct')
-        .style('bu')
-        .size(1, 1)
-        .text('SERVICIO DE LAVADO')
-        .text('--------------------------------')
         .style('normal')
+        .size(1, 1)
+        .text('INVERSIONES ROSNER')
+        .style('bu')
+        .text('Estacionamiento y Lavado')
+        .style('normal')
+        .text('Perez Rosales #733-C')
+        .text('Los Rios, Chile')
+        .text('Tel:+56 9 3395 8739')
+        .text('')
+        .style('bu')
+        .size(2, 1)
+        .text('SERVICIO DE LAVADO')
+        .style('normal')
+        .size(1, 1)
+        .text('--------------------------------')
         .align('lt')
-        .size(0, 0)
         .text(`Ticket: ${datos.ticket_id || 'N/A'}`)
         .text(`Patente: ${datos.patente || 'N/A'}`)
         .text(`Servicio: ${datos.servicio || 'Lavado Simple'}`)
         .text(`Fecha: ${datos.fecha || ''}`)
         .text('--------------------------------')
         .align('rt')
-        .size(1, 1)
+        .size(2, 1)
         .text(`TOTAL: $${datos.monto || '0'}`)
-        .size(0, 0)
+        .size(1, 1)
         .text('--------------------------------')
-        .align('ct')
+        .align('ct');
+    
+    // Intentar imprimir código de barras si hay ticket_id
+    if (datos.ticket_id && datos.ticket_id.length >= 3) {
+        try {
+            printer.barcode(datos.ticket_id, 'CODE39');
+            printer.text(datos.ticket_id);
+        } catch (e) {
+            printer.text(`ID: ${datos.ticket_id}`);
+        }
+    }
+    
+    printer
         .text('Gracias por su preferencia')
         .feed(2)
         .cut()

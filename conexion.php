@@ -60,7 +60,8 @@ $conn = new mysqli($host, $user, $pass, $dbname);
 
 if ($conn->connect_error) {
     error_log("Error de conexión DB: " . $conn->connect_error);
-    die(json_encode(['success' => false, 'error' => 'Error de conexión a la base de datos']));
+    // No hacer die() aquí para permitir manejo en archivos que incluyen conexion.php
+    // Los archivos que incluyen este archivo deben verificar $conn->connect_error
 }
 
 // Configurar charset
