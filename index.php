@@ -469,7 +469,8 @@ $rol = $_SESSION['rol'];
               <i class="fas fa-clipboard-list"></i> ¿Por qué usar pago manual?
             </label>
             <select class="form-select" id="motivo-pago-manual" required>
-              <option value="">Seleccione un motivo...</option>
+              <option value="Pago en efectivo" selected>💵 Pago en efectivo</option>
+              <option value="">Seleccione otro motivo...</option>
               <option value="TUU caído">🔴 TUU está caído</option>
               <option value="Sin Internet">📡 Sin conexión a Internet</option>
               <option value="Ingreso por error">⚠️ Ingreso por error</option>

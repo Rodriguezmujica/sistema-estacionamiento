@@ -172,6 +172,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('patente-modal-manual').textContent = ticketCobroActual.patente;
       document.getElementById('total-modal-manual').textContent = `$${totalFinal.toLocaleString('es-CL')}`;
       
+      // Establecer valores predeterminados para agilizar
+      const motivoManual = document.getElementById('motivo-pago-manual');
+      if (motivoManual) motivoManual.value = 'Pago en efectivo';
+      const metodoPagoManual = document.getElementById('metodo-pago-manual');
+      if (metodoPagoManual) metodoPagoManual.value = 'EFECTIVO';
+      
       // Mostrar modal
       if (modalPagoManual) modalPagoManual.show();
     });
@@ -578,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Resetear modal de pago manual
     const motivoManual = document.getElementById('motivo-pago-manual');
-    if (motivoManual) motivoManual.value = '';
+    if (motivoManual) motivoManual.value = 'Pago en efectivo'; // Valor predeterminado para agilizar
     const metodoPagoManual = document.getElementById('metodo-pago-manual');
     if (metodoPagoManual) metodoPagoManual.value = 'EFECTIVO';
     
