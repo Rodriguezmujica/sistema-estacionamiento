@@ -575,19 +575,6 @@ $rol = $_SESSION['rol'];
             </div>
           </div>
 
-          <!-- Información sobre pago -->
-          <div class="alert alert-success">
-            <i class="fas fa-info-circle"></i> <strong>Pago con TUU</strong><br>
-            <small>La máquina TUU procesará el pago y emitirá el documento correspondiente. El cliente podrá elegir el método de pago (efectivo, débito o crédito) directamente en la máquina.</small>
-          </div>
-
-          <div class="alert alert-info">
-            <i class="fas fa-money-bill-wave"></i> <strong>¿Cliente paga en efectivo?</strong><br>
-            <small>Usa el botón <strong>"Pago Manual"</strong> (amarillo) para registrar pagos en efectivo. Este genera un comprobante interno sin boleta oficial.</small>
-          </div>
-
-          <hr>
-
           <!-- Tipo de Documento -->
           <div class="mb-3">
             <label class="form-label fw-bold">
