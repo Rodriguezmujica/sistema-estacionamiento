@@ -198,6 +198,14 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('patente-modal-tuu').textContent = ticketCobroActual.patente;
       document.getElementById('total-modal-tuu').textContent = `$${totalFinal.toLocaleString('es-CL')}`;
       document.getElementById('spinner-pago-tuu').classList.add('d-none'); // Ocultar spinner
+      
+      // Asegurar que el botón TUU esté en estado normal al abrir el modal
+      const btnConfirmarTUU = document.getElementById('btn-confirmar-pago-tuu');
+      if (btnConfirmarTUU) {
+        btnConfirmarTUU.disabled = false;
+        btnConfirmarTUU.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar y Pagar con TUU';
+      }
+      
       if (modalPagoTUU) modalPagoTUU.show();
     });
   }
@@ -347,6 +355,17 @@ document.addEventListener('DOMContentLoaded', () => {
         
         btnCobrarTicket.disabled = false;
         btnPagarTuu.disabled = false;
+        
+        // Resetear botón TUU si hay error en pago TUU
+        if (metodo === 'TUU') {
+          const btnConfirmarTUU = document.getElementById('btn-confirmar-pago-tuu');
+          if (btnConfirmarTUU) {
+            btnConfirmarTUU.disabled = false;
+            btnConfirmarTUU.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar y Pagar con TUU';
+          }
+          const spinner = document.getElementById('spinner-pago-tuu');
+          if (spinner) spinner.classList.add('d-none');
+        }
       }
     } catch (error) {
       // Si el error es de parseo JSON, es muy probable que sea un error de PHP.
@@ -358,9 +377,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       btnCobrarTicket.disabled = false;
       btnPagarTuu.disabled = false;
+      
+      // Resetear botón TUU en caso de error de conexión
       if (metodo === 'TUU') {
         actualizarToast(opciones.toastId, `❌ Error de Conexión para ${ticketCobroActual.patente}`, 'danger');
         if (modalPagoTUU) modalPagoTUU.hide();
+        
+        const btnConfirmarTUU = document.getElementById('btn-confirmar-pago-tuu');
+        if (btnConfirmarTUU) {
+          btnConfirmarTUU.disabled = false;
+          btnConfirmarTUU.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar y Pagar con TUU';
+        }
+        const spinner = document.getElementById('spinner-pago-tuu');
+        if (spinner) spinner.classList.add('d-none');
       }
     }
   }
