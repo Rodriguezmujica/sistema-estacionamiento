@@ -163,8 +163,14 @@ function procesarPagoTUU($monto, $idTransaccion, $patente, $extraData = [], $met
         // ✅ Si es factura, agregamos el RUT del cliente
         // El sistema TUU buscará automáticamente los datos en el SII
         if ($datosTransaccion['dteType'] == 33 && !empty($rut_cliente)) {
+            // Limpiar y validar formato del RUT
+            $rut_limpio = preg_replace('/[^0-9kK\-\.]/', '', $rut_cliente);
+            
+            // Debug: Log del RUT que se está enviando
+            error_log("TUU DEBUG - RUT cliente: '$rut_cliente' -> limpio: '$rut_limpio'");
+            
             $datosTransaccion['customer'] = [
-                'rut' => $rut_cliente // RUT con formato XX.XXX.XXX-X o XXXXXXXX-X
+                'rut' => $rut_limpio // RUT limpio sin espacios ni caracteres extra
             ];
         }
 
@@ -181,6 +187,9 @@ function procesarPagoTUU($monto, $idTransaccion, $patente, $extraData = [], $met
         }
         // Si es 'efectivo' o 'desconocido', no agregamos paymentMethod
         // Esto permite que la máquina muestre todas las opciones disponibles
+        
+        // Debug: Log de datos que se envían a TUU
+        error_log("TUU DEBUG - Datos enviados: " . json_encode($datosTransaccion, JSON_PRETTY_PRINT));
         
         // Iniciar cURL para comunicación con TUU
         $ch = curl_init(TUU_API_URL_CREATE);
@@ -209,6 +218,9 @@ function procesarPagoTUU($monto, $idTransaccion, $patente, $extraData = [], $met
         }
 
         $resultado = json_decode($response, true);
+        
+        // Debug: Log de respuesta de TUU
+        error_log("TUU DEBUG - HTTP Code: $httpCode, Response: " . json_encode($resultado, JSON_PRETTY_PRINT));
         
         // Si la creación del pago falla, retornamos el error inmediatamente
         if ($httpCode !== 200 && $httpCode !== 201) {

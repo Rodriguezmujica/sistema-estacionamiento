@@ -430,7 +430,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const metodoTarjeta = metodoTarjetaElement.value;
       
       // Obtener tipo de documento
-      const tipoDocumento = document.querySelector('input[name="tipoDocumento"]:checked').value;
+      const tipoDocumentoElement = document.querySelector('input[name="tipoDocumento"]:checked');
+      if (!tipoDocumentoElement) {
+        mostrarAlerta('Por favor, seleccione un tipo de documento (boleta o factura).', 'warning');
+        return;
+      }
+      const tipoDocumento = tipoDocumentoElement.value;
       let rutCliente = null;
 
       // Validar y obtener RUT si es factura
@@ -462,6 +467,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const toastId = `toast-${Date.now()}`;
       const mensajeToast = `⏳ Esperando pago para patente <strong>${ticketCobroActual.patente}</strong> en la máquina TUU...`;
       crearToast(toastId, mensajeToast);
+
+      // Debug: verificar valores antes de enviar a TUU
+      console.log('🔍 Valores que se enviarán a TUU:', {
+        metodoTarjeta,
+        tipoDocumento,
+        rutCliente,
+        patente: ticketCobroActual.patente,
+        total: ticketCobroActual.total
+      });
 
       // Llama a la función de procesamiento de pago
       procesarPago('TUU', { metodoTarjeta, tipoDocumento, rutCliente, toastId }); 
