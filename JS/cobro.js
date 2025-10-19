@@ -3,6 +3,119 @@
  * Maneja la lógica de la sección de Cobro de Salidas.
  */
 
+/**
+ * Muestra una notificación toast bonita (función auxiliar para impresión)
+ */
+function mostrarToastBonito(mensaje, tipo = 'info') {
+    // Si existe SweetAlert2
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: tipo === 'success' ? 'success' : tipo === 'error' ? 'error' : tipo === 'warning' ? 'warning' : 'info',
+            title: mensaje,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+        return;
+    }
+
+    // Si existe Bootstrap toast
+    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+        // Crear elemento toast
+        const toastHTML = `
+            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="2500">
+                <div class="toast-header bg-${tipo === 'success' ? 'success' : tipo === 'error' ? 'danger' : tipo === 'warning' ? 'warning' : 'info'} text-white">
+                    <i class="fa fa-${tipo === 'success' ? 'check-circle' : tipo === 'error' ? 'exclamation-triangle' : tipo === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                    <strong class="me-auto">${tipo === 'success' ? 'Éxito' : tipo === 'error' ? 'Error' : tipo === 'warning' ? 'Advertencia' : 'Información'}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">${mensaje}</div>
+            </div>
+        `;
+        
+        // Crear contenedor si no existe
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container position-fixed top-0 end-0 p-3';
+            container.style.zIndex = '9999';
+            document.body.appendChild(container);
+        }
+        
+        // Agregar toast y mostrar
+        container.insertAdjacentHTML('beforeend', toastHTML);
+        const toastElement = container.lastElementChild;
+        const toast = new bootstrap.Toast(toastElement, {
+            autohide: true,
+            delay: 2500
+        });
+        toast.show();
+        
+        // Eliminar después de ocultar
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+        return;
+    }
+
+    // Fallback: Crear toast personalizado simple (NUNCA alertas bloqueantes)
+    const toast = document.createElement('div');
+    toast.className = `toast-personalizado toast-${tipo}`;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        max-width: 400px;
+        padding: 12px 16px;
+        background: ${tipo === 'success' ? '#d4edda' : tipo === 'error' ? '#f8d7da' : tipo === 'warning' ? '#fff3cd' : '#d1ecf1'};
+        color: ${tipo === 'success' ? '#155724' : tipo === 'error' ? '#721c24' : tipo === 'warning' ? '#856404' : '#0c5460'};
+        border: 1px solid ${tipo === 'success' ? '#c3e6cb' : tipo === 'error' ? '#f5c6cb' : tipo === 'warning' ? '#ffeaa7' : '#bee5eb'};
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 14px;
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    `;
+    
+    const icon = tipo === 'success' ? '✅' : tipo === 'error' ? '❌' : tipo === 'warning' ? '⚠️' : 'ℹ️';
+    toast.innerHTML = `
+        <div style="display: flex; align-items: center;">
+            <span style="margin-right: 8px; font-size: 16px;">${icon}</span>
+            <span>${mensaje}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" style="background: none; border: none; font-size: 18px; cursor: pointer; margin-left: 12px; color: inherit; opacity: 0.7;">&times;</button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Animar entrada
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Auto ocultar después de 3 segundos
+    setTimeout(() => {
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.remove();
+            }
+        }, 300);
+    }, 3000);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const formCobroSalida = document.getElementById('form-cobro-salida');
   if (!formCobroSalida) return; // No ejecutar si no estamos en la página de cobro
@@ -410,6 +523,8 @@ document.addEventListener('DOMContentLoaded', () => {
           
           if (resultado.success) {
             console.log('✅ Ticket de salida impreso con nuevo servicio.');
+            // Mostrar toast bonito de éxito
+            mostrarToastBonito('🎫 Comprobante impreso correctamente', 'success');
           } else {
             console.warn('⚠️ Nuevo servicio falló, intentando método antiguo...');
             throw new Error('Fallback al método antiguo');
@@ -434,21 +549,24 @@ document.addEventListener('DOMContentLoaded', () => {
             })
           });
           const dataImprimir = await responseImprimir.text();
-          if (dataImprimir.trim() !== '1') {
-            mostrarAlerta('El cobro manual fue exitoso, pero la impresión del comprobante falló.', 'warning');
+          if (dataImprimir.trim() === '1') {
+            // Mostrar toast bonito de éxito para método antiguo también
+            mostrarToastBonito('🎫 Comprobante impreso correctamente', 'success');
           }
         } catch (errorImprimir) {
           console.warn('⚠️ No se pudo imprimir el comprobante:', errorImprimir);
-          mostrarAlerta('El cobro manual fue exitoso, pero el servicio de impresión no está disponible.', 'warning');
         }
+      } finally {
+        // Limpiar UI independientemente del resultado de la impresión
+        resetearCobro();
       }
     } else {
       // Para pagos con TUU (incluyendo efectivo), el POS imprime el voucher.
       console.log(`ℹ️ Pago con ${metodo}. La impresión la maneja el terminal POS.`);
     }
 
-    // Limpiar UI
-    resetearCobro();
+    // Limpiar UI para pagos TUU (los manuales se limpian en el finally)
+    if (metodo !== 'MANUAL') resetearCobro();
   }
 
   function resetearCobro() {

@@ -3,6 +3,119 @@
  * Maneja la lógica del formulario de ingreso de vehículos.
  */
 
+/**
+ * Muestra una notificación toast bonita (función auxiliar para impresión)
+ */
+function mostrarToastBonito(mensaje, tipo = 'info') {
+    // Si existe SweetAlert2
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: tipo === 'success' ? 'success' : tipo === 'error' ? 'error' : tipo === 'warning' ? 'warning' : 'info',
+            title: mensaje,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+        return;
+    }
+
+    // Si existe Bootstrap toast
+    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+        // Crear elemento toast
+        const toastHTML = `
+            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="2500">
+                <div class="toast-header bg-${tipo === 'success' ? 'success' : tipo === 'error' ? 'danger' : tipo === 'warning' ? 'warning' : 'info'} text-white">
+                    <i class="fa fa-${tipo === 'success' ? 'check-circle' : tipo === 'error' ? 'exclamation-triangle' : tipo === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                    <strong class="me-auto">${tipo === 'success' ? 'Éxito' : tipo === 'error' ? 'Error' : tipo === 'warning' ? 'Advertencia' : 'Información'}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">${mensaje}</div>
+            </div>
+        `;
+        
+        // Crear contenedor si no existe
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container position-fixed top-0 end-0 p-3';
+            container.style.zIndex = '9999';
+            document.body.appendChild(container);
+        }
+        
+        // Agregar toast y mostrar
+        container.insertAdjacentHTML('beforeend', toastHTML);
+        const toastElement = container.lastElementChild;
+        const toast = new bootstrap.Toast(toastElement, {
+            autohide: true,
+            delay: 2500
+        });
+        toast.show();
+        
+        // Eliminar después de ocultar
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+        return;
+    }
+
+    // Fallback: Crear toast personalizado simple (NUNCA alertas bloqueantes)
+    const toast = document.createElement('div');
+    toast.className = `toast-personalizado toast-${tipo}`;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        max-width: 400px;
+        padding: 12px 16px;
+        background: ${tipo === 'success' ? '#d4edda' : tipo === 'error' ? '#f8d7da' : tipo === 'warning' ? '#fff3cd' : '#d1ecf1'};
+        color: ${tipo === 'success' ? '#155724' : tipo === 'error' ? '#721c24' : tipo === 'warning' ? '#856404' : '#0c5460'};
+        border: 1px solid ${tipo === 'success' ? '#c3e6cb' : tipo === 'error' ? '#f5c6cb' : tipo === 'warning' ? '#ffeaa7' : '#bee5eb'};
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 14px;
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    `;
+    
+    const icon = tipo === 'success' ? '✅' : tipo === 'error' ? '❌' : tipo === 'warning' ? '⚠️' : 'ℹ️';
+    toast.innerHTML = `
+        <div style="display: flex; align-items: center;">
+            <span style="margin-right: 8px; font-size: 16px;">${icon}</span>
+            <span>${mensaje}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" style="background: none; border: none; font-size: 18px; cursor: pointer; margin-left: 12px; color: inherit; opacity: 0.7;">&times;</button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Animar entrada
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Auto ocultar después de 3 segundos
+    setTimeout(() => {
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.remove();
+            }
+        }, 300);
+    }, 3000);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const formIngreso = document.getElementById('form-ingreso');
   if (!formIngreso) return; // No ejecutar si el formulario no está en la página
@@ -36,6 +149,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!patente || !servicioId) {
       mostrarAlerta('Por favor complete la patente y el tipo de servicio.', 'warning');
+      return;
+    }
+
+    // Validar longitud de patente (máximo 6 caracteres)
+    if (patente.length > 6) {
+      mostrarAlerta('La patente no puede tener más de 6 caracteres.', 'warning');
+      patenteIngreso.focus();
+      return;
+    }
+
+    // Validar que solo contenga letras y números
+    if (!/^[A-Z0-9]+$/.test(patente)) {
+      mostrarAlerta('La patente solo puede contener letras y números.', 'warning');
+      patenteIngreso.focus();
       return;
     }
 
@@ -126,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        mostrarAlerta('✅ Ingreso registrado correctamente.', 'success');
+        mostrarToastBonito('✅ Ingreso registrado correctamente.', 'success');
         formIngreso.reset();
         patenteIngreso.focus();
         imprimirTicketIngreso(data.id_ingreso, patente, servicioId, nombreCliente);
@@ -135,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
           cargarReportesUnificados();
         }
       } else {
-        mostrarAlerta(`❌ Error: ${data.error || 'No se pudo registrar el ingreso.'}`, 'danger');
+        mostrarToastBonito(`❌ Error: ${data.error || 'No se pudo registrar el ingreso.'}`, 'error');
       }
     })
     .catch(error => {
@@ -148,7 +275,21 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🖨️ Intentando imprimir ticket de ingreso...');
     try {
       // Obtenemos el nombre del servicio para imprimirlo
-      const servicioTexto = servicioIdSelect.options[servicioIdSelect.selectedIndex].text;
+      let servicioTexto = 'Estacionamiento'; // Valor por defecto
+      
+      if (servicioIdSelect && servicioIdSelect.selectedIndex >= 0) {
+        const selectedOption = servicioIdSelect.options[servicioIdSelect.selectedIndex];
+        if (selectedOption && selectedOption.text && selectedOption.text !== 'Seleccionar servicio...') {
+          servicioTexto = selectedOption.text;
+        }
+      }
+      
+      // Mapear valores específicos si es necesario
+      if (servicioId === '18') {
+        servicioTexto = 'Estacionamiento por minuto';
+      } else if (servicioId === 'lavado') {
+        servicioTexto = 'Lavado';
+      }
 
       // 🔧 VALIDAR QUE idIngreso SEA VÁLIDO
       const codigoParaImpresion = idIngreso && idIngreso !== 'undefined' ? idIngreso.toString() : Date.now().toString();
@@ -174,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
         );
         
         if (resultado.success) {
-          console.log('✅ Ticket impreso con nuevo servicio.');
+          console.log('✅ Ticket de ingreso enviado a imprimir con nuevo servicio.');
           return; // Salir si funcionó
         } else {
           console.warn('⚠️ Nuevo servicio falló, intentando método antiguo...');
@@ -200,13 +341,14 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (resultado.trim() === '1') {
         console.log('✅ Ticket de ingreso enviado a la impresora.');
+        // No mostramos nada, el éxito ya se notificó al registrar.
       } else {
         console.warn('⚠️ La impresora respondió, pero hubo un problema:', resultado);
-        mostrarAlerta('Ingreso registrado, pero la impresión del ticket falló.', 'warning');
+        // No mostramos alerta, es solo una advertencia.
       }
     } catch (error) {
       console.error('❌ Error de conexión con el servicio de impresión:', error);
-      mostrarAlerta('Ingreso registrado, pero el servicio de impresión no está disponible.', 'warning');
+      // No mostramos alerta, el ingreso fue exitoso.
     }
   }
 });

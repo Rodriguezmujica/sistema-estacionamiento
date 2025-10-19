@@ -57,39 +57,95 @@ $printer->setJustification(Printer::JUSTIFY_CENTER);
 	el logo
 */
 try{
-	$logo = EscposImage::load("geek.png", false);
-   $printer->bitImage($logo);
+    $logo_path = __DIR__ . "/geek.png";
+    if (file_exists($logo_path)) {
+        $logo = EscposImage::load($logo_path, false);
+        $printer->bitImage($logo);
+        $printer->text("\n"); // Espacio después del logo
+    }
 }catch(Exception $e){/*No hacemos nada si hay error*/}
 
 /*
 	Ahora vamos a imprimir un encabezado
 */
 
-$printer->text("\n"."INVERSIONES ROSNER" . "\n");
-$printer->text("Estacionamiento y Lavado" . "\n");
-$printer->text("Perez Rosales #733-C" . "\n");
-$printer->text("Los Rios, Chile" . "\n");
-$printer->text("Tel: +56 9 3395 8739" . "\n");
-$printer->text("Instagram: lavadodeautoslosrios" . "\n");
-$printer->text("================================" . "\n");
-$printer->text("Fecha: ");
-$printer->text(date("d-m-Y") . "\n");
-$printer->text("================================" . "\n");
-$printer->setJustification(Printer::JUSTIFY_LEFT);
-$printer->text("COMPROBANTE DE SALIDA \n");
-$printer->text("-----------------------------"."\n\n");
+// ========================================
+// 📋 ENCABEZADO DEL NEGOCIO
+// ========================================
+$printer->text("\n");
+$printer->setEmphasis(true);
+$printer->text("INVERSIONES ROSNER\n");
+$printer->setEmphasis(false);
+$printer->text("Estacionamiento y Lavado\n");
+$printer->text("================================\n");
+$printer->text("Perez Rosales #733-C\n");
+$printer->text("Los Rios, Chile\n");
+$printer->text("Tel: +56 9 3395 8739\n");
+$printer->text("Instagram: lavadodeautoslosrios\n");
+$printer->text("================================\n");
 
-	$printer->setJustification(Printer::JUSTIFY_LEFT);
-	 
-		$printer->text("Hora ingreso: ".$hora_ingreso. " \n");
-	    $printer->text("Hora salida: ".$hora_egreso. " \n");
-	 	$printer->text("patente: ".$patente. " \n");
-		$printer->text("Total: $".$total. " \n");
-		$printer->text("Metodo Pago: ".$metodo_pago. " \n");
-		// Imprimir el motivo solo si existe (para pagos manuales)
-		if ($motivo_manual) {
-			$printer->text("Motivo: ".$motivo_manual. " \n");
-		}
+// ========================================
+// 📅 FECHA Y HORA DE SALIDA
+// ========================================
+$printer->text("\n");
+$printer->setEmphasis(true);
+$printer->text("** COMPROBANTE DE SALIDA **\n");
+$printer->setEmphasis(false);
+$printer->text("Fecha: " . date("d-m-Y") . "\n");
+$printer->text("Hora:  " . date("H:i:s") . "\n");
+$printer->text("================================\n");
+
+// ========================================
+// 🚗 DETALLES DEL SERVICIO
+// ========================================
+$printer->setJustification(Printer::JUSTIFY_LEFT);
+$printer->text("\n");
+
+$printer->text("PATENTE:\n");
+$printer->setEmphasis(true);
+$printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+$printer->text("  " . strtoupper($patente) . "\n");
+$printer->selectPrintMode(); // Reset
+$printer->setEmphasis(false);
+$printer->text("\n");
+
+$printer->text("HORA INGRESO:\n");
+$printer->setEmphasis(true);
+$printer->text("  " . $hora_ingreso . "\n");
+$printer->setEmphasis(false);
+$printer->text("\n");
+
+$printer->text("HORA SALIDA:\n");
+$printer->setEmphasis(true);
+$printer->text("  " . $hora_egreso . "\n");
+$printer->setEmphasis(false);
+$printer->text("\n");
+
+// ========================================
+// 💰 TOTAL Y MÉTODO DE PAGO
+// ========================================
+$printer->setJustification(Printer::JUSTIFY_CENTER);
+$printer->text("================================\n");
+$printer->setEmphasis(true);
+$printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+$printer->text("TOTAL: $" . number_format($total, 0, ',', '.') . "\n");
+$printer->selectPrintMode(); // Reset
+$printer->setEmphasis(false);
+$printer->text("================================\n");
+
+$printer->setJustification(Printer::JUSTIFY_LEFT);
+$printer->text("\nMÉTODO DE PAGO:\n");
+$printer->setEmphasis(true);
+$printer->text("  " . $metodo_pago . "\n");
+$printer->setEmphasis(false);
+
+// Imprimir el motivo solo si existe (para pagos manuales)
+if ($motivo_manual) {
+    $printer->text("\nMOTIVO:\n");
+    $printer->setEmphasis(true);
+    $printer->text("  " . $motivo_manual . "\n");
+    $printer->setEmphasis(false);
+}
 	     
 
 	 
@@ -99,7 +155,9 @@ $printer->text("-----------------------------"."\n\n");
 	Terminamos de imprimir
 	los productos, ahora va el total
 */
-$printer->text("-----------------------------"."\n");
+// ========================================
+// 👋 PIE DE PÁGINA MEJORADO
+// ========================================
  
  
 
@@ -109,11 +167,12 @@ $printer->text("-----------------------------"."\n");
  
 
 $printer->text("\n");
-/*
-	Podemos poner también un pie de página
-*/
- 
-$printer->text("Muchas gracias por su preferencia\n");
+$printer->text("================================\n");
+$printer->setEmphasis(true);
+$printer->text("GRACIAS POR SU PREFERENCIA\n");
+$printer->setEmphasis(false);
+$printer->text("Vuelva pronto\n");
+$printer->text("================================\n");
 
 
 
