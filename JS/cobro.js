@@ -429,14 +429,14 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (btnConfirmarPagoTUU) {
     btnConfirmarPagoTUU.addEventListener('click', () => {
-      // Obtener método de pago seleccionado
+      // Obtener método de pago seleccionado (TUU maneja automáticamente débito/crédito)
       const metodoTarjetaElement = document.querySelector('input[name="metodoTarjeta"]:checked');
       
-      if (!metodoTarjetaElement) {
-        mostrarAlerta('Por favor, seleccione un tipo de tarjeta.', 'warning');
-        return;
+      // Si no hay selección (porque está oculto), usar 'auto' para que TUU decida
+      let metodoTarjeta = 'auto';
+      if (metodoTarjetaElement) {
+        metodoTarjeta = metodoTarjetaElement.value;
       }
-      const metodoTarjeta = metodoTarjetaElement.value;
       
       // Obtener tipo de documento
       const tipoDocumentoElement = document.querySelector('input[name="tipoDocumento"]:checked');
@@ -474,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Crear un ID único para la notificación "toast"
       const toastId = `toast-${Date.now()}`;
-      const mensajeToast = `⏳ Esperando pago para patente <strong>${ticketCobroActual.patente}</strong> en la máquina TUU...`;
+      const mensajeToast = `⏳ Esperando pago para patente <strong>${ticketCobroActual.patente}</strong> en la máquina TUU (red local)...`;
       crearToast(toastId, mensajeToast);
 
       // Debug: verificar valores antes de enviar a TUU
@@ -753,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // ✅ Pago confirmado
           console.log('✅ Pago TUU confirmado:', data.data);
           
-          actualizarToast(toastId, `✅ Pago confirmado para ${data.data.patente || ticketCobroActual.patente}`, 'success');
+          actualizarToast(toastId, `✅ ¡Pago confirmado! Cliente ${data.data.patente || ticketCobroActual.patente} pagó exitosamente`, 'success');
           
           // Forzar actualización del estado
           await finalizarCobroExitoso('TUU', ticketCobroActual.total, data.data);

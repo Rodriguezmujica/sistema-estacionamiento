@@ -575,8 +575,8 @@ $rol = $_SESSION['rol'];
             </div>
           </div>
 
-          <!-- Método de Pago -->
-          <div class="mb-3">
+          <!-- Método de Pago (OCULTO - TUU maneja automáticamente débito/crédito) -->
+          <div class="mb-3" style="display: none;">
             <label class="form-label fw-bold">
               <i class="fas fa-credit-card"></i> Tipo de Tarjeta:
             </label>
@@ -594,6 +594,12 @@ $rol = $_SESSION['rol'];
             <small class="text-muted d-block mt-2">
               <i class="fas fa-info-circle"></i> La máquina TUU procesará el pago con tarjeta y emitirá boleta oficial
             </small>
+          </div>
+
+          <!-- Información simplificada -->
+          <div class="alert alert-success mb-3">
+            <i class="fas fa-credit-card"></i> <strong>Pago con TUU</strong><br>
+            <small>La máquina TUU detecta automáticamente si es tarjeta de débito o crédito y procesa el pago correspondiente.</small>
           </div>
           
           <!-- Alerta sobre efectivo -->

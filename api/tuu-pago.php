@@ -30,7 +30,12 @@ define('TUU_DEVICE_SERIAL', '6010B232511900353'); // ✅ CORREGIDO según panel 
 $id_ingreso = isset($_POST['id_ingreso']) ? intval($_POST['id_ingreso']) : 0;
 $patente = isset($_POST['patente']) ? strtoupper(trim($_POST['patente'])) : '';
 $total = isset($_POST['total']) ? floatval($_POST['total']) : 0;
-$metodo_tarjeta = isset($_POST['metodo_tarjeta']) ? $_POST['metodo_tarjeta'] : 'desconocido';
+$metodo_tarjeta = isset($_POST['metodo_tarjeta']) ? $_POST['metodo_tarjeta'] : 'auto';
+
+// Si viene 'auto', lo cambiamos a un valor por defecto para la base de datos
+if ($metodo_tarjeta === 'auto') {
+    $metodo_tarjeta = 'desconocido'; // Se actualizará con el valor real cuando TUU responda
+}
 $tipo_documento = isset($_POST['tipo_documento']) ? $_POST['tipo_documento'] : 'boleta';
 $rut_cliente = isset($_POST['rut_cliente']) ? trim($_POST['rut_cliente']) : null;
 
