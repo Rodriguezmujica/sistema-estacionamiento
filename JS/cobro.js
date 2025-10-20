@@ -345,14 +345,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         await finalizarCobroExitoso(metodo, totalFinal, dataPago);
       } else {
-        const mensajeError = `❌ Pago Rechazado: ${dataPago.error || 'Error desconocido'}`;
-        const detalleError = dataPago.details?.error_code ? ` (${dataPago.details.error_code})` : '';
-        
-        if (metodo === 'TUU') {
-          actualizarToast(opciones.toastId, mensajeError + detalleError, 'danger');
-          mostrarAlerta(mensajeError + detalleError, 'danger');
+        // Para TUU, verificar si es un error de conexión o pago pendiente
+        if (metodo === 'TUU' && (dataPago.status === 'pending' || dataPago.red_local)) {
+          // Iniciar verificación de estado en red local
+          iniciarVerificacionEstadoTUU(opciones.toastId, dataPago.transaction_id || `EST-${ticketCobroActual.id}-${Date.now()}`);
+          return; // No mostrar error si es pending
         } else {
-          mostrarAlerta(mensajeError, 'danger');
+          const mensajeError = `❌ Pago Rechazado: ${dataPago.error || 'Error desconocido'}`;
+          const detalleError = dataPago.details?.error_code ? ` (${dataPago.details.error_code})` : '';
+          
+          if (metodo === 'TUU') {
+            actualizarToast(opciones.toastId, mensajeError + detalleError, 'danger');
+            mostrarAlerta(mensajeError + detalleError, 'danger');
+          } else {
+            mostrarAlerta(mensajeError, 'danger');
+          }
         }
         
         btnCobrarTicket.disabled = false;
@@ -422,8 +429,14 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (btnConfirmarPagoTUU) {
     btnConfirmarPagoTUU.addEventListener('click', () => {
-      // No necesitamos método de tarjeta ya que la máquina TUU maneja todo
-      const metodoTarjeta = 'desconocido'; // Valor por defecto ya que no se envía a TUU
+      // Obtener método de pago seleccionado
+      const metodoTarjetaElement = document.querySelector('input[name="metodoTarjeta"]:checked');
+      
+      if (!metodoTarjetaElement) {
+        mostrarAlerta('Por favor, seleccione un tipo de tarjeta.', 'warning');
+        return;
+      }
+      const metodoTarjeta = metodoTarjetaElement.value;
       
       // Obtener tipo de documento
       const tipoDocumentoElement = document.querySelector('input[name="tipoDocumento"]:checked');
@@ -466,11 +479,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Debug: verificar valores antes de enviar a TUU
       console.log('🔍 Valores que se enviarán a TUU:', {
-        tipoDocumento, // Solo importante: boleta o factura
+        metodoTarjeta,
+        tipoDocumento,
         rutCliente,
         patente: ticketCobroActual.patente,
-        total: ticketCobroActual.total,
-        nota: 'metodoTarjeta no relevante - TUU maneja métodos internamente'
+        total: ticketCobroActual.total
       });
 
       // Llama a la función de procesamiento de pago
@@ -705,4 +718,119 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ocultar el toast después de 10 segundos
     setTimeout(() => bootstrap.Toast.getInstance(toastElement)?.hide(), 10000);
   }
+
+  // 🔄 MÓDULO DE VERIFICACIÓN DE ESTADO TUU PARA RED LOCAL
+  let verificacionActiva = false;
+  let timeoutVerificacion = null;
+
+  async function iniciarVerificacionEstadoTUU(toastId, transactionId) {
+    if (verificacionActiva) {
+      console.log('🔄 Ya hay una verificación activa de TUU');
+      return;
+    }
+
+    verificacionActiva = true;
+    const tiempoInicio = Date.now();
+    const timeoutMaximo = 120000; // 2 minutos máximo
+    const intervaloVerificacion = 3000; // Verificar cada 3 segundos
+
+    actualizarToast(toastId, `⏳ Verificando pago para ${ticketCobroActual.patente}...`, 'info');
+
+    console.log(`🔄 Iniciando verificación de estado TUU para transacción: ${transactionId}`);
+
+    const verificarEstado = async () => {
+      try {
+        // Usar nuestro endpoint optimizado para red local
+        const response = await fetch(`${BASE_PATH}/tuu-status-websocket.php?action=check_status&transaction_id=${encodeURIComponent(transactionId)}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.success && data.status === 'completed') {
+          // ✅ Pago confirmado
+          console.log('✅ Pago TUU confirmado:', data.data);
+          
+          actualizarToast(toastId, `✅ Pago confirmado para ${data.data.patente || ticketCobroActual.patente}`, 'success');
+          
+          // Forzar actualización del estado
+          await finalizarCobroExitoso('TUU', ticketCobroActual.total, data.data);
+          
+          verificacionActiva = false;
+          if (timeoutVerificacion) clearTimeout(timeoutVerificacion);
+          return true;
+          
+        } else if (data.success && data.status === 'pending') {
+          // ⏳ Pago aún pendiente, continuar verificando
+          const tiempoTranscurrido = Date.now() - tiempoInicio;
+          
+          if (tiempoTranscurrido >= timeoutMaximo) {
+            // ⏰ Timeout alcanzado
+            actualizarToast(toastId, `⏰ Timeout: No se pudo confirmar el pago para ${ticketCobroActual.patente}`, 'warning');
+            verificacionActiva = false;
+            return false;
+          }
+          
+          // Programar siguiente verificación
+          timeoutVerificacion = setTimeout(verificarEstado, intervaloVerificacion);
+          
+          // Actualizar mensaje con tiempo restante
+          const tiempoRestante = Math.max(0, Math.floor((timeoutMaximo - tiempoTranscurrido) / 1000));
+          actualizarToast(toastId, `⏳ Esperando confirmación... (${tiempoRestante}s restantes)`, 'info');
+          
+        } else {
+          throw new Error(data.error || 'Error desconocido en verificación');
+        }
+        
+      } catch (error) {
+        console.error('❌ Error verificando estado TUU:', error);
+        
+        const tiempoTranscurrido = Date.now() - tiempoInicio;
+        if (tiempoTranscurrido >= timeoutMaximo) {
+          actualizarToast(toastId, `❌ Error verificando pago: ${error.message}`, 'danger');
+          verificacionActiva = false;
+          return false;
+        }
+        
+        // Reintentar en caso de error de conexión
+        timeoutVerificacion = setTimeout(verificarEstado, intervaloVerificacion);
+      }
+    };
+
+    // Iniciar primera verificación
+    verificarEstado();
+  }
+
+  // 🔄 VERIFICACIÓN PERIÓDICA DE PAGOS PENDIENTES (para múltiples transacciones)
+  let ultimaVerificacionPagos = Date.now();
+
+  async function verificarPagosPendientes() {
+    try {
+      const response = await fetch(`${BASE_PATH}/tuu-status-websocket.php?action=poll_status&last_check=${Math.floor(ultimaVerificacionPagos / 1000)}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.nuevos_pagos && data.nuevos_pagos.length > 0) {
+          console.log('💰 Nuevos pagos TUU detectados:', data.nuevos_pagos);
+          
+          // Notificar pagos nuevos encontrados
+          data.nuevos_pagos.forEach(pago => {
+            if (pago.status === 'completed') {
+              mostrarToastBonito(`✅ Pago TUU confirmado: ${pago.patente} - $${pago.total.toLocaleString('es-CL')}`, 'success');
+            }
+          });
+        }
+        
+        ultimaVerificacionPagos = Date.now();
+      }
+    } catch (error) {
+      console.log('Info: Verificación de pagos pendientes falló (normal en red local):', error.message);
+    }
+  }
+
+  // Iniciar verificación periódica cada 10 segundos (opcional)
+  setInterval(verificarPagosPendientes, 10000);
 });

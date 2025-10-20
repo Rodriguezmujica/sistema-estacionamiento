@@ -6,12 +6,13 @@
  */
 
 // --- CONFIGURACIÓN DE RUTAS ---
-const getBasePath = () => {
-    const path = window.location.pathname;
-    const baseMatch = path.match(/^(.*?sistemaEstacionamiento)/);
-    return baseMatch ? baseMatch[1] : '';
-};
-const BASE_PATH = getBasePath();
+if (typeof getBasePath === 'undefined') {
+    window.getBasePath = () => {
+        const path = window.location.pathname;
+        const baseMatch = path.match(/^(.*?sistemaEstacionamiento)/);
+        return baseMatch ? baseMatch[1] : '';
+    };
+}
 
 // Variables globales
 let modalEmergenciaTUU;
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 async function cargarEstadoTUU() {
     try {
+        const BASE_PATH = getBasePath();
         const response = await fetch(`${BASE_PATH}/api/api_config_tuu.php`);
         const data = await response.json();
 
@@ -104,6 +106,7 @@ async function abrirModalEmergencia() {
     modalEmergenciaTUU.show();
 
     try {
+        const BASE_PATH = getBasePath();
         const response = await fetch(`${BASE_PATH}/api/api_config_tuu.php`);
         const data = await response.json();
 
@@ -190,6 +193,7 @@ async function cambiarMaquinaTUU(maquina) {
     }
 
     try {
+        const BASE_PATH = getBasePath();
         const response = await fetch(`${BASE_PATH}/api/api_config_tuu.php`, {
             method: 'POST',
             headers: {
@@ -296,5 +300,9 @@ document.addEventListener('DOMContentLoaded', function() {
         badgeTUU.addEventListener('click', abrirModalEmergencia);
         badgeTUU.title = 'Click para cambiar máquina TUU';
     }
+    
+    // Asegurar que las funciones estén disponibles globalmente
+    window.cambiarMaquinaTUU = cambiarMaquinaTUU;
+    window.abrirModalEmergencia = abrirModalEmergencia;
 });
 

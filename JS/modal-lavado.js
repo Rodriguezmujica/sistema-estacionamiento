@@ -151,11 +151,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- CONFIGURACIÓN DE RUTAS ---
-  const getBasePath = () => {
-    const path = window.location.pathname;
-    const baseMatch = path.match(/^(.*?sistemaEstacionamiento)/);
-    return baseMatch ? baseMatch[1] : '';
-  };
+  if (typeof getBasePath === 'undefined') {
+    window.getBasePath = () => {
+      const path = window.location.pathname;
+      const baseMatch = path.match(/^(.*?sistemaEstacionamiento)/);
+      return baseMatch ? baseMatch[1] : '';
+    };
+  }
   const BASE_PATH = getBasePath();
 
   // --- FUNCIONES AUXILIARES ---

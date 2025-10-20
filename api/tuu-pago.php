@@ -141,18 +141,23 @@ function procesarPagoTUU($monto, $idTransaccion, $patente, $extraData = [], $met
         // Preparar datos según API V2 con idempotencia
         // Referencia: https://developers.tuu.cl/docs/pago-remoto
         
-        // Sanitizar idempotencyKey: solo alfanuméricos (TUU no acepta guiones ni caracteres especiales)
-        $idempotencyKeySafe = preg_replace('/[^a-zA-Z0-9]/', '', $idTransaccion);
+        // Sanitizar idempotencyKey: máximo 36 caracteres, alfanuméricos y guiones permitidos
+        $idempotencyKeyRaw = preg_replace('/[^a-zA-Z0-9\-_]/', '', $idTransaccion);
+        $idempotencyKeySafe = substr($idempotencyKeyRaw, 0, 36); // Máximo 36 caracteres según doc
         
-        // Sanitizar descripción: remover caracteres especiales problemáticos
-        $descripcionSafe = "Estacionamiento Patente $patente";
+        // Sanitizar descripción: máximo 28 caracteres según RP-015
+        $descripcionRaw = "Estacionamiento Patente $patente";
+        $descripcionSafe = substr($descripcionRaw, 0, 28);
+        
+        // Configurar DTE según versión que funcionaba
+        $dteType = ($tipo_documento === 'factura') ? 33 : 48; // REVERTIDO: 48 para boletas, no 99
         
         $datosTransaccion = [
             'idempotencyKey' => $idempotencyKeySafe, // Identificador único solo alfanumérico
             'amount' => (int)$monto, // Monto en entero (mínimo 100, máximo 99999999)
             'device' => TUU_DEVICE_SERIAL, // Número de serie del dispositivo POS
             'description' => $descripcionSafe, // Descripción sin caracteres especiales
-            'dteType' => ($tipo_documento === 'factura') ? 33 : 48, // 33 = Factura, 48 = Boleta
+            'dteType' => $dteType, // 33 = Factura, 48 = Boleta (REVERTIDO)
             'extradata' => [ // Objeto extradata (minúscula según doc)
                 'customFields' => $customFields, // Array de campos personalizados
                 'sourceName' => 'Sistema Estacionamiento Los Rios', // Sin tilde
@@ -174,22 +179,39 @@ function procesarPagoTUU($monto, $idTransaccion, $patente, $extraData = [], $met
             ];
         }
 
-        // ✅ PaymentMethod: Configurar según el método seleccionado (API v2 usa strings)
-        // Referencia: https://developers.tuu.cl/docs/pago-remoto
-        // - API v1 (antigua): usaba int (1 = crédito, 2 = débito)
-        // - API v2 (actual): usa string ("CREDIT", "DEBIT")
-        // - Si es efectivo o no se especifica: NO enviar el campo (la máquina muestra todas las opciones)
+        // ✅ PaymentMethod: NO enviar para que la máquina muestre todas las opciones
+        // Según documentación TUU: "Si no se envía, la máquina muestra todas las opciones (incluyendo efectivo)"
+        // Esto evita el error RP-032: "Device settings do not support the payment method entered"
         
-        if ($metodo_tarjeta === 'credito') {
-            $datosTransaccion['paymentMethod'] = 'CREDIT';
-        } elseif ($metodo_tarjeta === 'debito') {
-            $datosTransaccion['paymentMethod'] = 'DEBIT';
-        }
-        // Si es 'efectivo' o 'desconocido', no agregamos paymentMethod
-        // Esto permite que la máquina muestre todas las opciones disponibles
+        // COMENTADO: No enviar paymentMethod para evitar errores de configuración del dispositivo
+        // if ($metodo_tarjeta === 'credito') {
+        //     $datosTransaccion['paymentMethod'] = 1;
+        // } elseif ($metodo_tarjeta === 'debito') {
+        //     $datosTransaccion['paymentMethod'] = 2;
+        // }
         
-        // Debug: Log de datos que se envían a TUU
+        // Debug: Log de datos que se envían a TUU con validaciones
         error_log("TUU DEBUG - Datos enviados: " . json_encode($datosTransaccion, JSON_PRETTY_PRINT));
+        
+        // Validaciones según códigos de error de la documentación v2
+        if (!isset($datosTransaccion['device']) || empty($datosTransaccion['device'])) {
+            error_log("TUU ERROR - MR-191: Device for API-Key doesn't exist");
+        }
+        if (!isset($datosTransaccion['amount']) || $datosTransaccion['amount'] < 100) {
+            error_log("TUU ERROR - RP-028: Invalid amount, must be equal to or greater than 100. Actual: " . ($datosTransaccion['amount'] ?? 'no definido'));
+        }
+        if (!isset($datosTransaccion['dteType']) || !in_array($datosTransaccion['dteType'], [33, 48])) {
+            error_log("TUU ERROR - MR-130: DTE type not recognized. Value: " . ($datosTransaccion['dteType'] ?? 'no definido'));
+        }
+        if (strlen($datosTransaccion['idempotencyKey']) < 1 || strlen($datosTransaccion['idempotencyKey']) > 36) {
+            error_log("TUU ERROR - RP-001: Idempotency Key length must be between 1 and 36 characters. Actual: " . strlen($datosTransaccion['idempotencyKey']));
+        }
+        if (strlen($datosTransaccion['description']) > 28) {
+            error_log("TUU ERROR - RP-015: Invalid length. Description must be between 1 and 28 characters. Actual: " . strlen($datosTransaccion['description']));
+        }
+        
+        // Log de debugging básico (sin validaciones exempAmount como versión que funcionaba)
+        error_log("TUU DEBUG - DTE Type: $dteType, amount: " . $monto . " (versión revertida que funcionaba)");
         
         // Iniciar cURL para comunicación con TUU
         $ch = curl_init(TUU_API_URL_CREATE);
@@ -226,12 +248,47 @@ function procesarPagoTUU($monto, $idTransaccion, $patente, $extraData = [], $met
         if ($httpCode !== 200 && $httpCode !== 201) {
             $errorCode = $resultado['code'] ?? 'UNKNOWN';
             $errorMessage = $resultado['message'] ?? 'Error desconocido';
+            $errorDetails = $resultado['details'] ?? null;
+            $rawResponse = $response; // Respuesta cruda por si no es JSON válido
+            
+            // Log detallado del error
+            error_log("TUU ERROR HTTP $httpCode - Code: $errorCode, Message: $errorMessage");
+            if ($errorDetails) {
+                error_log("TUU ERROR Details: " . json_encode($errorDetails, JSON_PRETTY_PRINT));
+            }
+            
+            // Mensajes específicos según códigos de error de la documentación v2
+            $mensajeUsuario = $errorMessage;
+            
+            // Mapeo de códigos de error comunes según documentación
+            $mapaErrores = [
+                'MR-100' => 'Dispositivo no configurado correctamente',
+                'MR-110' => 'Monto menor al mínimo permitido',
+                'MR-120' => 'Monto excede el máximo permitido', 
+                'MR-130' => 'Tipo de documento no reconocido',
+                'MR-140' => 'Falta monto exento para boleta',
+                'MR-141' => 'Monto exento no coincide con total',
+                'RP-001' => 'Clave de idempotencia inválida (1-36 caracteres)',
+                'RP-005' => 'No se especificó monto exento para boleta',
+                'RP-006' => 'Monto exento no coincide con total',
+                'RP-008' => 'Falta método de pago',
+                'RP-015' => 'Longitud inválida en descripción (máx 28 caracteres)',
+                'RP-025' => 'Método de pago no válido',
+                'RP-028' => 'Monto debe ser mayor o igual a 100',
+            ];
+            
+            if (isset($mapaErrores[$errorCode])) {
+                $mensajeUsuario = $mapaErrores[$errorCode];
+            } elseif (strpos($errorCode, 'RP-') === 0 || strpos($errorCode, 'MR-') === 0) {
+                $mensajeUsuario = "Error de configuración TUU: $errorMessage";
+            }
             
             return [
                 'success' => false,
-                'error' => "TUU Error ($errorCode): $errorMessage",
+                'error' => "pago rechazado por tuu ($errorCode)",
                 'error_code' => $errorCode,
-                'response' => $resultado
+                'response' => $resultado,
+                'raw_response' => $rawResponse
             ];
         }
 
@@ -240,6 +297,21 @@ function procesarPagoTUU($monto, $idTransaccion, $patente, $extraData = [], $met
         $tuuTransactionId = $resultado['id'] ?? null;
 
         if ($status === 'Pending' && $tuuTransactionId) {
+            // 🔄 MODO RED LOCAL: No hacer polling aquí, dejar que JavaScript maneje la verificación
+            // Esto mejora la experiencia del usuario y reduce carga en el servidor
+            
+            error_log("TUU RED LOCAL - Pago iniciado (Pending): $tuuTransactionId para $patente");
+            
+            // Retornar inmediatamente con estado "pending" para que JavaScript maneje la verificación
+            return [
+                'success' => false, // Temporal, será true cuando se confirme
+                'status' => 'pending',
+                'transaction_id' => $tuuTransactionId,
+                'message' => 'Pago enviado a TUU. Verificando estado...',
+                'red_local' => true // Indicador para JavaScript
+            ];
+            
+            /* CÓDIGO ORIGINAL (comentado para red local):
             // Inicia el bucle de sondeo (polling)
             $tiempoInicio = time();
             
@@ -262,6 +334,7 @@ function procesarPagoTUU($monto, $idTransaccion, $patente, $extraData = [], $met
                 }
                 // Si sigue en Pending o Processing, el bucle continúa
             }
+            */
         }
 
         // Analizar el resultado final (después del bucle o si no fue 'Pending')
@@ -429,10 +502,23 @@ if ($resultadoPago['success']) {
     }
     
 } else {
-    // Pago rechazado
+    // Pago rechazado - manejar diferentes tipos de errores
+    $errorPrincipal = $resultadoPago['error'] ?? $resultadoPago['message'] ?? 'Pago rechazado por TUU';
+    $errorCode = $resultadoPago['error_code'] ?? null;
+    $responseData = $resultadoPago['response'] ?? null;
+    
+    // Si hay un error específico de TUU, usarlo
+    if (isset($resultadoPago['error']) && strpos($resultadoPago['error'], 'TUU Error') === 0) {
+        $errorPrincipal = $resultadoPago['error'];
+    }
+    
+    // Log detallado del error para debugging
+    error_log("TUU PAGO RECHAZADO - Error: $errorPrincipal, Code: $errorCode, Response: " . json_encode($responseData));
+    
     echo json_encode([
         'success' => false,
-        'error' => $resultadoPago['message'] ?? 'Pago rechazado por TUU',
+        'error' => $errorPrincipal,
+        'error_code' => $errorCode,
         'details' => $resultadoPago
     ]);
 }
