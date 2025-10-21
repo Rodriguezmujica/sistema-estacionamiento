@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../utils/redondeo_chile.php';
 
 // Obtener datos del POST
 $id_ingreso = $_POST['id_ingreso'] ?? '';
@@ -46,7 +47,7 @@ try {
     $servicio = $result_servicio->fetch_assoc();
     $precio_base = $servicio['precio'];
     $precio_extra = $lavado_pendiente['precio_extra'];
-    $total = $precio_base + $precio_extra;
+    $total = calcularTotalConRedondeoChile($precio_base, $precio_extra);
     $stmt_servicio->close();
     
     // 3. Insertar registro en la tabla 'salidas' con toda la información

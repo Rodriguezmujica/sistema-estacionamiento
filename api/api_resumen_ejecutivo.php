@@ -12,6 +12,11 @@ $mes = isset($_GET['mes']) ? intval($_GET['mes']) : date('n');
 $anio = isset($_GET['anio']) ? intval($_GET['anio']) : date('Y');
 
 try {
+    // Verificar conexión a la base de datos
+    if (!isset($conn) || $conn->connect_error) {
+        throw new Exception("Error de conexión a la base de datos");
+    }
+    
     switch ($method) {
         case 'GET':
             $resumen = obtenerResumenMensual($conn, $mes, $anio);
@@ -35,7 +40,10 @@ try {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
 
-$conn->close();
+// Cerrar conexión solo si existe
+if (isset($conn) && $conn) {
+    $conn->close();
+}
 
 // =============================================
 // FUNCIONES
@@ -68,8 +76,13 @@ function obtenerResumenMensual($conn, $mes, $anio) {
                        AND i.fecha_ingreso <= ?";
     
     $stmt = $conn->prepare($sqlIngresosMes);
+    if (!$stmt) {
+        throw new Exception("Error preparando consulta de ingresos: " . $conn->error);
+    }
     $stmt->bind_param('ss', $primerDia, $ultimoDia);
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        throw new Exception("Error ejecutando consulta de ingresos: " . $stmt->error);
+    }
     $resultMes = $stmt->get_result()->fetch_assoc();
     $stmt->close();
     
@@ -217,11 +230,15 @@ function obtenerResumenMensual($conn, $mes, $anio) {
     // 7. OBTENER META DEL MES
     $sqlMeta = "SELECT * FROM metas_mensuales WHERE mes = ? AND anio = ? LIMIT 1";
     $stmt = $conn->prepare($sqlMeta);
-    $stmt->bind_param('ii', $mes, $anio);
-    $stmt->execute();
-    $resultMeta = $stmt->get_result();
-    $metaData = $resultMeta->fetch_assoc();
-    $stmt->close();
+    $metaData = null;
+    if ($stmt) {
+        $stmt->bind_param('ii', $mes, $anio);
+        if ($stmt->execute()) {
+            $resultMeta = $stmt->get_result();
+            $metaData = $resultMeta->fetch_assoc();
+        }
+        $stmt->close();
+    }
     
     $metaMonto = $metaData ? floatval($metaData['meta_monto']) : 0;
     $soloDiasLaborales = $metaData ? intval($metaData['solo_dias_laborales']) : 1;

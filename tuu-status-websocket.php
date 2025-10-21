@@ -65,6 +65,12 @@ if ($action === 'check_status') {
     
     // Función para consultar estado en TUU
     function consultarEstadoTUUDirecto($transactionId) {
+        // Verificar que cURL esté disponible
+        if (!function_exists('curl_init')) {
+            error_log("TUU ERROR: Extensión cURL no disponible para consultar estado");
+            return null;
+        }
+        
         $urlGet = TUU_API_URL_GET . $transactionId;
         $ch = curl_init($urlGet);
         curl_setopt_array($ch, [
@@ -82,16 +88,44 @@ if ($action === 'check_status') {
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
+        // Log de la respuesta de TUU para debugging
+        error_log("TUU API RESPONSE - URL: $urlGet, HTTP Code: $httpCode, Response: $response");
+
         if ($httpCode === 200) {
-            return json_decode($response, true);
+            $decoded = json_decode($response, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $decoded;
+            } else {
+                error_log("TUU JSON ERROR - Error parsing JSON: " . json_last_error_msg());
+                return null;
+            }
+        } else {
+            error_log("TUU HTTP ERROR - HTTP Code: $httpCode, Response: $response");
+            return null;
         }
-        return null;
     }
     
     // Consultar estado en TUU
     $estadoTUU = consultarEstadoTUUDirecto($transaction_id);
     
-    if ($estadoTUU && ($estadoTUU['status'] === 'Completed' || $estadoTUU['status'] === 'Paid')) {
+    // Log detallado para debugging
+    error_log("TUU STATUS CHECK - Transaction: $transaction_id, Estado: " . json_encode($estadoTUU));
+    
+    // Verificar más estados posibles que indican pago exitoso
+    $estadosExitosos = ['Completed', 'Paid', 'COMPLETED', 'PAID', 'APPROVED', 'SUCCESS'];
+    $esExitoso = false;
+    
+    if ($estadoTUU && isset($estadoTUU['status'])) {
+        $statusTUU = $estadoTUU['status'];
+        $esExitoso = in_array($statusTUU, $estadosExitosos);
+        
+        // Log del estado específico
+        error_log("TUU STATUS - Estado recibido: '$statusTUU', Es exitoso: " . ($esExitoso ? 'SÍ' : 'NO'));
+    } else {
+        error_log("TUU STATUS - No se obtuvo estado válido de TUU");
+    }
+    
+    if ($estadoTUU && $esExitoso) {
         // ✅ Pago confirmado en TUU, pero no en nuestra BD
         
         // Extraer ID de ingreso del transaction_id (formato: EST-123-timestamp)
@@ -165,11 +199,21 @@ if ($action === 'check_status') {
         ]);
         
     } else {
-        // ⏳ Pago aún pendiente
+        // ⏳ Pago aún pendiente o estado no reconocido
+        $statusActual = $estadoTUU['status'] ?? 'null';
+        error_log("TUU STATUS - Estado no exitoso detectado: '$statusActual' para transacción $transaction_id");
+        
         echo json_encode([
             'success' => true,
             'status' => 'pending',
-            'data' => ['paid' => false, 'tuu_status' => $estadoTUU['status'] ?? 'unknown']
+            'data' => [
+                'paid' => false, 
+                'tuu_status' => $statusActual,
+                'debug_info' => [
+                    'transaction_id' => $transaction_id,
+                    'full_response' => $estadoTUU
+                ]
+            ]
         ]);
     }
     
@@ -206,6 +250,83 @@ if ($action === 'check_status') {
         'nuevos_pagos' => $nuevos_pagos,
         'last_check' => time()
     ]);
+    
+} elseif ($action === 'confirm_manual_payment') {
+    // Acción especial: Confirmar pago manual cuando el usuario reporta que pagó en TUU
+    $transaction_id = $_POST['transaction_id'] ?? '';
+    $patente = $_POST['patente'] ?? '';
+    
+    if (!$transaction_id || !$patente) {
+        echo json_encode(['success' => false, 'error' => 'Faltan parámetros requeridos']);
+        exit;
+    }
+    
+    // Extraer ID de ingreso del transaction_id (formato: EST-123-timestamp)
+    $partes = explode('-', $transaction_id);
+    if (count($partes) >= 3 && is_numeric($partes[1])) {
+        $id_ingreso_tuu = intval($partes[1]);
+        
+        // Buscar datos del ingreso
+        $sql_ingreso = "SELECT i.*, ti.nombre_servicio, ti.precio
+                       FROM ingresos i
+                       JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos 
+                       WHERE i.idautos_estacionados = ? AND i.patente = ?";
+        
+        $stmt_ingreso = $conn->prepare($sql_ingreso);
+        $stmt_ingreso->bind_param('is', $id_ingreso_tuu, $patente);
+        $stmt_ingreso->execute();
+        $result_ingreso = $stmt_ingreso->get_result();
+        
+        if ($ingreso = $result_ingreso->fetch_assoc()) {
+            // Verificar si ya existe el pago
+            $sql_check = "SELECT * FROM salidas WHERE id_ingresos = ?";
+            $stmt_check = $conn->prepare($sql_check);
+            $stmt_check->bind_param('i', $id_ingreso_tuu);
+            $stmt_check->execute();
+            
+            if ($stmt_check->get_result()->num_rows === 0) {
+                // Registrar el pago manualmente
+                $sql_insert = "INSERT INTO salidas (id_ingresos, fecha_salida, total, metodo_pago, tipo_pago, 
+                              transaction_id, authorization_code, card_type, card_last4) 
+                              VALUES (?, NOW(), ?, 'TUU', 'tuu', ?, 'MANUAL_CONFIRM', 'MANUAL', 'MANUAL')";
+                
+                $stmt_insert = $conn->prepare($sql_insert);
+                $total = floatval($ingreso['precio'] ?? 0);
+                $stmt_insert->bind_param('ids', $id_ingreso_tuu, $total, $transaction_id);
+                
+                if ($stmt_insert->execute()) {
+                    // Actualizar ingreso como pagado
+                    $sql_update = "UPDATE ingresos SET salida = 1 WHERE idautos_estacionados = ?";
+                    $stmt_update = $conn->prepare($sql_update);
+                    $stmt_update->bind_param('i', $id_ingreso_tuu);
+                    $stmt_update->execute();
+                    
+                    error_log("TUU MANUAL CONFIRM - Pago confirmado manualmente para $patente - ID: $transaction_id");
+                    
+                    echo json_encode([
+                        'success' => true,
+                        'status' => 'completed',
+                        'message' => 'Pago confirmado manualmente',
+                        'data' => [
+                            'paid' => true,
+                            'transaction_id' => $transaction_id,
+                            'patente' => $patente,
+                            'total' => $total,
+                            'manual_confirm' => true
+                        ]
+                    ]);
+                } else {
+                    echo json_encode(['success' => false, 'error' => 'Error al registrar pago manual']);
+                }
+            } else {
+                echo json_encode(['success' => false, 'error' => 'Este pago ya está registrado']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'error' => 'No se encontró el ingreso especificado']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Transaction ID inválido']);
+    }
     
 } else {
     echo json_encode(['success' => false, 'error' => 'Acción no válida']);

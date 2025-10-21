@@ -218,12 +218,45 @@ document.addEventListener('DOMContentLoaded', () => {
       return baseMatch ? baseMatch[1] : '';
     };
   }
-  const BASE_PATH = getBasePath();
+
+  // Usar window.BASE_PATH para evitar conflictos de redeclaración
+  if (typeof window.BASE_PATH === 'undefined') {
+    window.BASE_PATH = getBasePath();
+  }
+
+  // Usar la variable global
+  const BASE_PATH = window.BASE_PATH;
 
   // --- FUNCIONES AUXILIARES ---
+  
+  /**
+   * Redondea monto según la ley chilena
+   * En Chile no existe moneda de 5 pesos desde 1991
+   * Reglas oficiales del Banco Central de Chile:
+   * - 1-4 pesos: redondea hacia abajo (al 0)
+   * - 5-9 pesos: redondea hacia arriba (al 10)
+   */
+  function redondearSegunLeyChilena(monto) {
+    const montoCentavos = parseInt(monto);
+    const unidades = montoCentavos % 10;
+    
+    if (unidades >= 1 && unidades <= 4) {
+      // Redondea hacia abajo (al 0)
+      return montoCentavos - unidades;
+    } else if (unidades >= 5 && unidades <= 9) {
+      // Redondea hacia arriba (al 10)
+      return montoCentavos + (10 - unidades);
+    } else {
+      // Ya está en múltiplo de 10
+      return montoCentavos;
+    }
+  }
 
   async function buscarTicketParaCobro(patente) {
     try { 
+      // Ocultar botón de confirmación manual al buscar nuevo ticket
+      ocultarBotonConfirmacionManual();
+      
       const response = await fetch(`${BASE_PATH}/api/calcular-cobro.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -311,6 +344,21 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       let dataPago;
       if (metodo === 'TUU') {
+        // Log para debuggear qué datos se envían
+        const datosParaEnviar = {
+          id_ingreso: ticketCobroActual.id,
+          patente: ticketCobroActual.patente,
+          total: totalFinal,
+          metodo_tarjeta: opciones.metodoTarjeta || 'desconocido',
+          tipo_documento: opciones.tipoDocumento || 'boleta',
+          rut_cliente: opciones.rutCliente || '',
+          toast_id: opciones.toastId || ''
+        };
+        console.log('🔍 Datos que se envían a tuu-pago.php:', datosParaEnviar);
+        console.log('🔍 ticketCobroActual completo:', ticketCobroActual);
+        console.log('🔍 BASE_PATH:', BASE_PATH);
+        console.log('🔍 URL completa:', `${BASE_PATH}/api/tuu-pago.php`);
+        
         const responseTUU = await fetch(`${BASE_PATH}/api/tuu-pago.php`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -324,7 +372,23 @@ document.addEventListener('DOMContentLoaded', () => {
             toast_id: opciones.toastId || '' // Enviamos el ID del toast para actualizarlo
           })
         });
-        dataPago = await responseTUU.json();
+
+        // Verificar si la respuesta es válida antes de parsear JSON
+        if (!responseTUU.ok) {
+          const errorText = await responseTUU.text();
+          console.error('Error TUU server response:', responseTUU.status, errorText);
+          throw new Error(`Error del servidor TUU (${responseTUU.status}): ${errorText}`);
+        }
+
+        const responseText = await responseTUU.text();
+        console.log('Respuesta TUU raw:', responseText);
+        
+        try {
+          dataPago = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Error parsing JSON from TUU:', parseError, 'Raw response:', responseText);
+          throw new Error(`Error al procesar respuesta de TUU: ${parseError.message}`);
+        }
       } else { // EFECTIVO
         const responseSalida = await fetch(`${BASE_PATH}/api/registrar-salida.php`, {
           method: 'POST',
@@ -347,8 +411,21 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         // Para TUU, verificar si es un error de conexión o pago pendiente
         if (metodo === 'TUU' && (dataPago.status === 'pending' || dataPago.red_local)) {
+          // Obtener el transaction_id correcto
+          const tuuTransactionId = dataPago.transaction_id || dataPago.details?.transaction_id;
+          console.log('🔍 TUU Transaction ID recibido:', tuuTransactionId, 'Data completo:', dataPago);
+          
+          if (!tuuTransactionId) {
+            console.error('❌ No se recibió transaction_id de TUU');
+            actualizarToast(opciones.toastId, 'Error: No se obtuvo ID de transacción de TUU', 'danger');
+            return;
+          }
+          
+          // Mostrar botón de confirmación manual inmediatamente cuando hay pending
+          mostrarBotonConfirmacionManual(tuuTransactionId, ticketCobroActual.patente, ticketCobroActual.total);
+          
           // Iniciar verificación de estado en red local
-          iniciarVerificacionEstadoTUU(opciones.toastId, dataPago.transaction_id || `EST-${ticketCobroActual.id}-${Date.now()}`);
+          iniciarVerificacionEstadoTUU(opciones.toastId, tuuTransactionId);
           return; // No mostrar error si es pending
         } else {
           const mensajeError = `❌ Pago Rechazado: ${dataPago.error || 'Error desconocido'}`;
@@ -429,6 +506,15 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (btnConfirmarPagoTUU) {
     btnConfirmarPagoTUU.addEventListener('click', () => {
+      // Validar que ticketCobroActual esté definido
+      if (!ticketCobroActual) {
+        console.error('❌ ticketCobroActual no está definido');
+        mostrarAlerta('Error: No hay datos de ticket para procesar el pago', 'danger');
+        return;
+      }
+      
+      console.log('🔍 ticketCobroActual:', ticketCobroActual);
+      
       // Obtener método de pago seleccionado (TUU maneja automáticamente débito/crédito)
       const metodoTarjetaElement = document.querySelector('input[name="metodoTarjeta"]:checked');
       
@@ -634,6 +720,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnCobrarTicket) btnCobrarTicket.disabled = true;
     if (btnPagarTuu) btnPagarTuu.disabled = true;
     
+    // Ocultar botón de confirmación manual
+    ocultarBotonConfirmacionManual();
+    
     // Resetear modal de pago manual
     const motivoManual = document.getElementById('motivo-pago-manual');
     if (motivoManual) motivoManual.value = 'Pago en efectivo'; // Valor predeterminado para agilizar
@@ -719,6 +808,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => bootstrap.Toast.getInstance(toastElement)?.hide(), 10000);
   }
 
+  function actualizarToastConHTML(id, mensajeHTML, estado) {
+    const toastElement = document.getElementById(id);
+    if (!toastElement) return;
+
+    const toastBody = toastElement.querySelector('.toast-body');
+    toastBody.innerHTML = mensajeHTML; // Permite HTML en el mensaje
+    toastElement.classList.add(estado === 'success' ? 'bg-success-subtle' : 'bg-warning-subtle');
+  }
+
   // 🔄 MÓDULO DE VERIFICACIÓN DE ESTADO TUU PARA RED LOCAL
   let verificacionActiva = false;
   let timeoutVerificacion = null;
@@ -767,8 +865,12 @@ document.addEventListener('DOMContentLoaded', () => {
           const tiempoTranscurrido = Date.now() - tiempoInicio;
           
           if (tiempoTranscurrido >= timeoutMaximo) {
-            // ⏰ Timeout alcanzado
-            actualizarToast(toastId, `⏰ Timeout: No se pudo confirmar el pago para ${ticketCobroActual.patente}`, 'warning');
+            // ⏰ Timeout alcanzado - ofrecer confirmación manual
+            const mensajeTimeout = `⏰ Timeout: No se pudo confirmar el pago para ${ticketCobroActual.patente}<br><br>
+                                   <button class="btn btn-sm btn-success" onclick="confirmarPagoManualTUU('${transactionId}', '${ticketCobroActual.patente}', '${toastId}')">
+                                     <i class="fas fa-check"></i> Confirmar Pago Manual
+                                   </button>`;
+            actualizarToastConHTML(toastId, mensajeTimeout, 'warning');
             verificacionActiva = false;
             return false;
           }
@@ -833,4 +935,178 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Iniciar verificación periódica cada 10 segundos (opcional)
   setInterval(verificarPagosPendientes, 10000);
+});
+
+// 🔧 Función global para confirmar pago manual de TUU
+async function confirmarPagoManualTUU(transactionId, patente, toastId) {
+  try {
+    console.log('🔧 Confirmando pago manual TUU:', { transactionId, patente });
+    
+    const response = await fetch(`${BASE_PATH}/tuu-status-websocket.php?action=confirm_manual_payment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        transaction_id: transactionId,
+        patente: patente
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.success && data.status === 'completed') {
+      console.log('✅ Pago manual confirmado:', data.data);
+      actualizarToast(toastId, `✅ ¡Pago confirmado manualmente! Cliente ${patente} pagó exitosamente`, 'success');
+      
+      // Intentar finalizar el cobro
+      if (typeof finalizarCobroExitoso === 'function') {
+        // Buscar el ticket actual (necesitamos acceso a ticketCobroActual)
+        const ticketActual = obtenerTicketActual();
+        if (ticketActual) {
+          await finalizarCobroExitoso('TUU', ticketActual.total, data.data);
+        }
+      }
+      
+      // Recargar la página después de un breve delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+      
+    } else {
+      throw new Error(data.error || 'Error desconocido al confirmar pago manual');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error confirmando pago manual:', error);
+    actualizarToast(toastId, `❌ Error al confirmar pago: ${error.message}`, 'danger');
+  }
+}
+
+// Función auxiliar para obtener el ticket actual (si está disponible)
+function obtenerTicketActual() {
+  // Esta función depende de cómo esté estructurada tu aplicación
+  // Puede necesitar ajustes según tu implementación específica
+  if (typeof ticketCobroActual !== 'undefined') {
+    return ticketCobroActual;
+  }
+  
+  // Intentar obtener desde el DOM o variables globales
+  return null;
+}
+
+// Variables globales para el botón de confirmación manual
+let transactionIdActual = null;
+let patenteActual = null;
+let totalActual = null;
+
+/**
+ * Muestra el botón de confirmación manual para pagos TUU pendientes
+ */
+function mostrarBotonConfirmacionManual(transactionId, patente, total) {
+  transactionIdActual = transactionId;
+  patenteActual = patente;
+  totalActual = total;
+  
+  const container = document.getElementById('confirmar-pago-manual-container');
+  if (container) {
+    container.classList.remove('d-none');
+    console.log('🔧 Botón de confirmación manual mostrado para:', patente, 'Total:', total);
+  }
+}
+
+/**
+ * Oculta el botón de confirmación manual
+ */
+function ocultarBotonConfirmacionManual() {
+  const container = document.getElementById('confirmar-pago-manual-container');
+  if (container) {
+    container.classList.add('d-none');
+  }
+  transactionIdActual = null;
+  patenteActual = null;
+  totalActual = null;
+}
+
+// Event listener para el botón de confirmación manual
+document.addEventListener('DOMContentLoaded', () => {
+  const btnConfirmarPagoManualTUU = document.getElementById('btn-confirmar-pago-manual-tuu');
+  
+  if (btnConfirmarPagoManualTUU) {
+    btnConfirmarPagoManualTUU.addEventListener('click', async () => {
+      if (!transactionIdActual || !patenteActual || !totalActual) {
+        mostrarAlerta('Error: No hay datos de transacción para confirmar', 'danger');
+        return;
+      }
+
+      if (!confirm(`¿Confirmar pago de ${patenteActual} por ${new Intl.NumberFormat('es-CL', { 
+        style: 'currency', 
+        currency: 'CLP' 
+      }).format(totalActual)}?`)) {
+        return;
+      }
+
+      try {
+        // Mostrar loading en el botón
+        const boton = btnConfirmarPagoManualTUU;
+        const textoOriginal = boton.innerHTML;
+        boton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Confirmando...';
+        boton.disabled = true;
+
+        console.log('🔧 Confirmando pago manual TUU:', { 
+          transactionId: transactionIdActual, 
+          patente: patenteActual, 
+          total: totalActual 
+        });
+
+        // Hacer la petición de confirmación usando la función existente
+        const response = await fetch(`${BASE_PATH}/tuu-status-websocket.php?action=confirm_manual_payment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            transaction_id: transactionIdActual,
+            patente: patenteActual
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.status === 'completed') {
+          console.log('✅ Pago manual confirmado:', data.data);
+          mostrarAlerta(`✅ ¡Pago confirmado exitosamente para ${patenteActual}!`, 'success');
+          
+          // Ocultar botón
+          ocultarBotonConfirmacionManual();
+          
+          // Finalizar el cobro usando la función existente
+          if (typeof finalizarCobroExitoso === 'function') {
+            await finalizarCobroExitoso('TUU', totalActual, data.data);
+          }
+
+          // Recargar la página después de un breve delay
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+
+        } else {
+          throw new Error(data.error || 'Error desconocido al confirmar pago');
+        }
+
+      } catch (error) {
+        console.error('❌ Error confirmando pago manual:', error);
+        mostrarAlerta(`❌ Error al confirmar pago: ${error.message}`, 'danger');
+        
+        // Restaurar botón
+        const boton = btnConfirmarPagoManualTUU;
+        boton.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar Pago TUU Manualmente';
+        boton.disabled = false;
+      }
+    });
+  }
 });

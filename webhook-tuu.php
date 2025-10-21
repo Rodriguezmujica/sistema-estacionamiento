@@ -133,6 +133,12 @@ try {
 }
 
 function consultarEstadoTUU($transactionId) {
+    // Verificar que cURL esté disponible
+    if (!function_exists('curl_init')) {
+        error_log("TUU ERROR: Extensión cURL no disponible en webhook");
+        return null;
+    }
+    
     $urlGet = TUU_API_URL_GET . $transactionId;
     $ch = curl_init($urlGet);
     

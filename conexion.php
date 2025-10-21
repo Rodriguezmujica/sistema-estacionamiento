@@ -54,21 +54,43 @@ if (file_exists(__DIR__ . '/config.php')) {
 }
 
 // ============================================
-// CONEXIÓN MYSQLI
+// CONEXIÓN MYSQLI ROBUSTA
 // ============================================
-$conn = new mysqli($host, $user, $pass, $dbname);
+// Configuraciones específicas para Windows XAMPP
+$is_windows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
 
-if ($conn->connect_error) {
-    error_log("Error de conexión DB: " . $conn->connect_error);
-    // No hacer die() aquí para permitir manejo en archivos que incluyen conexion.php
-    // Los archivos que incluyen este archivo deben verificar $conn->connect_error
+try {
+    // Timeout más largo para Windows (a veces es lento al iniciar)
+    $conn = new mysqli();
+    if ($is_windows) {
+        $conn->options(MYSQLI_OPT_CONNECT_TIMEOUT, 30);
+        $conn->options(MYSQLI_OPT_READ_TIMEOUT, 30);
+    }
+    
+    $conn->connect($host, $user, $pass, $dbname);
+    
+    if ($conn->connect_error) {
+        error_log("Error de conexión DB: " . $conn->connect_error);
+        // No hacer die() aquí para permitir manejo en archivos que incluyen conexion.php
+        // Los archivos que incluyen este archivo deben verificar $conn->connect_error
+    } else {
+        // Configurar charset
+        $conn->set_charset('utf8mb4');
+        
+        // Configurar zona horaria de MySQL
+        $conn->query("SET time_zone = '-03:00'");
+        
+        // Configuraciones adicionales para estabilidad en Windows
+        if ($is_windows) {
+            // Mantener conexión más estable
+            $conn->query("SET SESSION wait_timeout = 28800"); // 8 horas
+            $conn->query("SET SESSION interactive_timeout = 28800");
+        }
+    }
+} catch (Exception $e) {
+    error_log("Excepción en conexión DB: " . $e->getMessage());
+    $conn = null;
 }
-
-// Configurar charset
-$conn->set_charset('utf8mb4');
-
-// Configurar zona horaria de MySQL
-$conn->query("SET time_zone = '-03:00'");
 
 // ============================================
 // COMPATIBILIDAD: Variable alternativa

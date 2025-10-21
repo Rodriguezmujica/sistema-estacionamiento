@@ -3,6 +3,7 @@ error_reporting(E_ERROR | E_PARSE);
 ini_set('display_errors', '0');
 header('Content-Type: application/json');
 require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../utils/redondeo_chile.php';
 
 $patente = isset($_POST['patente']) ? strtoupper(trim($_POST['patente'])) : '';
 
@@ -78,7 +79,8 @@ if ($row = $result->fetch_assoc()) {
             $precioMinimo = 500;
         }
         
-        $total = max($minutos * $precioPorMinuto, $precioMinimo);
+        $totalBase = max($minutos * $precioPorMinuto, $precioMinimo);
+        $total = redondearSegunLeyChilena($totalBase);
         $tipoCalculo = 'Por minuto';
 
         // ❗ CORRECCIÓN CLAVE: Actualizar el tipo de ingreso en la BD a 'Estacionamiento por minuto' (ID 18)
@@ -99,7 +101,8 @@ if ($row = $result->fetch_assoc()) {
     }
     // Si es servicio de lavado o precio fijo
     else {
-        $total = $precioServicio + $precioExtra;
+        $totalBase = $precioServicio + $precioExtra;
+        $total = redondearSegunLeyChilena($totalBase);
         $tipoCalculo = 'Precio fijo';
     }
     

@@ -3,11 +3,13 @@ error_reporting(E_ERROR | E_PARSE);
 ini_set('display_errors', '0');
 header('Content-Type: application/json');
 require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../utils/redondeo_chile.php';
 
 // Obtener datos
 $id_ingreso = isset($_POST['id_ingreso']) ? intval($_POST['id_ingreso']) : 0;
 $patente = isset($_POST['patente']) ? strtoupper(trim($_POST['patente'])) : '';
 $total = isset($_POST['total']) ? floatval($_POST['total']) : 0;
+$total = redondearSegunLeyChilena($total); // Aplicar redondeo según ley chilena
 
 if (!$id_ingreso || !$patente) {
     echo json_encode(['success' => false, 'error' => 'Datos incompletos']);

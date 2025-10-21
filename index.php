@@ -126,7 +126,12 @@ $rol = $_SESSION['rol'];
             <div class="row mt-4 text-center">
               <div class="col-6">
                 <div class="card bg-light">
-                  <div class="card-body py-2">
+                  <div class="card-body py-2 position-relative">
+                    <button type="button" class="btn btn-link p-1 position-absolute" 
+                            style="top: 5px; right: 5px; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;"
+                            id="toggle-servicios-hoy" title="Mostrar/ocultar">
+                      <i class="fas fa-eye text-muted" style="font-size: 12px;"></i>
+                    </button>
                     <h5 class="mb-1" id="total-hoy">0</h5>
                     <small class="text-muted">Servicios Hoy</small>
                   </div>
@@ -134,7 +139,12 @@ $rol = $_SESSION['rol'];
               </div>
               <div class="col-6">
                 <div class="card bg-light">
-                  <div class="card-body py-2">
+                  <div class="card-body py-2 position-relative">
+                    <button type="button" class="btn btn-link p-1 position-absolute" 
+                            style="top: 5px; right: 5px; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;"
+                            id="toggle-ingresos-hoy" title="Mostrar/ocultar">
+                      <i class="fas fa-eye text-muted" style="font-size: 12px;"></i>
+                    </button>
                     <h5 class="mb-1" id="ingresos-hoy">$0</h5>
                     <small class="text-muted">Ingresos Hoy</small>
                   </div>
@@ -176,6 +186,16 @@ $rol = $_SESSION['rol'];
               <button class="btn btn-success btn-lg" id="btn-pagar-tuu" disabled>
                 <i class="fas fa-receipt"></i> Pagar con TUU (Boleta Oficial)
               </button>
+            </div>
+
+            <!-- Botón de confirmación manual (oculto por defecto) -->
+            <div class="d-grid gap-2 mt-3 d-none" id="confirmar-pago-manual-container">
+              <button class="btn btn-info btn-lg" id="btn-confirmar-pago-manual-tuu">
+                <i class="fas fa-check-circle"></i> Confirmar Pago TUU Manualmente
+              </button>
+              <small class="text-muted text-center">
+                <i class="fas fa-info-circle"></i> Usar si el pago se procesó en TUU pero no se confirmó automáticamente
+              </small>
             </div>
           </div>
         </div>
@@ -662,6 +682,31 @@ $rol = $_SESSION['rol'];
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
             <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Confirmar Lavado -->
+  <div class="modal fade" id="modalConfirmarLavado" tabindex="-1" aria-labelledby="modalConfirmarLavadoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content shadow-lg">
+        <div class="modal-header" id="confirmarLavadoHeader">
+          <h5 class="modal-title" id="confirmarLavadoTitulo">
+            <!-- Título dinámico -->
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="confirmarLavadoBody">
+          <!-- El resumen se insertará aquí dinámicamente -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-success" id="btn-confirmar-lavado-accion">
+            <i class="fas fa-check me-1"></i> Confirmar Operación
           </button>
         </div>
       </div>

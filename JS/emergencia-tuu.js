@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 async function cargarEstadoTUU() {
     try {
-        const BASE_PATH = getBasePath();
+        const BASE_PATH = window.BASE_PATH || (window.BASE_PATH = getBasePath());
         const response = await fetch(`${BASE_PATH}/api/api_config_tuu.php`);
         const data = await response.json();
 
@@ -106,7 +106,7 @@ async function abrirModalEmergencia() {
     modalEmergenciaTUU.show();
 
     try {
-        const BASE_PATH = getBasePath();
+        const BASE_PATH = window.BASE_PATH || (window.BASE_PATH = getBasePath());
         const response = await fetch(`${BASE_PATH}/api/api_config_tuu.php`);
         const data = await response.json();
 
@@ -193,7 +193,7 @@ async function cambiarMaquinaTUU(maquina) {
     }
 
     try {
-        const BASE_PATH = getBasePath();
+        const BASE_PATH = window.BASE_PATH || (window.BASE_PATH = getBasePath());
         const response = await fetch(`${BASE_PATH}/api/api_config_tuu.php`, {
             method: 'POST',
             headers: {

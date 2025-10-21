@@ -13,6 +13,7 @@ $fecha_hasta = $fecha . ' 23:59:59';
 
 try {
     // 1. TOTAL GENERAL DEL DÍA
+    // Usar fecha_salida cuando existe, si no usar fecha_ingreso
     $sqlTotal = "SELECT 
                     COUNT(i.idautos_estacionados) as total_servicios,
                     SUM(COALESCE(s.total, ti.precio, 0)) as total_ingresos
@@ -20,11 +21,7 @@ try {
                  LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
                  JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                  WHERE i.salida = 1
-                 AND CASE 
-                     WHEN s.fecha_salida IS NULL 
-                     THEN i.fecha_ingreso 
-                     ELSE s.fecha_salida 
-                 END BETWEEN ? AND ?
+                 AND COALESCE(s.fecha_salida, i.fecha_ingreso) BETWEEN ? AND ?
                  AND ti.es_plan = 0
                  AND ti.idtipo_ingresos NOT IN (19)";
     
@@ -47,14 +44,10 @@ try {
                     LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
                     JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                     WHERE i.salida = 1
-                    AND CASE 
-                        WHEN s.fecha_salida IS NULL 
-                        THEN i.fecha_ingreso 
-                        ELSE s.fecha_salida 
-                    END BETWEEN ? AND ?
+                    AND COALESCE(s.fecha_salida, i.fecha_ingreso) BETWEEN ? AND ?
                     AND ti.es_plan = 0
                     AND ti.idtipo_ingresos NOT IN (19)
-                    GROUP BY s.metodo_pago, s.tipo_pago
+                    GROUP BY COALESCE(s.metodo_pago, 'EFECTIVO'), COALESCE(s.tipo_pago, 'manual')
                     ORDER BY total DESC";
     
     $stmt = $conn->prepare($sqlDesglose);
@@ -119,11 +112,7 @@ try {
                       LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
                       JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                       WHERE i.salida = 1
-                      AND CASE 
-                          WHEN s.fecha_salida IS NULL 
-                          THEN i.fecha_ingreso 
-                          ELSE s.fecha_salida 
-                      END BETWEEN ? AND ?
+                      AND COALESCE(s.fecha_salida, i.fecha_ingreso) BETWEEN ? AND ?
                       AND ti.es_plan = 0
                       AND ti.idtipo_ingresos NOT IN (19)
                       GROUP BY categoria
@@ -160,11 +149,7 @@ try {
                    LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
                    JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                    WHERE i.salida = 1
-                   AND CASE 
-                       WHEN s.fecha_salida IS NULL 
-                       THEN i.fecha_ingreso 
-                       ELSE s.fecha_salida 
-                   END BETWEEN ? AND ?
+                   AND COALESCE(s.fecha_salida, i.fecha_ingreso) BETWEEN ? AND ?
                    AND ti.es_plan = 0
                    AND ti.idtipo_ingresos NOT IN (19)
                    ORDER BY fecha_cobro ASC";
@@ -191,6 +176,8 @@ try {
     echo json_encode([
         'success' => true,
         'fecha' => $fecha,
+        'fecha_desde' => $fecha_desde,
+        'fecha_hasta' => $fecha_hasta,
         'resumen' => [
             'total_servicios' => $totalServicios,
             'total_ingresos' => $totalIngresos

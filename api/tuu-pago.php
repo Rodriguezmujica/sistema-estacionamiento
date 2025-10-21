@@ -1,6 +1,24 @@
 <?php
-error_reporting(E_ERROR | E_PARSE);
+// Configuración de manejo de errores mejorada
+error_reporting(E_ALL);
 ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
+// Manejar errores fatales
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'error' => 'Error interno del servidor: ' . $error['message'],
+            'file' => $error['file'],
+            'line' => $error['line']
+        ]);
+        exit;
+    }
+});
+
 header('Content-Type: application/json');
 
 /**
@@ -22,15 +40,42 @@ define('TUU_TIMEOUT', 90); // Timeout de 90 segundos para dar tiempo al cliente 
 define('TUU_MODO_PRUEBA', false); // ✅ MODO PRODUCCIÓN ACTIVADO
 
 require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../utils/redondeo_chile.php';
+
+// Verificar conexión a BD inmediatamente
+if ($conexion && $conexion->connect_error) {
+    echo json_encode([
+        'success' => false,
+        'error' => 'Error de conexión a base de datos: ' . $conexion->connect_error
+    ]);
+    exit;
+}
+
+// Verificar que la extensión cURL esté disponible
+if (!function_exists('curl_init')) {
+    echo json_encode([
+        'success' => false,
+        'error' => 'Extensión cURL no está disponible en este servidor. Por favor, instale php-curl.',
+        'suggestion' => 'En Ubuntu/Debian ejecute: sudo apt-get install php-curl'
+    ]);
+    exit;
+}
 
 // Device serial FIJO - Número de serie real de la app TUU
 define('TUU_DEVICE_SERIAL', '6010B232511900353'); // ✅ CORREGIDO según panel TUU (era 6010B232519... y es 6010B232511...)
+
+// Log de debugging para ver qué datos llegan
+error_log("TUU DEBUG - POST recibido: " . json_encode($_POST, JSON_UNESCAPED_UNICODE));
 
 // Obtener datos del POST
 $id_ingreso = isset($_POST['id_ingreso']) ? intval($_POST['id_ingreso']) : 0;
 $patente = isset($_POST['patente']) ? strtoupper(trim($_POST['patente'])) : '';
 $total = isset($_POST['total']) ? floatval($_POST['total']) : 0;
+$total = redondearSegunLeyChilena($total); // Aplicar redondeo según ley chilena
 $metodo_tarjeta = isset($_POST['metodo_tarjeta']) ? $_POST['metodo_tarjeta'] : 'auto';
+
+// Log de los valores parseados
+error_log("TUU DEBUG - Valores parseados - id_ingreso: $id_ingreso, patente: $patente, total: $total, metodo_tarjeta: $metodo_tarjeta");
 
 // Si viene 'auto', lo cambiamos a un valor por defecto para la base de datos
 if ($metodo_tarjeta === 'auto') {
@@ -366,10 +411,11 @@ function procesarPagoTUU($monto, $idTransaccion, $patente, $extraData = [], $met
 }
 
 // ====== PROCESAR PAGO ======
-date_default_timezone_set('America/Santiago');
-$fecha_salida = date('Y-m-d H:i:s');
-$transactionId = 'EST-' . $id_ingreso . '-' . time();
-$extraDataParaTUU = [];
+try {
+    date_default_timezone_set('America/Santiago');
+    $fecha_salida = date('Y-m-d H:i:s');
+    $transactionId = 'EST-' . $id_ingreso . '-' . time();
+    $extraDataParaTUU = [];
 
 // 1. Obtener datos adicionales para el voucher de TUU
 $sql_info = "SELECT i.fecha_ingreso, ti.nombre_servicio 
@@ -398,6 +444,25 @@ if ($info = $result_info->fetch_assoc()) {
     }
 }
 $stmt_info->close();
+
+// Guardar el transaction_id y total antes de procesar con TUU
+// Esto permite identificar pagos pendientes si falla la confirmación automática
+try {
+    $sql_update_ingreso = "UPDATE ingresos SET 
+                           transaction_id_tuu = ?, 
+                           total_calculado_tuu = ?,
+                           fecha_intento_tuu = NOW()
+                           WHERE idautos_estacionados = ?";
+    $stmt_update = $conexion->prepare($sql_update_ingreso);
+    $stmt_update->bind_param("sdi", $transactionId, $total, $id_ingreso);
+    $stmt_update->execute();
+    $stmt_update->close();
+    
+    error_log("TUU - Transaction ID guardado: $transactionId para patente $patente, total: $total");
+} catch (Exception $e) {
+    error_log("TUU - Error guardando transaction_id: " . $e->getMessage());
+    // Continuar con el procesamiento aunque falle el guardado
+}
 
 // Intentar procesar el pago con TUU
 $resultadoPago = procesarPagoTUU($total, $transactionId, $patente, $extraDataParaTUU, $metodo_tarjeta, $rut_cliente, $tipo_documento);
@@ -528,5 +593,42 @@ if ($resultadoPago['success']) {
     ]);
 }
 
-$conexion->close();
+} catch (Exception $e) {
+    // Capturar cualquier error no manejado
+    error_log("TUU Error no manejado: " . $e->getMessage() . " en línea " . $e->getLine());
+    echo json_encode([
+        'success' => false,
+        'error' => 'Error interno: ' . $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
+}
+
+if ($conexion) {
+    $conexion->close();
+}
+
+/*
+ * NOTA PARA EL ADMINISTRADOR DEL SERVIDOR:
+ * 
+ * Si recibe el error: "Extensión cURL no está disponible en este servidor"
+ * 
+ * Para solucionarlo, instale la extensión cURL de PHP:
+ * 
+ * En Ubuntu/Debian:
+ * sudo apt-get update
+ * sudo apt-get install php-curl
+ * sudo systemctl restart apache2  # o nginx
+ * 
+ * En CentOS/RHEL:
+ * sudo yum install php-curl
+ * sudo systemctl restart httpd
+ * 
+ * En XAMPP (Windows/Linux):
+ * - La extensión ya viene incluida, verifique que esté habilitada en php.ini
+ * - Busque la línea: extension=curl y descoméntela si está comentada
+ * 
+ * Verificar instalación:
+ * php -m | grep curl
+ */
 ?>

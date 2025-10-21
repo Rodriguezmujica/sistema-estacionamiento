@@ -158,7 +158,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return baseMatch ? baseMatch[1] : '';
     };
   }
-  const BASE_PATH = getBasePath();
+
+  // Usar window.BASE_PATH para evitar conflictos de redeclaración
+  if (typeof window.BASE_PATH === 'undefined') {
+    window.BASE_PATH = getBasePath();
+  }
+
+  // Usar la variable global
+  const BASE_PATH = window.BASE_PATH;
 
   // --- FUNCIONES AUXILIARES ---
 
@@ -231,61 +238,104 @@ document.addEventListener('DOMContentLoaded', () => {
     const esModificacion = formLavadoModal.getAttribute('data-modificacion') === 'true';
     const idIngreso = formLavadoModal.getAttribute('data-id-ingreso');
 
-    const resumen = `
-      Resumen del ${esModificacion ? 'lavado modificado' : 'lavado'}:
-      • Patente: ${patente}
-      • Servicio: ${servicioSeleccionado?.nombre_servicio || 'N/A'}
-      • Total: $${precioTotal.toLocaleString('es-CL')}
+    // Usar el modal de confirmación en lugar del confirm()
+    mostrarModalConfirmacionLavado({
+      patente,
+      servicioSeleccionado,
+      precioBase,
+      precioExtra,
+      precioTotal,
+      nombreCliente,
+      motivos,
+      esModificacion,
+      tipoLavado,
+      descripcion,
+      idIngreso
+    });
+  }
+
+  function mostrarModalConfirmacionLavado(datos) {
+    const esModificacion = datos.esModificacion;
+    const tituloModal = esModificacion ? '🔄 Confirmar Modificación' : '✨ Confirmar Nuevo Registro';
+    const claseHeader = esModificacion ? 'bg-info text-dark' : 'bg-success text-white';
+    
+    // Llenar y mostrar el modal de confirmación
+    const modalConfirmar = new bootstrap.Modal(document.getElementById('modalConfirmarLavado'));
+    document.getElementById('confirmarLavadoTitulo').textContent = tituloModal;
+    document.getElementById('confirmarLavadoHeader').className = `modal-header ${claseHeader}`;
+    
+    // Crear el contenido del modal con el mismo diseño que lavados.html
+    document.getElementById('confirmarLavadoBody').innerHTML = `
+      <p>Por favor, revisa los detalles antes de confirmar:</p>
+      <ul class="list-group">
+        <li class="list-group-item"><strong>Patente:</strong> ${datos.patente}</li>
+        <li class="list-group-item"><strong>Servicio:</strong> ${datos.servicioSeleccionado?.nombre_servicio || 'N/A'}</li>
+        <li class="list-group-item"><strong>Cliente:</strong> ${datos.nombreCliente || 'No registrado'}</li>
+        <li class="list-group-item"><strong>Precio Base:</strong> $${datos.precioBase.toLocaleString('es-CL')}</li>
+        <li class="list-group-item"><strong>Precio Extra:</strong> $${datos.precioExtra.toLocaleString('es-CL')}</li>
+        <li class="list-group-item"><strong>Motivos Extra:</strong> ${datos.motivos.length > 0 ? datos.motivos.join(', ') : 'Ninguno'}</li>
+        <li class="list-group-item list-group-item-success"><strong>Total a Cobrar:</strong> $${datos.precioTotal.toLocaleString('es-CL')}</li>
+      </ul>
+      ${datos.descripcion ? `<div class="mt-3"><strong>Descripción adicional:</strong><br><small class="text-muted">${datos.descripcion}</small></div>` : ''}
     `;
+    
+    modalConfirmar.show();
 
-    if (confirm(`${resumen}\n\n¿Confirmar la operación?`)) {
-      const formData = new FormData();
-      formData.append('patente', patente);
-      formData.append('id_servicio', tipoLavado);
-      formData.append('nombre_cliente', nombreCliente);
-      formData.append('precio_extra', precioExtra);
-      formData.append('motivos_extra', JSON.stringify(motivos));
-      formData.append('descripcion_extra', descripcion);
+    // Manejar el click del botón de confirmación del modal
+    document.getElementById('btn-confirmar-lavado-accion').onclick = () => {
+      modalConfirmar.hide();
+      // Ejecutar la operación real
+      ejecutarRegistroLavado(datos);
+    };
+  }
 
-      const apiUrl = esModificacion ? './api/modificar-lavado.php' : './api/registrar-lavado.php';
-      if (esModificacion && idIngreso) {
-        formData.append('id_ingreso', idIngreso);
-      }
+  function ejecutarRegistroLavado(datos) {
+    const formData = new FormData();
+    formData.append('patente', datos.patente);
+    formData.append('id_servicio', datos.tipoLavado);
+    formData.append('nombre_cliente', datos.nombreCliente);
+    formData.append('precio_extra', datos.precioExtra);
+    formData.append('motivos_extra', JSON.stringify(datos.motivos));
+    formData.append('descripcion_extra', datos.descripcion);
 
-      fetch(apiUrl, {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(async (data) => { // Convertir a función asíncrona
-        if (data.success) {
-          const mensajeExito = esModificacion ? '✅ Ticket modificado a lavado' : '✅ Lavado registrado';
-          mostrarToastBonito(mensajeExito, 'success');
-          
-          // 🖨️ Llamar a la nueva función de impresión robusta
-          imprimirTicketLavadoConFallback(data, patente, servicioSeleccionado, precioTotal, esModificacion);
-
-          const modalInstance = bootstrap.Modal.getInstance(modalLavadoElement);
-          if (modalInstance) modalInstance.hide();
-          
-          resetModal();
-          if (!esModificacion) {
-            const formIngreso = document.getElementById('form-ingreso');
-            if (formIngreso) formIngreso.reset();
-          }
-          
-          if (typeof cargarReportesUnificados === 'function') {
-            cargarReportesUnificados();
-          }
-        } else {
-          mostrarToastBonito(`❌ Error: ${data.error || 'No se pudo completar la operación'}`, 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Error en formulario de lavado:', error);
-        mostrarToastBonito(`❌ Error de conexión: ${error.message}`, 'error');
-      });
+    const apiUrl = datos.esModificacion ? `${BASE_PATH}/api/modificar-lavado.php` : `${BASE_PATH}/api/registrar-lavado.php`;
+    if (datos.esModificacion && datos.idIngreso) {
+      formData.append('id_ingreso', datos.idIngreso);
     }
+
+    fetch(apiUrl, {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(async (responseData) => {
+      if (responseData.success) {
+        const mensajeExito = datos.esModificacion ? '✅ Ticket modificado a lavado' : '✅ Lavado registrado';
+        mostrarToastBonito(mensajeExito, 'success');
+        
+        // 🖨️ Llamar a la nueva función de impresión robusta
+        imprimirTicketLavadoConFallback(responseData, datos.patente, datos.servicioSeleccionado, datos.precioTotal, datos.esModificacion);
+
+        const modalInstance = bootstrap.Modal.getInstance(modalLavadoElement);
+        if (modalInstance) modalInstance.hide();
+        
+        resetModal();
+        if (!datos.esModificacion) {
+          const formIngreso = document.getElementById('form-ingreso');
+          if (formIngreso) formIngreso.reset();
+        }
+        
+        if (typeof cargarReportesUnificados === 'function') {
+          cargarReportesUnificados();
+        }
+      } else {
+        mostrarToastBonito(`❌ Error: ${responseData.error || 'No se pudo completar la operación'}`, 'error');
+      }
+    })
+    .catch(error => {
+      console.error('Error en formulario de lavado:', error);
+      mostrarToastBonito(`❌ Error de conexión: ${error.message}`, 'error');
+    });
   }
 
   /**

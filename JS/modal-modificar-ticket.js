@@ -9,7 +9,9 @@ if (typeof getBasePath === 'undefined') {
     return baseMatch ? baseMatch[1] : '';
   };
 }
-const BASE_PATH = getBasePath();
+
+// Usar la función global definida en main.js
+// No declarar BASE_PATH aquí para evitar conflictos
 
 // Función para mostrar alertas elegantes
 function mostrarAlerta(mensaje, tipo = 'info') {
@@ -90,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Buscar en la API
-      fetch(`${BASE_PATH}/api/api_reporte.php`)
+      fetch(`${window.getBasePathValue()}/api/api_reporte.php`)
         .then(res => res.json())
         .then(data => {
           console.log('📊 Datos de API:', data);
@@ -170,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Procedemos a guardar en la base de datos
       console.log('📤 Enviando:', { patente, idServicio: valorSeleccionado });
       
-      fetch(`${BASE_PATH}/api/modificar_ticket.php`, {
+      fetch(`${window.getBasePathValue()}/api/modificar_ticket.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ 

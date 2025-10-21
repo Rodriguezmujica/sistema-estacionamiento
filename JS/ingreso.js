@@ -184,7 +184,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return baseMatch ? baseMatch[1] : '';
     };
   }
-  const BASE_PATH = getBasePath();
+
+  // Usar window.BASE_PATH para evitar conflictos de redeclaración
+  if (typeof window.BASE_PATH === 'undefined') {
+    window.BASE_PATH = getBasePath();
+  }
+
+  // Usar la variable global
+  const BASE_PATH = window.BASE_PATH;
 
   // --- FUNCIONES AUXILIARES ---
 
