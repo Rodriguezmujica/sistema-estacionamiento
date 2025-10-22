@@ -49,11 +49,6 @@ $rol = $_SESSION['rol'];
               <i class="fas fa-chart-bar"></i> Reportes
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="./firebase-monitor.html" target="_blank">
-              <i class="fas fa-fire"></i> Monitor Firebase
-            </a>
-          </li>
           <?php if ($rol === 'admin'): ?>
           <li class="nav-item">
             <a class="nav-link text-warning fw-bold" href="./secciones/admin.php">
@@ -791,6 +786,8 @@ $rol = $_SESSION['rol'];
   <!-- 🔥 OPTIMIZADORES FIREBASE - Agregados para 2,189 servicios/mes -->
   <script src="JS/firebase-optimizer-simple.js"></script>
   <script src="JS/firebase-sync-simple.js"></script>
+  <script src="JS/firebase-sync-monitor.js"></script>
+  <script src="JS/sync-notifications.js"></script>
 
   <!-- 🔄 INTEGRACIÓN TUU + FIREBASE -->
   <?php

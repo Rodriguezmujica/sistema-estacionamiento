@@ -578,6 +578,42 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
                     </button>
                   </div>
                 </div>
+                
+                <!-- 🔄 MONITOR DE SINCRONIZACIÓN -->
+                <div class="row mt-3">
+                  <div class="col-12">
+                    <div class="card border-primary">
+                      <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">
+                          <i class="fas fa-sync-alt me-2"></i>Monitoreo de Sincronización
+                        </h6>
+                      </div>
+                      <div class="card-body">
+                        <p class="text-muted mb-3">
+                          <i class="fas fa-info-circle me-1"></i>
+                          Herramientas de monitoreo para el sistema híbrido Firebase ↔ Antix
+                        </p>
+                        <div class="row">
+                          <div class="col-md-4 mb-2">
+                            <button class="btn btn-outline-primary w-100" onclick="abrirMonitorSync()">
+                              <i class="fas fa-sync-alt me-1"></i> Monitor Sync
+                            </button>
+                          </div>
+                          <div class="col-md-4 mb-2">
+                            <button class="btn btn-outline-info w-100" onclick="abrirMonitorFirebase()">
+                              <i class="fas fa-fire me-1"></i> Monitor Firebase
+                            </button>
+                          </div>
+                          <div class="col-md-4 mb-2">
+                            <button class="btn btn-outline-success w-100" onclick="abrirTestIngreso()">
+                              <i class="fas fa-vial me-1"></i> Test Ingreso
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -788,5 +824,30 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../JS/main.js"></script>
   <script src="../JS/admin.js"></script>
+  
+  <script>
+    // 🔄 FUNCIONES DE MONITOREO DE SINCRONIZACIÓN
+    
+    /**
+     * Abrir Monitor de Sincronización
+     */
+    function abrirMonitorSync() {
+      window.open('../firebase-antix-monitor.html', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+    }
+    
+    /**
+     * Abrir Monitor de Firebase
+     */
+    function abrirMonitorFirebase() {
+      window.open('../firebase-monitor.html', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+    }
+    
+    /**
+     * Abrir Test de Ingreso
+     */
+    function abrirTestIngreso() {
+      window.open('../test-ingreso-completo.html', '_blank', 'width=1000,height=700,scrollbars=yes,resizable=yes');
+    }
+  </script>
 </body>
 </html>
