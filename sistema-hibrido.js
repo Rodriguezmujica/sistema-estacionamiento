@@ -10,6 +10,8 @@ import { systemConfig, getSystemInfo } from './firebase-config.js';
 import syncManager from './firebase-sync.js';
 import pcDetector from './pc-detector.js';
 import printingManager from './printing-manager.js';
+import tuuFirebaseSync from './tuu-firebase-sync.js';
+import tuuFirebaseIntegration from './tuu-firebase-integration.js';
 
 class SistemaHibrido {
   constructor() {
@@ -19,7 +21,9 @@ class SistemaHibrido {
       online: navigator.onLine,
       active: false,
       syncing: false,
-      printing: false
+      printing: false,
+      tuuSync: false,
+      tuuIntegration: false
     };
     
     // Inicializar
@@ -74,6 +78,22 @@ class SistemaHibrido {
     
     if (!window.printingManager) {
       throw new Error('PrintingManager no disponible');
+    }
+    
+    // Verificar TUU Firebase Sync
+    if (window.tuuFirebaseSync) {
+      this.status.tuuSync = true;
+      console.log('✅ TUU Firebase Sync disponible');
+    } else {
+      console.warn('⚠️ TUU Firebase Sync no disponible');
+    }
+    
+    // Verificar TUU Firebase Integration
+    if (window.tuuFirebaseIntegration) {
+      this.status.tuuIntegration = true;
+      console.log('✅ TUU Firebase Integration disponible');
+    } else {
+      console.warn('⚠️ TUU Firebase Integration no disponible');
     }
     
     console.log('✅ Componentes inicializados');
@@ -380,7 +400,9 @@ class SistemaHibrido {
       components: {
         syncManager: !!window.syncManager,
         pcDetector: !!window.pcDetector,
-        printingManager: !!window.printingManager
+        printingManager: !!window.printingManager,
+        tuuFirebaseSync: !!window.tuuFirebaseSync,
+        tuuFirebaseIntegration: !!window.tuuFirebaseIntegration
       },
       environment: {
         userAgent: navigator.userAgent,
@@ -389,6 +411,74 @@ class SistemaHibrido {
         timestamp: new Date()
       }
     };
+  }
+  
+  /**
+   * Obtener estado de TUU
+   */
+  getTUUStatus() {
+    return {
+      sync: this.status.tuuSync,
+      integration: this.status.tuuIntegration,
+      syncStatus: window.tuuFirebaseSync?.getSyncStatus(),
+      integrationStatus: window.tuuFirebaseIntegration?.getIntegrationStatus()
+    };
+  }
+  
+  /**
+   * Crear pago TUU
+   */
+  async createTUUPayment(paymentData) {
+    if (!this.status.tuuSync) {
+      throw new Error('TUU Sync no disponible');
+    }
+    
+    try {
+      const paymentId = await window.tuuFirebaseSync.createPayment(paymentData);
+      console.log('✅ Pago TUU creado:', paymentId);
+      return paymentId;
+    } catch (error) {
+      console.error('❌ Error creando pago TUU:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Verificar pago TUU
+   */
+  async verifyTUUPayment(transactionId) {
+    if (!this.status.tuuSync) {
+      throw new Error('TUU Sync no disponible');
+    }
+    
+    try {
+      const result = await window.tuuFirebaseSync.verifyPaymentWithTUU({ transaction_id: transactionId });
+      console.log('✅ Pago TUU verificado:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Error verificando pago TUU:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Obtener pagos TUU pendientes
+   */
+  async getPendingTUUPayments() {
+    try {
+      const response = await fetch('api/get-pending-tuu-payments.php');
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log(`✅ ${data.count} pagos TUU pendientes obtenidos`);
+        return data.payments;
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error('❌ Error obteniendo pagos TUU pendientes:', error);
+      throw error;
+    }
   }
 }
 
