@@ -415,7 +415,12 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('🔍 Debug TUU - dataPago.details?.status:', dataPago.details?.status);
         console.log('🔍 Debug TUU - dataPago.red_local:', dataPago.red_local);
         
-        if (metodo === 'TUU' && (dataPago.status === 'pending' || dataPago.details?.status === 'pending' || dataPago.red_local)) {
+        const isPending = dataPago.status === 'pending' || dataPago.details?.status === 'pending' || dataPago.red_local;
+        console.log('🔍 Debug TUU - isPending:', isPending);
+        console.log('🔍 Debug TUU - metodo === TUU:', metodo === 'TUU');
+        console.log('🔍 Debug TUU - condición completa:', metodo === 'TUU' && isPending);
+        
+        if (metodo === 'TUU' && isPending) {
           // Obtener el transaction_id correcto
           const tuuTransactionId = dataPago.transaction_id || dataPago.details?.transaction_id;
           console.log('🔍 TUU Transaction ID recibido:', tuuTransactionId, 'Data completo:', dataPago);
