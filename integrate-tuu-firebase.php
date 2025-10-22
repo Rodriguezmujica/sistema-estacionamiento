@@ -98,19 +98,16 @@ $firebasePath = $basePath . '/SISTEMA-HIBRIDO/COMPARTIDOS';
     // Mostrar indicador de estado
     function updateTUUStatus() {
         const statusElement = document.getElementById('tuu-firebase-status');
-        const textElement = document.getElementById('tuu-status-text');
         
         if (window.tuuFirebaseIntegration) {
             const status = window.tuuFirebaseIntegration.getIntegrationStatus();
             
             if (status.initialized) {
-                statusElement.style.display = 'block';
-                statusElement.className = 'tuu-firebase-status online';
-                textElement.textContent = 'TUU + Firebase: Conectado';
+                statusElement.textContent = 'Conectado';
+                statusElement.className = 'mb-1 text-success';
             } else {
-                statusElement.style.display = 'block';
-                statusElement.className = 'tuu-firebase-status offline';
-                textElement.textContent = 'TUU + Firebase: Desconectado';
+                statusElement.textContent = 'Desconectado';
+                statusElement.className = 'mb-1 text-danger';
             }
         }
     }

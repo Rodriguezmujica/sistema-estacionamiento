@@ -111,64 +111,59 @@ function inicializarToggleEstadisticas() {
   // Agregar estilos CSS para el hover
   const style = document.createElement('style');
   style.textContent = `
-    #toggle-servicios-hoy:hover, #toggle-ingresos-hoy:hover {
+    #toggle-servicios-hoy:hover, #toggle-ingresos-hoy:hover, #toggle-tuu-firebase:hover {
       background-color: rgba(0, 0, 0, 0.1) !important;
       transform: scale(1.1);
       transition: all 0.2s ease;
     }
-    #toggle-servicios-hoy:hover i, #toggle-ingresos-hoy:hover i {
+    #toggle-servicios-hoy:hover i, #toggle-ingresos-hoy:hover i, #toggle-tuu-firebase:hover i {
       color: #007bff !important;
     }
   `;
   document.head.appendChild(style);
 
-  // Toggle para servicios de hoy
-  const toggleServicios = document.getElementById('toggle-servicios-hoy');
-  const totalHoy = document.getElementById('total-hoy');
-  
-  if (toggleServicios && totalHoy) {
-    toggleServicios.addEventListener('click', () => {
-      const icono = toggleServicios.querySelector('i');
-      const estaVisible = !totalHoy.classList.contains('d-none');
+  // Función helper para toggle con localStorage
+  function setupToggle(toggleId, contentId, storageKey) {
+    const toggle = document.getElementById(toggleId);
+    const content = document.getElementById(contentId);
+    
+    if (toggle && content) {
+      // Cargar estado inicial desde localStorage (por defecto oculto)
+      const isHidden = localStorage.getItem(storageKey) !== 'false';
       
-      if (estaVisible) {
-        // Ocultar
-        totalHoy.classList.add('d-none');
+      if (isHidden) {
+        content.classList.add('d-none');
+        const icono = toggle.querySelector('i');
         icono.className = 'fas fa-eye-slash text-muted';
         icono.style.fontSize = '12px';
-        toggleServicios.title = 'Mostrar información';
-      } else {
-        // Mostrar
-        totalHoy.classList.remove('d-none');
-        icono.className = 'fas fa-eye text-muted';
-        icono.style.fontSize = '12px';
-        toggleServicios.title = 'Ocultar información';
+        toggle.title = 'Mostrar información';
       }
-    });
-  }
-  
-  // Toggle para ingresos de hoy
-  const toggleIngresos = document.getElementById('toggle-ingresos-hoy');
-  const ingresosHoy = document.getElementById('ingresos-hoy');
-  
-  if (toggleIngresos && ingresosHoy) {
-    toggleIngresos.addEventListener('click', () => {
-      const icono = toggleIngresos.querySelector('i');
-      const estaVisible = !ingresosHoy.classList.contains('d-none');
       
-      if (estaVisible) {
-        // Ocultar
-        ingresosHoy.classList.add('d-none');
-        icono.className = 'fas fa-eye-slash text-muted';
-        icono.style.fontSize = '12px';
-        toggleIngresos.title = 'Mostrar información';
-      } else {
-        // Mostrar
-        ingresosHoy.classList.remove('d-none');
-        icono.className = 'fas fa-eye text-muted';
-        icono.style.fontSize = '12px';
-        toggleIngresos.title = 'Ocultar información';
-      }
-    });
+      toggle.addEventListener('click', () => {
+        const icono = toggle.querySelector('i');
+        const estaVisible = !content.classList.contains('d-none');
+        
+        if (estaVisible) {
+          // Ocultar
+          content.classList.add('d-none');
+          icono.className = 'fas fa-eye-slash text-muted';
+          icono.style.fontSize = '12px';
+          toggle.title = 'Mostrar información';
+          localStorage.setItem(storageKey, 'true');
+        } else {
+          // Mostrar
+          content.classList.remove('d-none');
+          icono.className = 'fas fa-eye text-muted';
+          icono.style.fontSize = '12px';
+          toggle.title = 'Ocultar información';
+          localStorage.setItem(storageKey, 'false');
+        }
+      });
+    }
   }
+
+  // Configurar toggles para los tres cuadros
+  setupToggle('toggle-servicios-hoy', 'total-hoy', 'servicios-hoy-hidden');
+  setupToggle('toggle-ingresos-hoy', 'ingresos-hoy', 'ingresos-hoy-hidden');
+  setupToggle('toggle-tuu-firebase', 'tuu-firebase-status', 'tuu-firebase-hidden');
 }

@@ -124,29 +124,42 @@ $rol = $_SESSION['rol'];
 
             <!-- Estadísticas rápidas -->
             <div class="row mt-4 text-center">
-              <div class="col-6">
+              <div class="col-4">
                 <div class="card bg-light">
                   <div class="card-body py-2 position-relative">
                     <button type="button" class="btn btn-link p-1 position-absolute" 
                             style="top: 5px; right: 5px; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;"
                             id="toggle-servicios-hoy" title="Mostrar/ocultar">
-                      <i class="fas fa-eye text-muted" style="font-size: 12px;"></i>
+                      <i class="fas fa-eye-slash text-muted" style="font-size: 12px;"></i>
                     </button>
                     <h5 class="mb-1" id="total-hoy">0</h5>
                     <small class="text-muted">Servicios Hoy</small>
                   </div>
                 </div>
               </div>
-              <div class="col-6">
+              <div class="col-4">
                 <div class="card bg-light">
                   <div class="card-body py-2 position-relative">
                     <button type="button" class="btn btn-link p-1 position-absolute" 
                             style="top: 5px; right: 5px; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;"
                             id="toggle-ingresos-hoy" title="Mostrar/ocultar">
-                      <i class="fas fa-eye text-muted" style="font-size: 12px;"></i>
+                      <i class="fas fa-eye-slash text-muted" style="font-size: 12px;"></i>
                     </button>
                     <h5 class="mb-1" id="ingresos-hoy">$0</h5>
                     <small class="text-muted">Ingresos Hoy</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="card bg-light">
+                  <div class="card-body py-2 position-relative">
+                    <button type="button" class="btn btn-link p-1 position-absolute" 
+                            style="top: 5px; right: 5px; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;"
+                            id="toggle-tuu-firebase" title="Mostrar/ocultar">
+                      <i class="fas fa-eye-slash text-muted" style="font-size: 12px;"></i>
+                    </button>
+                    <h5 class="mb-1" id="tuu-firebase-status">Desconectado</h5>
+                    <small class="text-muted">TUU + Firebase</small>
                   </div>
                 </div>
               </div>
