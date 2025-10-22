@@ -22,25 +22,25 @@ try {
         throw new Exception('Error de conexión a la base de datos: ' . $conn->connect_error);
     }
     
-    // Consulta para obtener pagos TUU pendientes
+    // Consulta para obtener pagos TUU pendientes desde la tabla 'tickets'
     $sql = "SELECT 
-                i.idautos_estacionados as id_ingreso,
-                i.patente,
-                i.fecha_ingreso,
-                i.precio,
-                i.cliente_nombre,
-                i.cliente_telefono,
-                i.observaciones,
+                t.id as id_ingreso,
+                t.patente,
+                t.fecha_ingreso,
+                t.precio,
+                t.cliente_nombre,
+                t.cliente_telefono,
+                t.observaciones,
                 'TUU' as metodo_pago,
                 'tuu' as tipo_pago,
-                CONCAT('EST-', i.idautos_estacionados, '-', UNIX_TIMESTAMP()) as transaction_id,
+                CONCAT('EST-', t.id, '-', UNIX_TIMESTAMP()) as transaction_id,
                 NOW() as created_at
-            FROM ingresos i
-            LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
-            WHERE i.salida = 0 
-            AND i.metodo_pago = 'TUU'
+            FROM tickets t
+            LEFT JOIN salidas s ON t.id = s.id_ingresos
+            WHERE t.pagado = 0 
+            AND t.tipo_servicio IN ('estacionamiento', 'ambos')
             AND s.id_ingresos IS NULL
-            ORDER BY i.fecha_ingreso DESC
+            ORDER BY t.fecha_ingreso DESC
             LIMIT 50";
     
     $result = $conn->query($sql);

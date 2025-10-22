@@ -61,29 +61,29 @@ try {
         throw new Exception('ID de ingreso no válido');
     }
     
-    // Verificar que el ingreso existe
-    $sql_check = "SELECT idautos_estacionados, patente, precio, salida 
-                  FROM ingresos 
-                  WHERE idautos_estacionados = ?";
+    // Verificar que el ticket existe
+    $sql_check = "SELECT id, patente, precio, pagado 
+                  FROM tickets 
+                  WHERE id = ?";
     
     $stmt_check = $conn->prepare($sql_check);
     $stmt_check->bind_param('i', $id_ingreso);
     $stmt_check->execute();
     $result_check = $stmt_check->get_result();
     
-    if ($ingreso = $result_check->fetch_assoc()) {
+    if ($ticket = $result_check->fetch_assoc()) {
         // Verificar que no esté ya pagado
-        if ($ingreso['salida'] == 1) {
-            throw new Exception('El ingreso ya está pagado');
+        if ($ticket['pagado'] == 1) {
+            throw new Exception('El ticket ya está pagado');
         }
         
         // Verificar que la patente coincida
-        if ($ingreso['patente'] !== $patente) {
-            throw new Exception('La patente no coincide con el ingreso');
+        if ($ticket['patente'] !== $patente) {
+            throw new Exception('La patente no coincide con el ticket');
         }
         
     } else {
-        throw new Exception('Ingreso no encontrado');
+        throw new Exception('Ticket no encontrado');
     }
     
     // Iniciar transacción
@@ -117,13 +117,13 @@ try {
             throw new Exception('Error insertando salida: ' . $stmt_salida->error);
         }
         
-        // 2. Actualizar ingreso como pagado
-        $sql_update = "UPDATE ingresos SET salida = 1 WHERE idautos_estacionados = ?";
+        // 2. Actualizar ticket como pagado
+        $sql_update = "UPDATE tickets SET pagado = 1, fecha_salida = NOW() WHERE id = ?";
         $stmt_update = $conn->prepare($sql_update);
         $stmt_update->bind_param('i', $id_ingreso);
         
         if (!$stmt_update->execute()) {
-            throw new Exception('Error actualizando ingreso: ' . $stmt_update->error);
+            throw new Exception('Error actualizando ticket: ' . $stmt_update->error);
         }
         
         // 3. Eliminar lavados pendientes si existen

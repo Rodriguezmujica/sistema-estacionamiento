@@ -54,7 +54,6 @@ class TUUFirebaseSync {
       const q = query(
         paymentsRef,
         where('status', '==', 'pending'),
-        orderBy('created_at', 'desc'),
         limit(50)
       );
       
