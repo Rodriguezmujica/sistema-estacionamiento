@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Webhook TUU - Sistema Estacionamiento</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .step { margin: 20px 0; padding: 15px; border-left: 4px solid #007bff; background: #f8f9fa; }
+        .step h3 { color: #007bff; margin-top: 0; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; margin: 10px 0; word-break: break-all; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 5px; background: #007bff; color: white; }
+        .btn-success { background: #28a745; }
+        .btn-warning { background: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Configurar Webhook TUU</h1>
+        
+        <div class="warning">
+            <strong>⚠️ PROBLEMA ACTUAL:</strong> TUU confirma el pago pero no envía notificación automática a tu sistema. Por eso aparece "Confirmar Manualmente".
+        </div>
+        
+        <div class="step">
+            <h3>📋 Paso 1: Obtener Token FCM</h3>
+            <p>Primero necesitamos el token FCM de tu navegador:</p>
+            <button onclick="obtenerTokenFCM()">Obtener Token FCM</button>
+            <div id="token-resultado"></div>
+        </div>
+        
+        <div class="step">
+            <h3>🔗 Paso 2: Configurar Webhook en TUU/Haulmer</h3>
+            <p>Contacta a soporte de TUU/Haulmer y solicita configurar un webhook con estos datos:</p>
+            <div class="code">
+<strong>URL del Webhook:</strong>
+https://tu-dominio.com/sistemaEstacionamiento/fcm-webhook-tuu.php
+
+<strong>Método:</strong>
+POST
+
+<strong>Headers:</strong>
+Authorization: key=BL38f3jX5zj-73XuxYytU9m6bCMKA2mKHcxBwJWUI0u1I_IDfFjAtuUw91DSH1gLEgsLr1XCrdqOp9IqmfK8yDI
+Content-Type: application/json
+
+<strong>Body (ejemplo):</strong>
+{
+  "transaction_id": "700024107682",
+  "status": "completed",
+  "amount": 200,
+  "patente": "ABC123",
+  "authorization_code": "123456",
+  "card_type": "VISA",
+  "card_last4": "1234"
+}
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>🧪 Paso 3: Probar Webhook</h3>
+            <p>Una vez configurado, prueba enviando una notificación de prueba:</p>
+            <button onclick="probarWebhook()">Probar Webhook</button>
+            <div id="webhook-resultado"></div>
+        </div>
+        
+        <div class="step">
+            <h3>🔄 Paso 4: Verificar Sincronización</h3>
+            <p>Verifica que el sistema reciba notificaciones automáticamente:</p>
+            <button onclick="verificarSincronizacion()">Verificar Sincronización</button>
+            <div id="sync-resultado"></div>
+        </div>
+        
+        <div class="success">
+            <strong>🎉 RESULTADO ESPERADO:</strong><br>
+            Una vez configurado el webhook, cuando un cliente pague en TUU:<br>
+            1. TUU confirma el pago ✅<br>
+            2. TUU envía webhook a tu sistema ✅<br>
+            3. Tu sistema recibe notificación FCM ✅<br>
+            4. Pago se confirma automáticamente ✅<br>
+            5. ¡No más "Confirmar Manualmente"! 🎉
+        </div>
+        
+        <div class="step">
+            <h3>📞 Contacto TUU/Haulmer</h3>
+            <p>Información para contactar soporte:</p>
+            <div class="code">
+<strong>Empresa:</strong> Haulmer/TUU<br>
+<strong>Servicio:</strong> Configuración de Webhook<br>
+<strong>Motivo:</strong> Notificaciones automáticas de confirmación de pagos<br>
+<strong>URL Webhook:</strong> https://tu-dominio.com/sistemaEstacionamiento/fcm-webhook-tuu.php<br>
+<strong>Clave API:</strong> BL38f3jX5zj-73XuxYytU9m6bCMKA2mKHcxBwJWUI0u1I_IDfFjAtuUw91DSH1gLEgsLr1XCrdqOp9IqmfK8yDI
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-messaging.js";
+        
+        let messaging;
+        let fcmToken = null;
+        
+        // Inicializar Firebase
+        try {
+            const app = getApp();
+            messaging = getMessaging(app);
+        } catch (error) {
+            console.log('Firebase no inicializado aún');
+        }
+        
+        window.obtenerTokenFCM = async function() {
+            const resultado = document.getElementById('token-resultado');
+            
+            if (!messaging) {
+                resultado.innerHTML = '<div style="color: red;">❌ Firebase no inicializado. Recarga la página.</div>';
+                return;
+            }
+            
+            try {
+                const permission = await Notification.requestPermission();
+                
+                if (permission === 'granted') {
+                    const vapidKey = "BL38f3jX5zj-73XuxYytU9m6bCMKA2mKHcxBwJWUI0u1I_IDfFjAtuUw91DSH1gLEgsLr1XCrdqOp9IqmfK8yDI";
+                    const token = await getToken(messaging, { vapidKey });
+                    
+                    if (token) {
+                        fcmToken = token;
+                        resultado.innerHTML = `
+                            <div style="color: green;">
+                                ✅ <strong>Token FCM Obtenido:</strong><br>
+                                <div class="code">${token}</div>
+                                <button onclick="copiarToken()">Copiar Token</button>
+                            </div>
+                        `;
+                    } else {
+                        resultado.innerHTML = '<div style="color: red;">❌ No se pudo obtener token FCM</div>';
+                    }
+                } else {
+                    resultado.innerHTML = '<div style="color: red;">❌ Permisos de notificación denegados</div>';
+                }
+            } catch (error) {
+                resultado.innerHTML = `<div style="color: red;">❌ Error: ${error.message}</div>`;
+            }
+        };
+        
+        window.copiarToken = function() {
+            if (fcmToken) {
+                navigator.clipboard.writeText(fcmToken).then(() => {
+                    alert('Token copiado al portapapeles');
+                });
+            }
+        };
+        
+        window.probarWebhook = async function() {
+            const resultado = document.getElementById('webhook-resultado');
+            resultado.innerHTML = '⏳ Probando webhook...';
+            
+            try {
+                // Simular datos de webhook de TUU
+                const webhookData = {
+                    transaction_id: 'TEST-' + Date.now(),
+                    status: 'completed',
+                    amount: 200,
+                    patente: 'TEST123',
+                    authorization_code: '123456',
+                    card_type: 'VISA',
+                    card_last4: '1234'
+                };
+                
+                const response = await fetch('fcm-webhook-tuu.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(webhookData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultado.innerHTML = `
+                        <div style="color: green;">
+                            ✅ <strong>Webhook Funcionando</strong><br>
+                            Respuesta: ${data.message}<br>
+                            Transaction ID: ${data.transaction_id}
+                        </div>
+                    `;
+                } else {
+                    resultado.innerHTML = `
+                        <div style="color: red;">
+                            ❌ <strong>Error del Webhook</strong><br>
+                            ${data.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultado.innerHTML = `
+                    <div style="color: red;">
+                        ❌ <strong>Error de Conexión</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        };
+        
+        window.verificarSincronizacion = async function() {
+            const resultado = document.getElementById('sync-resultado');
+            resultado.innerHTML = '⏳ Verificando sincronización...';
+            
+            try {
+                const response = await fetch('api/get-pending-tuu-payments.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultado.innerHTML = `
+                        <div style="color: green;">
+                            ✅ <strong>Sistema de Sincronización Funcionando</strong><br>
+                            Pagos pendientes: ${data.payments.length}<br>
+                            Estado: Listo para recibir notificaciones automáticas
+                        </div>
+                    `;
+                } else {
+                    resultado.innerHTML = `
+                        <div style="color: red;">
+                            ❌ <strong>Error del Sistema</strong><br>
+                            ${data.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultado.innerHTML = `
+                    <div style="color: red;">
+                        ❌ <strong>Error de Conexión</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        };
+    </script>
+</body>
+</html>

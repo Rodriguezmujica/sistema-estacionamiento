@@ -111,12 +111,12 @@ function inicializarToggleEstadisticas() {
   // Agregar estilos CSS para el hover
   const style = document.createElement('style');
   style.textContent = `
-    #toggle-servicios-hoy:hover, #toggle-ingresos-hoy:hover, #toggle-tuu-firebase:hover {
+    #toggle-servicios-hoy:hover, #toggle-ingresos-hoy:hover, #toggle-tuu-firebase:hover, #toggle-fcm:hover {
       background-color: rgba(0, 0, 0, 0.1) !important;
       transform: scale(1.1);
       transition: all 0.2s ease;
     }
-    #toggle-servicios-hoy:hover i, #toggle-ingresos-hoy:hover i, #toggle-tuu-firebase:hover i {
+    #toggle-servicios-hoy:hover i, #toggle-ingresos-hoy:hover i, #toggle-tuu-firebase:hover i, #toggle-fcm:hover i {
       color: #007bff !important;
     }
   `;
@@ -162,8 +162,9 @@ function inicializarToggleEstadisticas() {
     }
   }
 
-  // Configurar toggles para los tres cuadros
+  // Configurar toggles para los cuatro cuadros
   setupToggle('toggle-servicios-hoy', 'total-hoy', 'servicios-hoy-hidden');
   setupToggle('toggle-ingresos-hoy', 'ingresos-hoy', 'ingresos-hoy-hidden');
   setupToggle('toggle-tuu-firebase', 'tuu-firebase-status', 'tuu-firebase-hidden');
+  setupToggle('toggle-fcm', 'fcm-status', 'fcm-hidden');
 }

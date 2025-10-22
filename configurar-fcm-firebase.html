@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Firebase Cloud Messaging (FCM)</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .step { margin: 20px 0; padding: 15px; border-left: 4px solid #007bff; background: #f8f9fa; }
+        .step h3 { color: #007bff; margin-top: 0; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; margin: 10px 0; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 5px; background: #007bff; color: white; }
+        .btn-success { background: #28a745; }
+        .btn-warning { background: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Configurar Firebase Cloud Messaging (FCM)</h1>
+        
+        <div class="warning">
+            <strong>⚠️ IMPORTANTE:</strong> FCM es la pieza que falta para recibir notificaciones automáticas de TUU cuando se confirman los pagos.
+        </div>
+        
+        <div class="step">
+            <h3>📋 Paso 1: Ir a Firebase Console</h3>
+            <p>1. Ve a <a href="https://console.firebase.google.com" target="_blank">Firebase Console</a></p>
+            <p>2. Selecciona tu proyecto: <strong>sistemaestacionamiento-46735</strong></p>
+            <p>3. En el menú lateral, busca <strong>"Cloud Messaging"</strong></p>
+        </div>
+        
+        <div class="step">
+            <h3>🔑 Paso 2: Configurar Certificados Push Web</h3>
+            <p>1. En Cloud Messaging, busca <strong>"Certificados push web"</strong></p>
+            <p>2. Haz clic en <strong>"Generar par de claves"</strong></p>
+            <p>3. Copia la <strong>Clave del servidor</strong> que se genera</p>
+            <div class="code">
+                Clave del servidor: AAAA... (copia esta clave)
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>⚙️ Paso 3: Configurar en tu Sistema</h3>
+            <p>1. Crea el archivo <strong>firebase-messaging-sw.js</strong> en la raíz de tu proyecto</p>
+            <div class="code">
+// firebase-messaging-sw.js
+importScripts('https://www.gstatic.com/firebasejs/12.4.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/12.4.0/firebase-messaging-compat.js');
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBnkbFxK2e7jw6O_6E8CDfHWOZH9AT3MKg",
+  authDomain: "sistemaestacionamiento-46735.firebaseapp.com",
+  projectId: "sistemaestacionamiento-46735",
+  storageBucket: "sistemaestacionamiento-46735.firebasestorage.app",
+  messagingSenderId: "570161231939",
+  appId: "1:570161231939:web:50a5f88fcd65e98fa03cf6"
+};
+
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
+
+// Escuchar mensajes de FCM
+messaging.onBackgroundMessage((payload) => {
+  console.log('Mensaje recibido en background:', payload);
+  
+  const notificationTitle = payload.notification?.title || 'Notificación TUU';
+  const notificationOptions = {
+    body: payload.notification?.body || 'Pago confirmado',
+    icon: '/imagenes/logo.png',
+    badge: '/imagenes/logo.png'
+  };
+  
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>📱 Paso 4: Solicitar Permisos de Notificación</h3>
+            <p>Agrega este código a tu <strong>index.php</strong> antes del cierre del body:</p>
+            <div class="code">
+&lt;script type="module"&gt;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-messaging.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBnkbFxK2e7jw6O_6E8CDfHWOZH9AT3MKg",
+  authDomain: "sistemaestacionamiento-46735.firebaseapp.com",
+  projectId: "sistemaestacionamiento-46735",
+  storageBucket: "sistemaestacionamiento-46735.firebasestorage.app",
+  messagingSenderId: "570161231939",
+  appId: "1:570161231939:web:50a5f88fcd65e98fa03cf6"
+};
+
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+// Solicitar permiso para notificaciones
+async function requestNotificationPermission() {
+  const permission = await Notification.requestPermission();
+  if (permission === 'granted') {
+    console.log('✅ Permisos de notificación concedidos');
+    
+    // Obtener token FCM
+    const token = await getToken(messaging, {
+      vapidKey: 'TU_VAPID_KEY_AQUI' // Reemplaza con tu clave VAPID
+    });
+    
+    console.log('🔑 Token FCM:', token);
+    
+    // Guardar token en tu base de datos
+    await guardarTokenFCM(token);
+  } else {
+    console.log('❌ Permisos de notificación denegados');
+  }
+}
+
+// Escuchar mensajes en primer plano
+onMessage(messaging, (payload) => {
+  console.log('📨 Mensaje recibido:', payload);
+  
+  // Mostrar notificación
+  if (payload.notification) {
+    new Notification(payload.notification.title, {
+      body: payload.notification.body,
+      icon: '/imagenes/logo.png'
+    });
+  }
+  
+  // Actualizar estado del pago
+  if (payload.data?.transaction_id) {
+    verificarPagoTUU(payload.data.transaction_id);
+  }
+});
+
+// Solicitar permisos al cargar la página
+requestNotificationPermission();
+&lt;/script&gt;
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>🔗 Paso 5: Configurar Webhook TUU → Firebase</h3>
+            <p>1. En TUU/Haulmer, configura el webhook:</p>
+            <div class="code">
+URL Webhook: https://fcm.googleapis.com/fcm/send
+Método: POST
+Headers: 
+  Authorization: key=TU_SERVER_KEY_AQUI
+  Content-Type: application/json
+
+Body:
+{
+  "to": "TOKEN_FCM_DEL_DISPOSITIVO",
+  "notification": {
+    "title": "Pago Confirmado",
+    "body": "Transacción #700024107682 pagada exitosamente"
+  },
+  "data": {
+    "transaction_id": "700024107682",
+    "status": "completed",
+    "amount": "200"
+  }
+}
+            </div>
+        </div>
+        
+        <div class="success">
+            <strong>🎉 ¡Resultado Esperado!</strong><br>
+            Una vez configurado FCM, cuando TUU confirme un pago:<br>
+            1. TUU envía notificación a Firebase<br>
+            2. Firebase envía notificación a tu navegador<br>
+            3. Tu sistema actualiza automáticamente<br>
+            4. ¡No más confirmación manual!
+        </div>
+        
+        <div class="step">
+            <h3>🧪 Paso 6: Probar Configuración</h3>
+            <button onclick="probarNotificaciones()">Probar Notificaciones</button>
+            <button onclick="probarFCM()">Probar FCM</button>
+            <div id="test-result"></div>
+        </div>
+    </div>
+
+    <script>
+        function probarNotificaciones() {
+            const resultDiv = document.getElementById('test-result');
+            
+            if ('Notification' in window) {
+                if (Notification.permission === 'granted') {
+                    resultDiv.innerHTML = '<div class="success">✅ Notificaciones soportadas y permitidas</div>';
+                } else if (Notification.permission === 'denied') {
+                    resultDiv.innerHTML = '<div class="warning">⚠️ Notificaciones denegadas. Ve a configuración del navegador.</div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="warning">⚠️ Solicita permisos de notificación primero</div>';
+                }
+            } else {
+                resultDiv.innerHTML = '<div class="warning">❌ Este navegador no soporta notificaciones</div>';
+            }
+        }
+        
+        function probarFCM() {
+            const resultDiv = document.getElementById('test-result');
+            
+            if ('serviceWorker' in navigator) {
+                resultDiv.innerHTML = '<div class="success">✅ Service Worker soportado (necesario para FCM)</div>';
+            } else {
+                resultDiv.innerHTML = '<div class="warning">❌ Service Worker no soportado</div>';
+            }
+        }
+        
+        // Probar automáticamente al cargar
+        window.onload = function() {
+            probarNotificaciones();
+            probarFCM();
+        };
+    </script>
+</body>
+</html>

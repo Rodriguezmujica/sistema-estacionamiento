@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación Manual TUU - Sistema Estacionamiento</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .status-box { padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 5px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; width: 300px; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Verificación Manual TUU</h1>
+        
+        <div class="status-box info">
+            <strong>🎯 Uso Temporal:</strong> Mientras configuras el webhook automático, puedes verificar pagos manualmente usando el Transaction ID del POS.
+        </div>
+        
+        <div class="status-box">
+            <h3>🔍 Verificar Pago Específico</h3>
+            <input type="text" id="transaction-id" placeholder="Transaction ID del POS (ej: #700024107682)" style="width: 400px;">
+            <button class="btn-primary" onclick="verificarPago()">Verificar Pago</button>
+            <div id="verificacion-resultado"></div>
+        </div>
+        
+        <div class="status-box">
+            <h3>📊 Verificar Todos los Pagos Pendientes</h3>
+            <button class="btn-success" onclick="verificarPendientes()">Verificar Pagos Pendientes</button>
+            <div id="pendientes-resultado"></div>
+        </div>
+        
+        <div class="status-box">
+            <h3>🔄 Verificación Automática</h3>
+            <button class="btn-warning" onclick="iniciarVerificacionAutomatica()">Iniciar Verificación Automática (30 seg)</button>
+            <button onclick="detenerVerificacionAutomatica()">Detener</button>
+            <div id="automatica-resultado"></div>
+        </div>
+        
+        <div class="status-box">
+            <h3>📝 Log de Actividad</h3>
+            <div id="log" class="log"></div>
+            <button onclick="limpiarLog()">Limpiar Log</button>
+        </div>
+    </div>
+
+    <script>
+        const BASE_PATH = window.location.origin + window.location.pathname.replace('verificacion-manual-tuu.html', '');
+        let logElement = document.getElementById('log');
+        let verificacionInterval = null;
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function limpiarLog() {
+            logElement.innerHTML = '';
+        }
+        
+        window.verificarPago = async function() {
+            const transactionId = document.getElementById('transaction-id').value;
+            const resultado = document.getElementById('verificacion-resultado');
+            
+            if (!transactionId) {
+                resultado.innerHTML = '<div class="status-box error">❌ Ingresa un Transaction ID</div>';
+                return;
+            }
+            
+            log(`🔍 Verificando pago: ${transactionId}`);
+            resultado.innerHTML = '<div class="status-box info">⏳ Verificando pago...</div>';
+            
+            try {
+                const response = await fetch(`${BASE_PATH}tuu-status-websocket.php?action=check_status&transaction_id=${encodeURIComponent(transactionId)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.status === 'completed') {
+                        resultado.innerHTML = `
+                            <div class="status-box success">
+                                ✅ <strong>PAGO CONFIRMADO</strong><br>
+                                Transaction ID: ${transactionId}<br>
+                                Estado: ${data.status}<br>
+                                Patente: ${data.data?.patente || 'N/A'}<br>
+                                Total: $${data.data?.total || 'N/A'}
+                            </div>
+                        `;
+                        log(`✅ Pago confirmado: ${transactionId}`);
+                    } else {
+                        resultado.innerHTML = `
+                            <div class="status-box warning">
+                                ⚠️ <strong>PAGO PENDIENTE</strong><br>
+                                Transaction ID: ${transactionId}<br>
+                                Estado: ${data.status}<br>
+                                <button class="btn-success" onclick="confirmarManual('${transactionId}')">Confirmar Manual</button>
+                            </div>
+                        `;
+                        log(`⚠️ Pago pendiente: ${transactionId}`);
+                    }
+                } else {
+                    resultado.innerHTML = `
+                        <div class="status-box error">
+                            ❌ <strong>ERROR</strong><br>
+                            ${data.error}
+                        </div>
+                    `;
+                    log(`❌ Error: ${data.error}`);
+                }
+            } catch (error) {
+                resultado.innerHTML = `
+                    <div class="status-box error">
+                        ❌ <strong>ERROR DE CONEXIÓN</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+                log(`❌ Error conexión: ${error.message}`);
+            }
+        };
+        
+        window.confirmarManual = async function(transactionId) {
+            log(`🔧 Confirmando pago manual: ${transactionId}`);
+            
+            try {
+                const response = await fetch(`${BASE_PATH}tuu-status-websocket.php?action=confirm_manual_payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        transaction_id: transactionId,
+                        patente: 'MANUAL'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    log(`✅ Pago confirmado manualmente: ${transactionId}`);
+                    alert('Pago confirmado manualmente');
+                    verificarPago(); // Actualizar estado
+                } else {
+                    log(`❌ Error confirmación: ${data.error}`);
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                log(`❌ Error confirmación: ${error.message}`);
+                alert(`Error: ${error.message}`);
+            }
+        };
+        
+        window.verificarPendientes = async function() {
+            const resultado = document.getElementById('pendientes-resultado');
+            log('📊 Verificando pagos pendientes...');
+            resultado.innerHTML = '<div class="status-box info">⏳ Verificando pagos pendientes...</div>';
+            
+            try {
+                const response = await fetch(`${BASE_PATH}api/get-pending-tuu-payments.php`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.payments.length > 0) {
+                        let html = '<div class="status-box success">';
+                        html += `<strong>✅ Pagos Pendientes Encontrados: ${data.payments.length}</strong><br>`;
+                        
+                        data.payments.forEach((pago, index) => {
+                            html += `
+                                <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                                    <strong>Pago ${index + 1}:</strong><br>
+                                    Transaction ID: ${pago.transaction_id}<br>
+                                    Patente: ${pago.patente}<br>
+                                    Total: $${pago.total.toLocaleString('es-CL')}<br>
+                                    <button class="btn-success" onclick="confirmarManual('${pago.transaction_id}')">Confirmar Manual</button>
+                                </div>
+                            `;
+                        });
+                        
+                        html += '</div>';
+                        resultado.innerHTML = html;
+                        log(`✅ Encontrados ${data.payments.length} pagos pendientes`);
+                    } else {
+                        resultado.innerHTML = '<div class="status-box success">✅ No hay pagos pendientes</div>';
+                        log('✅ No hay pagos pendientes');
+                    }
+                } else {
+                    resultado.innerHTML = `
+                        <div class="status-box error">
+                            ❌ <strong>ERROR</strong><br>
+                            ${data.error}
+                        </div>
+                    `;
+                    log(`❌ Error: ${data.error}`);
+                }
+            } catch (error) {
+                resultado.innerHTML = `
+                    <div class="status-box error">
+                        ❌ <strong>ERROR DE CONEXIÓN</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+                log(`❌ Error conexión: ${error.message}`);
+            }
+        };
+        
+        window.iniciarVerificacionAutomatica = function() {
+            const resultado = document.getElementById('automatica-resultado');
+            
+            if (verificacionInterval) {
+                clearInterval(verificacionInterval);
+            }
+            
+            log('🔄 Iniciando verificación automática cada 30 segundos...');
+            resultado.innerHTML = '<div class="status-box info">🔄 Verificación automática iniciada (cada 30 segundos)</div>';
+            
+            verificacionInterval = setInterval(() => {
+                log('🔄 Verificación automática ejecutándose...');
+                verificarPendientes();
+            }, 30000);
+        };
+        
+        window.detenerVerificacionAutomatica = function() {
+            if (verificacionInterval) {
+                clearInterval(verificacionInterval);
+                verificacionInterval = null;
+                log('⏹️ Verificación automática detenida');
+                document.getElementById('automatica-resultado').innerHTML = '<div class="status-box warning">⏹️ Verificación automática detenida</div>';
+            }
+        };
+        
+        // Inicializar
+        log('🚀 Sistema de verificación manual iniciado');
+    </script>
+</body>
+</html>

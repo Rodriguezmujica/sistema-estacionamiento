@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación Automática TUU - API Oficial</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .status-box { padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 5px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-danger { background: #dc3545; color: white; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; width: 300px; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; }
+        .pago-item { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .pago-completed { background: #d4edda; border-color: #c3e6cb; }
+        .pago-pending { background: #fff3cd; border-color: #ffeaa7; }
+        .pago-error { background: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Verificación Automática TUU - API Oficial</h1>
+        
+        <div class="status-box info">
+            <strong>🎯 Basado en:</strong> <a href="https://developers.tuu.cl/reference/getpaymentrequest" target="_blank">API Oficial de TUU</a><br>
+            <strong>🔧 Funcionalidad:</strong> Verificación automática usando la API oficial de TUU para confirmar pagos sin intervención manual.
+        </div>
+        
+        <div class="status-box">
+            <h3>🔍 Verificar Pago Específico</h3>
+            <input type="text" id="transaction-id" placeholder="Transaction ID del POS (ej: #700024107682)" style="width: 400px;">
+            <button class="btn-primary" onclick="verificarPagoEspecifico()">Verificar Pago</button>
+            <div id="verificacion-resultado"></div>
+        </div>
+        
+        <div class="status-box">
+            <h3>📊 Verificar Todos los Pagos Pendientes</h3>
+            <button class="btn-success" onclick="verificarTodosPendientes()">Verificar Todos los Pendientes</button>
+            <div id="todos-resultado"></div>
+        </div>
+        
+        <div class="status-box">
+            <h3>🔄 Verificación Automática Continua</h3>
+            <button class="btn-warning" onclick="iniciarVerificacionContinua()">Iniciar Verificación Continua (30 seg)</button>
+            <button class="btn-danger" onclick="detenerVerificacionContinua()">Detener</button>
+            <div id="continua-resultado"></div>
+        </div>
+        
+        <div class="status-box">
+            <h3>📝 Log de Actividad</h3>
+            <div id="log" class="log"></div>
+            <button onclick="limpiarLog()">Limpiar Log</button>
+        </div>
+    </div>
+
+    <script>
+        const BASE_PATH = window.location.origin + window.location.pathname.replace('verificacion-automatica-tuu.html', '');
+        let logElement = document.getElementById('log');
+        let verificacionInterval = null;
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function limpiarLog() {
+            logElement.innerHTML = '';
+        }
+        
+        window.verificarPagoEspecifico = async function() {
+            const transactionId = document.getElementById('transaction-id').value;
+            const resultado = document.getElementById('verificacion-resultado');
+            
+            if (!transactionId) {
+                resultado.innerHTML = '<div class="status-box error">❌ Ingresa un Transaction ID</div>';
+                return;
+            }
+            
+            log(`🔍 Verificando pago específico: ${transactionId}`);
+            resultado.innerHTML = '<div class="status-box info">⏳ Verificando pago usando API oficial de TUU...</div>';
+            
+            try {
+                const response = await fetch(`${BASE_PATH}api/tuu-api-verificacion.php?action=check_payment_status&transaction_id=${encodeURIComponent(transactionId)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.status === 'completed') {
+                        resultado.innerHTML = `
+                            <div class="status-box success">
+                                ✅ <strong>PAGO CONFIRMADO Y REGISTRADO</strong><br>
+                                Transaction ID: ${transactionId}<br>
+                                Estado: ${data.status}<br>
+                                Patente: ${data.data?.patente || 'N/A'}<br>
+                                Total: $${data.data?.total || 'N/A'}<br>
+                                Método: ${data.data?.metodo_pago || 'TUU'}<br>
+                                Fecha: ${data.data?.fecha_salida || 'N/A'}<br>
+                                <strong>Acción: ${data.data?.auto_registered ? 'Registrado automáticamente' : 'Ya estaba registrado'}</strong>
+                            </div>
+                        `;
+                        log(`✅ Pago confirmado y registrado: ${transactionId}`);
+                    } else {
+                        resultado.innerHTML = `
+                            <div class="status-box warning">
+                                ⚠️ <strong>PAGO PENDIENTE</strong><br>
+                                Transaction ID: ${transactionId}<br>
+                                Estado: ${data.status}<br>
+                                Mensaje: ${data.message}
+                            </div>
+                        `;
+                        log(`⚠️ Pago pendiente: ${transactionId} - Estado: ${data.status}`);
+                    }
+                } else {
+                    resultado.innerHTML = `
+                        <div class="status-box error">
+                            ❌ <strong>ERROR</strong><br>
+                            ${data.error}
+                        </div>
+                    `;
+                    log(`❌ Error verificando pago: ${data.error}`);
+                }
+            } catch (error) {
+                resultado.innerHTML = `
+                    <div class="status-box error">
+                        ❌ <strong>ERROR DE CONEXIÓN</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+                log(`❌ Error conexión: ${error.message}`);
+            }
+        };
+        
+        window.verificarTodosPendientes = async function() {
+            const resultado = document.getElementById('todos-resultado');
+            log('📊 Verificando todos los pagos pendientes...');
+            resultado.innerHTML = '<div class="status-box info">⏳ Verificando todos los pagos pendientes usando API oficial de TUU...</div>';
+            
+            try {
+                const response = await fetch(`${BASE_PATH}api/tuu-api-verificacion.php?action=verify_all_pending`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = '<div class="status-box success">';
+                    html += `<strong>✅ Verificación Completada</strong><br>`;
+                    html += `Total verificados: ${data.total_checked}<br>`;
+                    html += `Completados: ${data.completed}<br><br>`;
+                    
+                    if (data.results && data.results.length > 0) {
+                        data.results.forEach((result, index) => {
+                            const statusClass = result.status === 'completed' ? 'pago-completed' : 
+                                             result.status === 'pending' ? 'pago-pending' : 'pago-error';
+                            
+                            html += `
+                                <div class="pago-item ${statusClass}">
+                                    <strong>Pago ${index + 1}:</strong><br>
+                                    Transaction ID: ${result.transaction_id}<br>
+                                    Estado: ${result.status}<br>
+                                    Acción: ${result.action}<br>
+                                    ${result.data ? `Patente: ${result.data.patente || 'N/A'}<br>Total: $${result.data.total || 'N/A'}` : ''}
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html += '<div class="pago-item">No hay pagos pendientes para verificar</div>';
+                    }
+                    
+                    html += '</div>';
+                    resultado.innerHTML = html;
+                    log(`✅ Verificación completada: ${data.total_checked} verificados, ${data.completed} completados`);
+                } else {
+                    resultado.innerHTML = `
+                        <div class="status-box error">
+                            ❌ <strong>ERROR</strong><br>
+                            ${data.error}
+                        </div>
+                    `;
+                    log(`❌ Error: ${data.error}`);
+                }
+            } catch (error) {
+                resultado.innerHTML = `
+                    <div class="status-box error">
+                        ❌ <strong>ERROR DE CONEXIÓN</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+                log(`❌ Error conexión: ${error.message}`);
+            }
+        };
+        
+        window.iniciarVerificacionContinua = function() {
+            const resultado = document.getElementById('continua-resultado');
+            
+            if (verificacionInterval) {
+                clearInterval(verificacionInterval);
+            }
+            
+            log('🔄 Iniciando verificación continua cada 30 segundos...');
+            resultado.innerHTML = '<div class="status-box info">🔄 Verificación continua iniciada (cada 30 segundos)</div>';
+            
+            verificacionInterval = setInterval(async () => {
+                log('🔄 Verificación automática ejecutándose...');
+                
+                try {
+                    const response = await fetch(`${BASE_PATH}api/tuu-api-verificacion.php?action=verify_all_pending`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.completed > 0) {
+                        log(`✅ Verificación automática: ${data.completed} pagos completados`);
+                    } else {
+                        log(`ℹ️ Verificación automática: ${data.total_checked || 0} verificados, sin cambios`);
+                    }
+                } catch (error) {
+                    log(`❌ Error en verificación automática: ${error.message}`);
+                }
+            }, 30000);
+        };
+        
+        window.detenerVerificacionContinua = function() {
+            if (verificacionInterval) {
+                clearInterval(verificacionInterval);
+                verificacionInterval = null;
+                log('⏹️ Verificación continua detenida');
+                document.getElementById('continua-resultado').innerHTML = '<div class="status-box warning">⏹️ Verificación continua detenida</div>';
+            }
+        };
+        
+        // Inicializar
+        log('🚀 Sistema de verificación automática TUU iniciado');
+        log('📚 Basado en API oficial: https://developers.tuu.cl/reference/getpaymentrequest');
+    </script>
+</body>
+</html>

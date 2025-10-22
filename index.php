@@ -163,6 +163,21 @@ $rol = $_SESSION['rol'];
                   </div>
                 </div>
               </div>
+              
+              <!-- Estado FCM -->
+              <div class="col-4">
+                <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);">
+                  <div class="card-body py-2 position-relative">
+                    <button type="button" class="btn btn-link p-1 position-absolute" 
+                            style="top: 5px; right: 5px; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;"
+                            id="toggle-fcm" title="Mostrar/ocultar">
+                      <i class="fas fa-eye-slash text-muted" style="font-size: 12px;"></i>
+                    </button>
+                    <h5 class="mb-1 text-white" id="fcm-status">Desconectado</h5>
+                    <small class="text-white-50">FCM Notificaciones</small>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -770,5 +785,167 @@ $rol = $_SESSION['rol'];
   // Incluir integración TUU + Firebase
   include_once 'SISTEMA-HIBRIDO/COMPARTIDOS/integrate-tuu-firebase.php';
   ?>
+
+  <!-- 🔥 FIREBASE CLOUD MESSAGING (FCM) - GRATUITO -->
+  <script type="module">
+    import { getApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-messaging.js";
+
+    // Usar la app de Firebase ya inicializada
+    let app;
+    try {
+      app = getApp(); // Obtener app existente
+    } catch (error) {
+      // Si no existe, inicializar
+      const { initializeApp } = await import("https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js");
+      const firebaseConfig = {
+        apiKey: "AIzaSyBnkbFxK2e7jw6O_6E8CDfHWOZH9AT3MKg",
+        authDomain: "sistemaestacionamiento-46735.firebaseapp.com",
+        projectId: "sistemaestacionamiento-46735",
+        storageBucket: "sistemaestacionamiento-46735.firebasestorage.app",
+        messagingSenderId: "570161231939",
+        appId: "1:570161231939:web:50a5f88fcd65e98fa03cf6"
+      };
+      app = initializeApp(firebaseConfig);
+    }
+    
+    const messaging = getMessaging(app);
+    
+    // VAPID Key para web push (GRATUITO)
+    const vapidKey = "BL38f3jX5zj-73XuxYytU9m6bCMKA2mKHcxBwJWUI0u1I_IDfFjAtuUw91DSH1gLEgsLr1XCrdqOp9IqmfK8yDI";
+    
+    // Solicitar permisos de notificación
+    async function configurarFCM() {
+      try {
+        console.log('🔥 Configurando FCM...');
+        
+        // Solicitar permisos
+        const permission = await Notification.requestPermission();
+        
+        if (permission === 'granted') {
+          console.log('✅ Permisos de notificación concedidos');
+          
+          // Obtener token FCM
+          const token = await getToken(messaging, { vapidKey });
+          
+          if (token) {
+            console.log('🔑 Token FCM obtenido:', token);
+            
+            // Guardar token en localStorage
+            localStorage.setItem('fcm_token', token);
+            
+            // Guardar token en servidor (opcional)
+            await guardarTokenEnServidor(token);
+            
+            // Actualizar estado en UI
+            actualizarEstadoFCM('conectado', token);
+            
+          } else {
+            console.log('❌ No se pudo obtener token FCM');
+            actualizarEstadoFCM('error', 'No se pudo obtener token');
+          }
+          
+        } else {
+          console.log('❌ Permisos de notificación denegados');
+          actualizarEstadoFCM('desconectado', 'Permisos denegados');
+        }
+        
+      } catch (error) {
+        console.error('❌ Error configurando FCM:', error);
+        actualizarEstadoFCM('error', error.message);
+      }
+    }
+    
+    // Escuchar mensajes FCM
+    onMessage(messaging, (payload) => {
+      console.log('📨 Mensaje FCM recibido:', payload);
+      
+      // Mostrar notificación
+      if (payload.notification) {
+        const notification = new Notification(payload.notification.title, {
+          body: payload.notification.body,
+          icon: '/imagenes/Logo_sin_fondo.png',
+          tag: 'tuu-payment',
+          requireInteraction: true
+        });
+        
+        notification.onclick = function() {
+          console.log('🔔 Notificación clickeada');
+          notification.close();
+          
+          // Actualizar estado del pago
+          if (payload.data?.transaction_id) {
+            verificarPagoTUU(payload.data.transaction_id);
+          }
+        };
+      }
+      
+      // Actualizar estado del pago automáticamente
+      if (payload.data?.transaction_id) {
+        console.log('🔄 Actualizando pago automáticamente:', payload.data.transaction_id);
+        verificarPagoTUU(payload.data.transaction_id);
+      }
+    });
+    
+    // Función para verificar pago TUU
+    async function verificarPagoTUU(transactionId) {
+      try {
+        const response = await fetch(`tuu-status-websocket.php?action=check_status&transaction_id=${encodeURIComponent(transactionId)}`);
+        const data = await response.json();
+        
+        if (data.success && data.status === 'completed') {
+          console.log('✅ Pago confirmado automáticamente:', transactionId);
+          
+          // Mostrar mensaje de éxito
+          if (typeof mostrarAlerta === 'function') {
+            mostrarAlerta('success', `Pago confirmado automáticamente: ${transactionId}`);
+          }
+          
+          // Recargar página para actualizar datos
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+          
+        } else {
+          console.log('⚠️ Pago aún pendiente:', transactionId);
+        }
+      } catch (error) {
+        console.error('❌ Error verificando pago:', error);
+      }
+    }
+    
+    // Guardar token en servidor
+    async function guardarTokenEnServidor(token) {
+      try {
+        await fetch('api/guardar-token-fcm.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token })
+        });
+        console.log('💾 Token guardado en servidor');
+      } catch (error) {
+        console.log('⚠️ No se pudo guardar token en servidor:', error);
+      }
+    }
+    
+    // Actualizar estado FCM en UI
+    function actualizarEstadoFCM(estado, mensaje) {
+      const fcmStatusElement = document.getElementById('fcm-status');
+      if (fcmStatusElement) {
+        fcmStatusElement.textContent = `FCM: ${estado === 'conectado' ? 'Conectado' : estado === 'desconectado' ? 'Desconectado' : 'Error'}`;
+        fcmStatusElement.className = `badge ${estado === 'conectado' ? 'bg-success' : estado === 'desconectado' ? 'bg-warning' : 'bg-danger'}`;
+      }
+      
+      console.log(`🔥 FCM Estado: ${estado} - ${mensaje}`);
+    }
+    
+    // Inicializar FCM al cargar la página
+    if ('serviceWorker' in navigator && 'Notification' in window) {
+      configurarFCM();
+    } else {
+      console.log('⚠️ FCM no soportado en este navegador');
+      actualizarEstadoFCM('desconectado', 'No soportado');
+    }
+  </script>
 </body>
 </html>
