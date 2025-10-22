@@ -410,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await finalizarCobroExitoso(metodo, totalFinal, dataPago);
       } else {
         // Para TUU, verificar si es un error de conexión o pago pendiente
-        if (metodo === 'TUU' && (dataPago.status === 'pending' || dataPago.red_local)) {
+        if (metodo === 'TUU' && (dataPago.status === 'pending' || dataPago.details?.status === 'pending' || dataPago.red_local)) {
           // Obtener el transaction_id correcto
           const tuuTransactionId = dataPago.transaction_id || dataPago.details?.transaction_id;
           console.log('🔍 TUU Transaction ID recibido:', tuuTransactionId, 'Data completo:', dataPago);
@@ -423,6 +423,9 @@ document.addEventListener('DOMContentLoaded', () => {
           
           // Mostrar botón de confirmación manual inmediatamente cuando hay pending
           mostrarBotonConfirmacionManual(tuuTransactionId, ticketCobroActual.patente, ticketCobroActual.total);
+          
+          // Mostrar toast informativo para estado pending
+          actualizarToast(opciones.toastId, `⏳ Pago en Proceso: ${ticketCobroActual.patente} - $${ticketCobroActual.total}`, 'info');
           
           // Iniciar verificación de estado en red local
           iniciarVerificacionEstadoTUU(opciones.toastId, tuuTransactionId);
