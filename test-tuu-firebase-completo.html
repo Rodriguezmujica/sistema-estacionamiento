@@ -136,12 +136,12 @@
         <div class="test-section">
             <h4>🧪 Simulación de Pagos TUU</h4>
             <div class="row">
-                <div class="col-md-3">
-                    <input type="text" class="form-control mb-2" id="sim-patente" placeholder="Patente" value="ABC123">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" class="form-control mb-2" id="sim-precio" placeholder="Precio" value="1500">
-                </div>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control mb-2" id="sim-patente" placeholder="Patente" value="TEST123">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" class="form-control mb-2" id="sim-precio" placeholder="Precio" value="2000">
+                            </div>
                 <div class="col-md-3">
                     <input type="text" class="form-control mb-2" id="sim-cliente" placeholder="Cliente" value="Juan Pérez">
                 </div>
@@ -182,7 +182,7 @@
                 <div class="col-md-6">
                     <h6>Crear Pago en Firebase</h6>
                     <div class="mb-2">
-                        <input type="text" class="form-control" id="create-transaction-id" placeholder="Transaction ID" value="EST-12345-TEST">
+                        <input type="text" class="form-control" id="create-transaction-id" placeholder="Transaction ID" value="EST-4-TEST">
                     </div>
                     <button class="btn btn-primary" id="btn-create-payment">Crear Pago</button>
                 </div>
@@ -311,7 +311,7 @@
                         
                         // Agregar parámetros específicos para cada API
                         if (api === 'check-payment-sync.php') {
-                            url += '?transaction_id=EST-TEST-123';
+                            url += '?transaction_id=EST-4-TEST';
                         } else if (api === 'sync-tuu-payment.php') {
                             // Esta API solo acepta POST, así que la saltamos en la verificación básica
                             workingAPIs++;
@@ -443,10 +443,10 @@
             
             try {
                 const paymentData = {
-                    transaction_id: 'EST-12345-TEST',
-                    patente: 'ABC123',
-                    precio: 1500,
-                    cliente_nombre: 'Juan Pérez',
+                    transaction_id: 'EST-4-TEST',
+                    patente: 'TEST123',
+                    precio: 2000,
+                    cliente_nombre: 'Cliente Test',
                     authorization_code: 'AUTH123456',
                     card_type: 'VISA',
                     card_last4: '1234'
