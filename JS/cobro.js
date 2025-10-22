@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('🔍 Debug TUU - dataPago.details?.status:', dataPago.details?.status);
         console.log('🔍 Debug TUU - dataPago.red_local:', dataPago.red_local);
         
-        const isPending = dataPago.status === 'pending' || dataPago.details?.status === 'pending' || dataPago.red_local;
+        const isPending = dataPago.status === 'pending' || dataPago.details?.status === 'Pending' || dataPago.red_local;
         console.log('🔍 Debug TUU - isPending:', isPending);
         console.log('🔍 Debug TUU - metodo === TUU:', metodo === 'TUU');
         console.log('🔍 Debug TUU - condición completa:', metodo === 'TUU' && isPending);
