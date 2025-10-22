@@ -7,13 +7,8 @@ if (typeof getBasePath === 'undefined') {
   };
 }
 
-// Usar window.BASE_PATH para evitar conflictos de redeclaración
-if (typeof window.BASE_PATH === 'undefined') {
-  window.BASE_PATH = getBasePath();
-}
-
-// Usar la variable global
-const BASE_PATH = window.BASE_PATH;
+// Usar la función global definida en main.js para evitar conflictos de redeclaración
+// No declarar BASE_PATH aquí para evitar conflictos
 
 document.addEventListener('DOMContentLoaded', function() {
   const modalClienteElement = document.getElementById('modalCliente');
@@ -124,7 +119,7 @@ function cargarUsuarios() {
   const tablaUsuarios = document.getElementById('tabla-usuarios');
   if (!tablaUsuarios) return; // Si no existe la tabla, no hacer nada
 
-  fetch(`${BASE_PATH}/api/api_usuarios.php`)
+  fetch(`${window.getBasePathValue()}/api/api_usuarios.php`)
     .then(response => response.json())
     .then(data => {
       if (!data.success) {
@@ -239,7 +234,7 @@ async function guardarUsuario() {
   console.log('🔍 DEBUG - ¿Es edición?', !!usuarioData.id);
 
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_usuarios.php`, {
+    const response = await fetch(`${window.getBasePathValue()}/api/api_usuarios.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(usuarioData)
@@ -265,7 +260,7 @@ async function eliminarUsuario(id) {
   if (!confirm('¿Está seguro de que desea eliminar este usuario? Esta acción no se puede deshacer.')) return;
 
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_usuarios.php?id=${id}`, { method: 'DELETE' });
+    const response = await fetch(`${window.getBasePathValue()}/api/api_usuarios.php?id=${id}`, { method: 'DELETE' });
     const result = await response.json();
     if (result.success) {
       alert(result.message);
@@ -305,7 +300,7 @@ if (selectorMesResumen) {
 let todosLosClientes = []; // Guardamos la lista completa de clientes aquí
 
 function cargarClientesMensuales() {
-  fetch(`${BASE_PATH}/api/api_clientes_mensuales.php`)
+  fetch(`${window.getBasePathValue()}/api/api_clientes_mensuales.php`)
     .then(response => response.json())
     .then(data => {
       if (!data.success) {
@@ -441,7 +436,7 @@ async function guardarClienteMensual() {
   }
 
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_clientes_mensuales.php`, {
+    const response = await fetch(`${window.getBasePathValue()}/api/api_clientes_mensuales.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(clienteData)
@@ -462,7 +457,7 @@ async function guardarClienteMensual() {
 async function editarClienteMensual(button) {
   const id = button.getAttribute('data-id');
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_clientes_mensuales.php`);
+    const response = await fetch(`${window.getBasePathValue()}/api/api_clientes_mensuales.php`);
     const result = await response.json();
     if (!result.success) throw new Error(result.error);
 
@@ -493,7 +488,7 @@ async function eliminarClienteMensual(id) {
   }
 
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_clientes_mensuales.php?id=${id}`, {
+    const response = await fetch(`${window.getBasePathValue()}/api/api_clientes_mensuales.php?id=${id}`, {
       method: 'DELETE'
     });
     const result = await response.json();
@@ -513,7 +508,7 @@ async function eliminarClienteMensual(id) {
 // ============================================
 
 function cargarServicios() {
-  fetch(`${BASE_PATH}/api/api_servicios_lavado.php?todos=1`) // Pedimos TODOS los servicios (activos e inactivos)
+  fetch(`${window.getBasePathValue()}/api/api_servicios_lavado.php?todos=1`) // Pedimos TODOS los servicios (activos e inactivos)
     .then(response => response.json())
     .then(data => {
       if (!data.success) throw new Error(data.error);
@@ -599,7 +594,7 @@ async function guardarServicio() {
   }
 
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_servicios_lavado.php`, {
+    const response = await fetch(`${window.getBasePathValue()}/api/api_servicios_lavado.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(servicioData)
@@ -628,7 +623,7 @@ async function toggleEstadoServicio(id, nuevoEstado) {
   }
 
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_servicios_lavado.php`, {
+    const response = await fetch(`${window.getBasePathValue()}/api/api_servicios_lavado.php`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: id, activo: nuevoEstado })
@@ -651,7 +646,7 @@ async function eliminarServicio(id) {
   }
 
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_servicios_lavado.php?id=${id}`, {
+    const response = await fetch(`${window.getBasePathValue()}/api/api_servicios_lavado.php?id=${id}`, {
       method: 'DELETE'
     });
     const result = await response.json();
@@ -672,7 +667,7 @@ async function eliminarServicio(id) {
 
 async function cargarPrecios() {
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_precios.php`);
+    const response = await fetch(`${window.getBasePathValue()}/api/api_precios.php`);
     const result = await response.json();
     
     if (result.success) {
@@ -738,7 +733,7 @@ async function guardarPrecios(event) {
   if (!confirmar) return;
   
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_precios.php`, {
+    const response = await fetch(`${window.getBasePathValue()}/api/api_precios.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -817,7 +812,7 @@ async function cargarResumenEjecutivo() {
   document.getElementById('resumen-contenido').classList.add('d-none');
   
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`);
+    const response = await fetch(`${window.getBasePathValue()}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`);
     const result = await response.json();
     
     if (result.success) {
@@ -1082,7 +1077,7 @@ async function guardarMetaMensual(event) {
   if (!confirmar) return;
   
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_resumen_ejecutivo.php`, {
+    const response = await fetch(`${window.getBasePathValue()}/api/api_resumen_ejecutivo.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

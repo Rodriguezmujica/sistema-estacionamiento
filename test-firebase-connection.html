@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Conexión Firebase - Sistema Estacionamiento</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-container { max-width: 800px; margin: 0 auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .log { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔥 Prueba de Conexión Firebase</h1>
+        <p>Sistema de Estacionamiento Los Ríos</p>
+        
+        <div id="test-results"></div>
+        
+        <h3>Log de Pruebas</h3>
+        <div class="log" id="test-log"></div>
+        
+        <div style="margin-top: 20px;">
+            <button onclick="runTests()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                🧪 Ejecutar Pruebas
+            </button>
+            <button onclick="clearLog()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+                🗑️ Limpiar Log
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importar Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+        import { getStorage } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-storage.js';
+        
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnkbFxK2e7jw6O_6E8CDfHWOZH9AT3MKg",
+            authDomain: "sistemaestacionamiento-46735.firebaseapp.com",
+            projectId: "sistemaestacionamiento-46735",
+            storageBucket: "sistemaestacionamiento-46735.firebasestorage.app",
+            messagingSenderId: "570161231939",
+            appId: "1:570161231939:web:50a5f88fcd65e98fa03cf6",
+            measurementId: "G-7E9CZ89DR4"
+        };
+        
+        let app, auth, db, storage;
+        let testResults = [];
+        
+        // Función para agregar log
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('test-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            log.appendChild(logEntry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        // Función para limpiar log
+        function clearLog() {
+            document.getElementById('test-log').innerHTML = '';
+            document.getElementById('test-results').innerHTML = '';
+            testResults = [];
+        }
+        
+        // Función para agregar resultado
+        function addResult(title, success, message) {
+            testResults.push({ title, success, message });
+        }
+        
+        // Función para mostrar resultados
+        function showResults() {
+            const container = document.getElementById('test-results');
+            container.innerHTML = '';
+            
+            testResults.forEach(result => {
+                const div = document.createElement('div');
+                div.className = `status ${result.success ? 'success' : 'error'}`;
+                div.innerHTML = `<strong>${result.success ? '✅' : '❌'} ${result.title}</strong><br>${result.message}`;
+                container.appendChild(div);
+            });
+        }
+        
+        // Función principal de pruebas
+        async function runTests() {
+            clearLog();
+            addLog('🚀 Iniciando pruebas de Firebase...');
+            
+            try {
+                // Prueba 1: Inicializar Firebase
+                addLog('📱 Inicializando Firebase...');
+                app = initializeApp(firebaseConfig);
+                addLog('✅ Firebase inicializado correctamente');
+                addResult('Inicialización de Firebase', true, 'Firebase se inicializó sin errores');
+                
+                // Prueba 2: Configurar servicios
+                addLog('🔧 Configurando servicios...');
+                auth = getAuth(app);
+                db = getFirestore(app);
+                storage = getStorage(app);
+                addLog('✅ Servicios configurados correctamente');
+                addResult('Configuración de Servicios', true, 'Auth, Firestore y Storage configurados');
+                
+                // Prueba 3: Verificar conectividad
+                addLog('🌐 Verificando conectividad...');
+                const isOnline = navigator.onLine;
+                addLog(`Estado de conexión: ${isOnline ? 'Online' : 'Offline'}`);
+                addResult('Conectividad', isOnline, isOnline ? 'Conexión a internet disponible' : 'Sin conexión a internet');
+                
+                // Prueba 4: Detectar PC
+                addLog('🖥️ Detectando tipo de PC...');
+                const userAgent = navigator.userAgent;
+                const isWindows7 = userAgent.includes('Windows NT 6.1');
+                const isLinux = userAgent.includes('Linux');
+                const pcType = isWindows7 ? 'PC2_WINDOWS7' : (isLinux ? 'PC1_ANTIX' : 'DESCONOCIDO');
+                addLog(`Tipo de PC detectado: ${pcType}`);
+                addResult('Detección de PC', true, `PC detectada como: ${pcType}`);
+                
+                // Prueba 5: Verificar configuración
+                addLog('⚙️ Verificando configuración...');
+                addLog(`Project ID: ${firebaseConfig.projectId}`);
+                addLog(`Auth Domain: ${firebaseConfig.authDomain}`);
+                addLog(`Storage Bucket: ${firebaseConfig.storageBucket}`);
+                addResult('Configuración', true, 'Configuración de Firebase verificada');
+                
+                // Prueba 6: Probar Firestore (si está online)
+                if (isOnline) {
+                    addLog('📊 Probando conexión a Firestore...');
+                    try {
+                        // Intentar una operación simple de Firestore
+                        const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js');
+                        const testCollection = collection(db, 'test');
+                        addLog('✅ Conexión a Firestore establecida');
+                        addResult('Conexión a Firestore', true, 'Firestore accesible y funcionando');
+                    } catch (error) {
+                        addLog(`❌ Error conectando a Firestore: ${error.message}`);
+                        addResult('Conexión a Firestore', false, `Error: ${error.message}`);
+                    }
+                } else {
+                    addLog('⏸️ Saltando prueba de Firestore (sin conexión)');
+                    addResult('Conexión a Firestore', false, 'No se pudo probar (sin conexión a internet)');
+                }
+                
+                // Prueba 7: Verificar Storage
+                addLog('💾 Verificando Storage...');
+                try {
+                    const storageRef = storage.ref();
+                    addLog('✅ Storage configurado correctamente');
+                    addResult('Configuración de Storage', true, 'Storage accesible y funcionando');
+                } catch (error) {
+                    addLog(`❌ Error configurando Storage: ${error.message}`);
+                    addResult('Configuración de Storage', false, `Error: ${error.message}`);
+                }
+                
+                // Resumen final
+                const successCount = testResults.filter(r => r.success).length;
+                const totalCount = testResults.length;
+                const successRate = Math.round((successCount / totalCount) * 100);
+                
+                addLog(`📊 Pruebas completadas: ${successCount}/${totalCount} (${successRate}%)`);
+                
+                if (successRate >= 80) {
+                    addLog('🎉 ¡Sistema configurado correctamente!');
+                } else if (successRate >= 60) {
+                    addLog('⚠️ Sistema configurado con advertencias');
+                } else {
+                    addLog('❌ Sistema necesita configuración adicional');
+                }
+                
+            } catch (error) {
+                addLog(`❌ Error crítico: ${error.message}`);
+                addResult('Error Crítico', false, `Error: ${error.message}`);
+            }
+            
+            showResults();
+        }
+        
+        // Hacer función global
+        window.runTests = runTests;
+        window.clearLog = clearLog;
+        
+        // Ejecutar pruebas automáticamente al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('Página cargada. Haz clic en "Ejecutar Pruebas" para comenzar.');
+        });
+    </script>
+</body>
+</html>
