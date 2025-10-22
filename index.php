@@ -751,5 +751,11 @@ $rol = $_SESSION['rol'];
   <script src="JS/modal-lavado.js"></script>
   <script src="JS/modal-modificar-ticket.js"></script>
   <script src="JS/emergencia-tuu.js"></script>
+
+  <!-- 🔄 INTEGRACIÓN TUU + FIREBASE -->
+  <?php
+  // Incluir integración TUU + Firebase
+  include_once 'SISTEMA-HIBRIDO/COMPARTIDOS/integrate-tuu-firebase.php';
+  ?>
 </body>
 </html>
