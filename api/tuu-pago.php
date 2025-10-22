@@ -454,11 +454,15 @@ try {
                            fecha_intento_tuu = NOW()
                            WHERE idautos_estacionados = ?";
     $stmt_update = $conexion->prepare($sql_update_ingreso);
-    $stmt_update->bind_param("sdi", $transactionId, $total, $id_ingreso);
-    $stmt_update->execute();
-    $stmt_update->close();
-    
-    error_log("TUU - Transaction ID guardado: $transactionId para patente $patente, total: $total");
+    if ($stmt_update) {
+        $stmt_update->bind_param("sdi", $transactionId, $total, $id_ingreso);
+        $stmt_update->execute();
+        $stmt_update->close();
+        
+        error_log("TUU - Transaction ID guardado: $transactionId para patente $patente, total: $total");
+    } else {
+        error_log("TUU - Error preparando consulta UPDATE: " . $conexion->error);
+    }
 } catch (Exception $e) {
     error_log("TUU - Error guardando transaction_id: " . $e->getMessage());
     // Continuar con el procesamiento aunque falle el guardado
