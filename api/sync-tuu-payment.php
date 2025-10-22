@@ -28,12 +28,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 try {
+    // Habilitar logging de errores
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+    
     // Obtener datos del POST
     $input = json_decode(file_get_contents('php://input'), true);
     
     if (!$input) {
         throw new Exception('Datos de pago no proporcionados');
     }
+    
+    // Log de entrada
+    error_log('TUU Sync - Datos recibidos: ' . json_encode($input));
     
     // Validar datos requeridos
     $requiredFields = ['transaction_id', 'patente', 'precio'];
@@ -90,8 +97,8 @@ try {
     $conn->begin_transaction();
     
     try {
-        // 1. Insertar registro de salida
-        $sql_salida = "INSERT INTO salidas (
+        // 1. Insertar registro de salida (usar INSERT IGNORE para evitar conflictos)
+        $sql_salida = "INSERT IGNORE INTO salidas (
             id_ingresos, 
             fecha_salida, 
             total, 
@@ -104,7 +111,7 @@ try {
         ) VALUES (?, NOW(), ?, 'TUU', 'tuu', ?, ?, ?, ?)";
         
         $stmt_salida = $conn->prepare($sql_salida);
-        $stmt_salida->bind_param('idsssss', 
+        $stmt_salida->bind_param('idssss', 
             $id_ingreso, 
             $precio, 
             $transaction_id, 
