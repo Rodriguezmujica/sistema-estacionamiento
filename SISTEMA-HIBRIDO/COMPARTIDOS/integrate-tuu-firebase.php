@@ -65,52 +65,25 @@ $firebasePath = $basePath . '/SISTEMA-HIBRIDO/COMPARTIDOS';
         background-color: #f8d7da;
     }
     
-    .tuu-firebase-status {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        z-index: 9999;
-        padding: 10px;
-        border-radius: 5px;
-        font-size: 12px;
-        font-weight: bold;
-    }
-    
-    .tuu-firebase-status.online {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-    
-    .tuu-firebase-status.offline {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
+    /* CSS del toast eliminado - ahora solo se usa el cuadro de estadísticas */
 </style>
 
-<!-- 🔄 INDICADOR DE ESTADO -->
-<div id="tuu-firebase-status" class="tuu-firebase-status" style="display: none;">
-    <span id="tuu-status-text">Verificando...</span>
-</div>
+<!-- 🔄 INDICADOR DE ESTADO ELIMINADO - Ahora está en el cuadro de estadísticas -->
 
 <script>
-    // Mostrar indicador de estado
+    // Función para actualizar el estado en el cuadro de estadísticas
     function updateTUUStatus() {
         const statusElement = document.getElementById('tuu-firebase-status');
-        const textElement = document.getElementById('tuu-status-text');
         
-        if (window.tuuFirebaseIntegration) {
+        if (window.tuuFirebaseIntegration && statusElement) {
             const status = window.tuuFirebaseIntegration.getIntegrationStatus();
             
             if (status.initialized) {
-                statusElement.style.display = 'block';
-                statusElement.className = 'tuu-firebase-status online';
-                textElement.textContent = 'TUU + Firebase: Conectado';
+                statusElement.textContent = 'Conectado';
+                statusElement.className = 'mb-1 text-success';
             } else {
-                statusElement.style.display = 'block';
-                statusElement.className = 'tuu-firebase-status offline';
-                textElement.textContent = 'TUU + Firebase: Desconectado';
+                statusElement.textContent = 'Desconectado';
+                statusElement.className = 'mb-1 text-danger';
             }
         }
     }
