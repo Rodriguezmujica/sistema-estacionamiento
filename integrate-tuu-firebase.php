@@ -89,17 +89,14 @@ $firebasePath = $basePath . '/SISTEMA-HIBRIDO/COMPARTIDOS';
     }
 </style>
 
-<!-- 🔄 INDICADOR DE ESTADO -->
-<div id="tuu-firebase-status" class="tuu-firebase-status" style="display: none;">
-    <span id="tuu-status-text">Verificando...</span>
-</div>
+<!-- 🔄 INDICADOR DE ESTADO ELIMINADO - Ahora está en el cuadro de estadísticas -->
 
 <script>
-    // Mostrar indicador de estado
+    // Función para actualizar el estado en el cuadro de estadísticas
     function updateTUUStatus() {
         const statusElement = document.getElementById('tuu-firebase-status');
         
-        if (window.tuuFirebaseIntegration) {
+        if (window.tuuFirebaseIntegration && statusElement) {
             const status = window.tuuFirebaseIntegration.getIntegrationStatus();
             
             if (status.initialized) {
