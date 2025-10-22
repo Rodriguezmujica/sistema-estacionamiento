@@ -232,7 +232,6 @@ class TUUFirebaseIntegrationComplete {
       initialized: this.isInitialized,
       systemInfo: this.systemInfo,
       tuuSyncStatus: window.tuuFirebaseSync?.getSyncStatus(),
-      tuuIntegrationStatus: window.tuuFirebaseIntegration?.getIntegrationStatus(),
       tuuInterceptorStatus: window.tuuPaymentInterceptor?.getInterceptorStatus(),
       timestamp: new Date()
     };
