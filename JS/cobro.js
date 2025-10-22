@@ -410,6 +410,11 @@ document.addEventListener('DOMContentLoaded', () => {
         await finalizarCobroExitoso(metodo, totalFinal, dataPago);
       } else {
         // Para TUU, verificar si es un error de conexión o pago pendiente
+        console.log('🔍 Debug TUU - dataPago completo:', dataPago);
+        console.log('🔍 Debug TUU - dataPago.status:', dataPago.status);
+        console.log('🔍 Debug TUU - dataPago.details?.status:', dataPago.details?.status);
+        console.log('🔍 Debug TUU - dataPago.red_local:', dataPago.red_local);
+        
         if (metodo === 'TUU' && (dataPago.status === 'pending' || dataPago.details?.status === 'pending' || dataPago.red_local)) {
           // Obtener el transaction_id correcto
           const tuuTransactionId = dataPago.transaction_id || dataPago.details?.transaction_id;
