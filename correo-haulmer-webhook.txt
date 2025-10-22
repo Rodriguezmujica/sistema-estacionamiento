@@ -1,0 +1,70 @@
+ASUNTO: Configuración de Webhook TUU - Sistema de Estacionamiento Los Ríos
+
+Estimado equipo de Haulmer,
+
+Espero se encuentren bien. Me pongo en contacto con ustedes para solicitar la configuración del webhook de TUU para nuestro sistema de estacionamiento.
+
+INFORMACIÓN DEL COMERCIO:
+• Nombre: INVERSIONES ROSNER
+• RUT: [Tu RUT empresarial]
+• Dirección: [Tu dirección comercial]
+• Teléfono: [Tu teléfono de contacto]
+• Email: [Tu email de contacto]
+• Actividad: Estacionamiento y Servicios de Lavado
+• Proyecto ID TUU: 5bd29bb6-d922-4eac-ae36-37635b0b8cd9
+
+OBJETIVO:
+Necesitamos configurar el webhook de TUU para nuestro sistema de estacionamiento híbrido que opera en red local. Como no disponemos de dominio público, proponemos utilizar Firebase como intermediario para recibir las notificaciones de pagos.
+
+CONFIGURACIÓN TÉCNICA SOLICITADA:
+URL del Webhook: https://sistemaestacionamiento-46735-default-rtdb.firebaseio.com/tuu_webhook_notifications
+Método HTTP: POST
+Content-Type: application/json
+Autenticación: Ninguna (pública)
+Notificaciones requeridas: success, failed, pending
+
+FORMATO DE DATOS ESPERADO:
+{
+    "transaction_id": "EST-123456-1234567890",
+    "status": "success",
+    "amount": 2000,
+    "patente": "ABC123",
+    "fecha_pago": "2025-10-22 15:30:00",
+    "timestamp": 1761145835,
+    "comercio_id": "5bd29bb6-d922-4eac-ae36-37635b0b8cd9"
+}
+
+ARQUITECTURA DEL SISTEMA:
+• Sistema Híbrido: Opera entre PC1 (Antix) y PC2 (Windows 7)
+• Base de Datos: MySQL local sincronizada con Firebase
+• Firebase: Intermediario para notificaciones en tiempo real
+• Integración: TUU → Firebase → Sistema Local
+
+BENEFICIOS DE LA INTEGRACIÓN:
+• Confirmación automática de pagos exitosos
+• Notificación inmediata de pagos fallidos
+• Sincronización en tiempo real entre ambas PC
+• Eliminación de confirmación manual de pagos
+• Mayor precisión en la conciliación de caja
+
+NOTA IMPORTANTE:
+Nuestro sistema opera en red local sin dominio público, por lo que Firebase actúa como puente de comunicación. La URL proporcionada es estable y está configurada para recibir notificaciones 24/7.
+
+DATOS DE CONTACTO:
+• Email: [tu-email@ejemplo.com]
+• Teléfono: [tu-teléfono]
+• Horario de atención: Lunes a Viernes, 8:00 - 18:00
+
+Agradecemos de antemano su colaboración y esperamos su pronta respuesta para poder implementar esta funcionalidad que mejorará significativamente la operación de nuestro negocio.
+
+Quedamos atentos a sus comentarios y requerimientos adicionales.
+
+Saludos cordiales,
+
+[Tu nombre]
+Sistema de Estacionamiento Los Ríos
+[Tu teléfono]
+[Tu email]
+
+---
+Fecha: 22 de Octubre de 2025

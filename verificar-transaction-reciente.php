@@ -21,7 +21,7 @@ try {
     echo "   URL: $url\n\n";
     
     $headers = [
-        'X-API-Key: uIAwXISF5Amug0O7QA16r72a07x10n6jdu4LNzjos3cdz736bGkHf7gM84bQ5CMsaeav0YSy8Y0qOlTdQy5pORoDE82m55HVDLybJFIuCKEwFeogRIBidkUU6nl6ux',
+        'X-API-Key: getenv('TUU_API_KEY') ?: 'TU_API_KEY_AQUI'',
         'accept: application/json'
     ];
     

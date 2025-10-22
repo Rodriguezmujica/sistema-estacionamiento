@@ -43,6 +43,9 @@ $firebasePath = $basePath . '/SISTEMA-HIBRIDO/COMPARTIDOS';
 <script type="module" src="<?php echo $firebasePath; ?>/tuu-firebase-integration.js"></script>
 <script type="module" src="<?php echo $firebasePath; ?>/tuu-payment-interceptor.js"></script>
 
+<!-- 🔄 FIREBASE TUU LISTENER -->
+<script src="JS/firebase-tuu-listener.js"></script>
+
 <!-- 🔄 ESTILOS CSS -->
 <style>
     .payment-pending {

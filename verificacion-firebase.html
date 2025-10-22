@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ Verificación Rápida Firebase</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="h3 text-primary mb-4">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Verificación Rápida Firebase
+                </h1>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Esta página verifica que las optimizaciones de Firebase estén funcionando correctamente.
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-fire me-2"></i>Estado del Optimizador Firebase
+                        </h5>
+                        <div id="status-result">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            Verificando...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-sync me-2"></i>Estado de la Sincronización
+                        </h5>
+                        <div id="sync-result">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            Verificando...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-bar me-2"></i>Estadísticas de Uso
+                        </h5>
+                        <div id="stats-result">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            Cargando estadísticas...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <a href="firebase-monitor.html" class="btn btn-primary me-2" target="_blank">
+                    <i class="fas fa-fire me-1"></i> Monitor Completo
+                </a>
+                <a href="index.php" class="btn btn-success me-2">
+                    <i class="fas fa-home me-1"></i> Dashboard Principal
+                </a>
+                <button class="btn btn-info" onclick="location.reload()">
+                    <i class="fas fa-redo me-1"></i> Reiniciar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="JS/firebase-optimizer-simple.js"></script>
+    <script src="JS/firebase-sync-simple.js"></script>
+    
+    <script>
+        function verificarOptimizador() {
+            const result = document.getElementById('status-result');
+            
+            try {
+                if (window.FirebaseOptimizer) {
+                    result.innerHTML = '<i class="fas fa-check text-success me-2"></i>Optimizador Firebase funcionando correctamente';
+                } else {
+                    throw new Error('Optimizador no encontrado');
+                }
+            } catch (error) {
+                result.innerHTML = `<i class="fas fa-times text-danger me-2"></i>Error: ${error.message}`;
+            }
+        }
+
+        function verificarSincronizacion() {
+            const result = document.getElementById('sync-result');
+            
+            try {
+                if (window.firebaseSync) {
+                    const stats = window.firebaseSync.getSyncStats();
+                    result.innerHTML = `
+                        <i class="fas fa-check text-success me-2"></i>
+                        Sincronización funcionando - Cola: ${stats.queue.pending}, Intervalo: ${stats.syncInterval/1000}s
+                    `;
+                } else {
+                    throw new Error('Sincronización no encontrada');
+                }
+            } catch (error) {
+                result.innerHTML = `<i class="fas fa-times text-danger me-2"></i>Error: ${error.message}`;
+            }
+        }
+
+        function mostrarEstadisticas() {
+            const result = document.getElementById('stats-result');
+            
+            try {
+                if (window.FirebaseOptimizer) {
+                    const stats = window.FirebaseOptimizer.getUsageStats();
+                    result.innerHTML = `
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>Lecturas:</strong> ${stats.reads.current} / ${stats.reads.limit}<br>
+                                <small class="text-muted">Uso: ${stats.reads.usage}</small>
+                            </div>
+                            <div class="col-6">
+                                <strong>Escrituras:</strong> ${stats.writes.current} / ${stats.writes.limit}<br>
+                                <small class="text-muted">Uso: ${stats.writes.usage}</small>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <span class="badge ${stats.status === 'ok' ? 'bg-success' : stats.status === 'warning' ? 'bg-warning' : 'bg-danger'}">
+                                Estado: ${stats.status.toUpperCase()}
+                            </span>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Estadísticas no disponibles');
+                }
+            } catch (error) {
+                result.innerHTML = `<i class="fas fa-times text-danger me-2"></i>Error: ${error.message}`;
+            }
+        }
+
+        // Ejecutar verificaciones al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                verificarOptimizador();
+                verificarSincronizacion();
+                mostrarEstadisticas();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -60,7 +60,7 @@ if ($action === 'check_status') {
     // Definir constantes TUU necesarias
     if (!defined('TUU_API_URL_GET')) {
         define('TUU_API_URL_GET', 'https://integrations.payment.haulmer.com/RemotePayment/v2/Get/');
-        define('TUU_API_KEY', 'uIAwXISF5Amug0O7QA16r72a07x10n6jdu4LNzjos3cdz736bGkHf7gM84bQ5CMsaeav0YSy8Y0qOlTdQy5pORoDE82m55HVDLybJFIuCKEwFeogRIBidkUU6nl6ux');
+        define('TUU_API_KEY', 'getenv('TUU_API_KEY') ?: 'TU_API_KEY_AQUI'');
     }
     
     // Función para consultar estado en TUU

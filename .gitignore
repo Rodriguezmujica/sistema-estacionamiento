@@ -32,10 +32,16 @@ Thumbs.db
 
 # Archivos de configuración privada
 config.private.php
+config-sensible.php
 config_seguridad.php
 .env
 *.secret
 *.private
+
+# Archivos con API Keys expuestas (NUNCA SUBIR)
+verificar-transaction-real.php
+*api-key*
+*secret*
 
 # Documentación de accesos (contiene credenciales)
 ACCESOS.private.md

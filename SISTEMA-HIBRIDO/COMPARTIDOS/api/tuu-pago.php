@@ -35,7 +35,7 @@ header('Content-Type: application/json');
 // Configuración según documentación oficial: https://developers.tuu.cl/docs/pago-remoto
 define('TUU_API_URL_CREATE', 'https://integrations.payment.haulmer.com/RemotePayment/v2/Create'); // URL para crear el pago
 define('TUU_API_URL_GET', 'https://integrations.payment.haulmer.com/RemotePayment/v2/Get/'); // URL para consultar estado (termina en /)
-define('TUU_API_KEY', 'uIAwXISF5Amug0O7QA16r72a07x10n6jdu4LNzjos3cdz736bGkHf7gM84bQ5CMsaeav0YSy8Y0qOlTdQy5pORoDE82m55HVDLybJFIuCKEwFeogRIBidkUU6nl6ux'); // API Key desde Espacio de Trabajo
+define('TUU_API_KEY', 'getenv('TUU_API_KEY') ?: 'TU_API_KEY_AQUI''); // API Key desde Espacio de Trabajo
 define('TUU_TIMEOUT', 90); // Timeout de 90 segundos para dar tiempo al cliente a pagar
 define('TUU_MODO_PRUEBA', false); // ✅ MODO PRODUCCIÓN ACTIVADO
 

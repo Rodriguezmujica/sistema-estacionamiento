@@ -11,7 +11,8 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/conexion.php';
 
 // Configuración TUU
-const TUU_API_KEY = 'uIAwXISF5Amug0O7QA16r72a07x10n6jdu4LNzjos3cdz736bGkHf7gM84bQ5CMsaeav0YSy8Y0qOlTdQy5pORoDE82m55HVDLybJFIuCKEwFeogRIBidkUU6nl6ux';
+// Cargar configuración sensible
+require_once __DIR__ . '/../config-sensible.php';
 const TUU_API_BASE = 'https://integrations.payment.haulmer.com/RemotePayment/v2';
 
 try {

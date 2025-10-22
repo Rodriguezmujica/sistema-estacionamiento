@@ -1,0 +1,47 @@
+================================================================================
+                    SISTEMA DE ESTACIONAMIENTO - LOS RÍOS
+                        INSTRUCCIONES DE USO
+================================================================================
+
+🔌 ENCENDIDO DEL SISTEMA
+================================================================================
+
+1. Presionar el botón de encendido de la computadora
+2. Esperar a que el sistema inicie completamente
+
+🔑 ACCESO AL SISTEMA
+================================================================================
+
+USUARIO: ServidorLosRios
+PRESIONAR: ENTER
+CONTRASEÑA: losrios733
+
+3. Hacer clic en el icono del navegador web
+4. El sistema se abrirá automáticamente en la página de login
+
+⚠️ SOLUCIÓN DE PROBLEMAS
+================================================================================
+
+Si NO se conecta a Internet o el sistema no responde:
+
+🚨 PROCEDIMIENTO DE EMERGENCIA
+================================================================================
+
+1. APAGAR completamente el sistema
+2. ESPERAR 10 segundos
+3. ENCENDER nuevamente el sistema
+
+NUNCA usar "Reiniciar" - siempre apagar y encender
+
+📋 INFORMACIÓN IMPORTANTE
+================================================================================
+
+• Usuario: ServidorLosRios
+• Contraseña: losrios733
+• Procedimiento de emergencia: Apagar y encender (nunca reiniciar)
+• Tiempo de espera: 10 segundos entre apagado y encendido
+
+================================================================================
+                    Sistema de Estacionamiento - Los Ríos
+                    Documento para imprimir y plastificar
+================================================================================

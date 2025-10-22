@@ -1,0 +1,299 @@
+================================================================================
+                    PRESUPUESTO ACTUALIZADO
+                SISTEMA DE ESTACIONAMIENTO LOS RÍOS
+================================================================================
+
+CLIENTE: Estacionamiento Los Ríos
+DESARROLLADOR: Luis Miguel Rodriguez
+FECHA: 22/10/2025
+DURACIÓN: 3 de octubre - 22 de octubre, 2025 (20 días)
+
+================================================================================
+                            RESUMEN EJECUTIVO
+================================================================================
+
+SISTEMA HÍBRIDO COMPLETO DESARROLLADO:
+• Sistema Híbrido PC1/PC2 con sincronización en tiempo real
+• Integración Firebase completa (Firestore, Storage, FCM)
+• Gestión completa de ingresos/salidas y servicios de lavado
+• Integración TUU con confirmación manual de pagos
+• Sistema de impresión térmica local y remota
+• Acceso remoto seguro con HTTPS y DuckDNS
+• Notificaciones push automáticas
+• Backup automático y sistema de respaldo
+
+================================================================================
+                    ANÁLISIS DEL SISTEMA DESARROLLADO
+================================================================================
+
+ARCHIVOS DEL PROYECTO:
+✓ 150+ archivos PHP - Backend, APIs y sistema híbrido
+✓ 25+ archivos JavaScript - Frontend, Firebase, sincronización
+✓ 20+ archivos HTML - Interfaces de usuario y documentación
+✓ 70+ archivos de documentación - Guías completas
+✓ TOTAL: 265+ archivos de código fuente y documentación
+
+MÓDULOS PRINCIPALES IMPLEMENTADOS:
+
+1. SISTEMA DE GESTIÓN DE ESTACIONAMIENTO (Complejidad: Alta)
+   - Registro de ingresos y salidas de vehículos
+   - Cálculo automático de tarifas por tiempo
+   - Gestión de diferentes tipos de servicios
+   - Validación de patentes y datos
+
+2. SISTEMA DE COBROS Y PAGOS (Complejidad: Alta)
+   - Integración completa con terminal TUU
+   - Múltiples métodos de pago (efectivo, débito, crédito)
+   - Pago manual como respaldo
+   - Gestión de transacciones y vouchers
+
+3. SISTEMA DE IMPRESIÓN TÉRMICA (Complejidad: Alta)
+   - Impresión automática de tickets de ingreso
+   - Impresión de tickets de salida con cobro
+   - Impresión de tickets de lavado
+   - Cierre de caja automatizado
+   - Compatibilidad Windows 7/10+
+
+4. SISTEMA DE SERVICIOS DE LAVADO (Complejidad: Media-Alta)
+   - Gestión completa de servicios de lavado
+   - Diferentes tipos de servicios y precios
+   - Historial de servicios por vehículo
+   - Reactivación de servicios
+
+5. SISTEMA DE REPORTES Y DASHBOARD (Complejidad: Alta)
+   - Dashboard en tiempo real
+   - Reportes diarios, mensuales y anuales
+   - Cierre de caja detallado
+   - Resumen ejecutivo
+   - Reportes unificados
+
+6. SISTEMA DE CLIENTES MENSUALES (Complejidad: Media)
+   - Gestión de clientes con membresías
+   - Control de abonos y vencimientos
+   - Descuentos automáticos
+
+7. ACCESO REMOTO Y SEGURIDAD (Complejidad: Alta)
+   - Configuración HTTPS con Let's Encrypt
+   - Acceso VPN seguro con Tailscale
+   - Sistema de autenticación y roles
+   - Acceso remoto privado y seguro
+
+8. SISTEMA HÍBRIDO PC1/PC2 (Complejidad: Muy Alta)
+   - Sincronización bidireccional en tiempo real
+   - Detección automática de PC (Antix vs Windows 7)
+   - Cola de sincronización para modo offline
+   - Manejo de conflictos de datos
+   - Sistema de respaldo automático
+
+9. INTEGRACIÓN FIREBASE COMPLETA (Complejidad: Alta)
+   - Firebase Firestore para datos en tiempo real
+   - Firebase Storage para archivos
+   - Firebase Cloud Messaging (FCM)
+   - Service Workers para notificaciones
+   - Reglas de seguridad configuradas
+
+10. ADMINISTRACIÓN DEL SISTEMA (Complejidad: Media)
+    - Panel de administración completo
+    - Configuración de precios
+    - Gestión de usuarios
+    - Configuración de TUU
+    - Dashboard híbrido con estadísticas
+
+================================================================================
+                    DESGLOSE DE HORAS REALES POR MÓDULO
+================================================================================
+
+CRONOGRAMA REAL DE TRABAJO (20 días):
+• Días laborables: ~15 días × 2.5 horas = 37.5 horas
+• Fines de semana: ~5 días × 8 horas promedio = 40 horas
+• Horas adicionales debugging y Firebase: 12.5 horas
+• TOTAL HORAS REALES: 90 horas
+
+DISTRIBUCIÓN DE HORAS POR ACTIVIDAD:
+
+DESARROLLO BACKEND (PHP - APIs y Lógica) - 35 horas
+┌─────────────────────────────────┬─────────┬─────────────────────────────────┐
+│ Módulo                          │ Horas   │ Descripción                     │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Gestión Estacionamiento         │ 8h      │ APIs de ingreso/salida,         │
+│                                 │         │ cálculos de tarifas             │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Sistema de Pagos TUU            │ 8h      │ Integración terminal,           │
+│                                 │         │ manejo transacciones            │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Sistema Híbrido PC1/PC2         │ 10h     │ APIs sincronización,            │
+│                                 │         │ detección PC                    │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Firebase Integration            │ 5h      │ APIs Firebase, Firestore,       │
+│                                 │         │ Storage                         │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Impresión Térmica               │ 4h      │ APIs de impresión,              │
+│                                 │         │ configuración hardware          │
+└─────────────────────────────────┴─────────┴─────────────────────────────────┘
+
+DESARROLLO FRONTEND (JavaScript + HTML) - 30 horas
+┌─────────────────────────────────┬─────────┬─────────────────────────────────┐
+│ Módulo                          │ Horas   │ Descripción                     │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Interfaz Principal              │ 8h      │ Dashboard híbrido, navegación,  │
+│                                 │         │ responsive                      │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Sistema Híbrido JS              │ 8h      │ Sincronización, detección PC,  │
+│                                 │         │ colas                           │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Firebase Frontend               │ 6h      │ FCM, Service Workers,           │
+│                                 │         │ notificaciones                  │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Gestión de Cobros               │ 4h      │ Interfaz cobros, integración    │
+│                                 │         │ TUU                             │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Sistema de Lavados              │ 4h      │ Interfaz lavados, modalidades   │
+└─────────────────────────────────┴─────────┴─────────────────────────────────┘
+
+CONFIGURACIÓN Y DEBUGGING - 25 horas
+┌─────────────────────────────────┬─────────┬─────────────────────────────────┐
+│ Módulo                          │ Horas   │ Descripción                     │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Firebase Setup                  │ 8h      │ Configuración Firestore,        │
+│                                 │         │ Storage, FCM                    │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Base de Datos                   │ 4h      │ Setup inicial, scripts SQL,     │
+│                                 │         │ columnas TUU                    │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Configuración Servidor          │ 4h      │ Apache, PHP, permisos, HTTPS    │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Acceso Remoto                   │ 4h      │ DuckDNS, Let's Encrypt,         │
+│                                 │         │ configuración                   │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Configuración Impresora         │ 3h      │ Drivers, servicios, impresión   │
+│                                 │         │ local                           │
+├─────────────────────────────────┼─────────┼─────────────────────────────────┤
+│ Debugging y Testing             │ 2h      │ Pruebas funcionales,            │
+│                                 │         │ correcciones                    │
+└─────────────────────────────────┴─────────┴─────────────────────────────────┘
+
+================================================================================
+                            CÁLCULO FINAL
+================================================================================
+
+DESGLOSE DE HORAS:
+• Desarrollo Backend: 35h
+• Desarrollo Frontend: 30h
+• Configuración y Debugging: 25h
+• TOTAL HORAS REALES: 90h
+
+CÁLCULO DEL COSTO:
+• Tarifa por hora: $6 USD (Tarifa especial primer proyecto)
+• Total horas reales: 90 horas
+• TOTAL DEL PROYECTO: $540 USD
+
+================================================================================
+                        VALOR AGREGADO INCLUIDO
+================================================================================
+
+SIN COSTO ADICIONAL SE INCLUYE:
+✓ 150+ archivos PHP completamente funcionales
+✓ Sistema híbrido PC1/PC2 con sincronización en tiempo real
+✓ Integración Firebase completa (Firestore, Storage, FCM)
+✓ Documentación completa (70+ archivos de documentación)
+✓ Guías de instalación paso a paso para ambas PC
+✓ Sistema de respaldo automático y sincronización
+✓ Notificaciones push automáticas
+✓ Soporte técnico inicial para puesta en marcha
+✓ Configuración de seguridad (HTTPS, autenticación, Firebase)
+
+================================================================================
+                        ENTREGABLES DEL PROYECTO
+================================================================================
+
+CÓDIGO FUENTE:
+✓ Sistema híbrido completo funcional
+✓ 265+ archivos de código y documentación
+✓ Base de datos configurada con columnas TUU
+✓ Scripts de instalación para PC1 y PC2
+✓ Sistema de sincronización Firebase
+
+DOCUMENTACIÓN:
+✓ Manual de usuario completo
+✓ Guías de instalación para ambas PC
+✓ Documentación técnica del sistema híbrido
+✓ Guías de configuración Firebase
+✓ Procedimientos de emergencia y respaldo
+
+CONFIGURACIÓN:
+✓ Servidor PC1 (Antix) configurado
+✓ Estación PC2 (Windows 7) configurada
+✓ Acceso remoto funcionando con HTTPS
+✓ Impresoras configuradas localmente
+✓ Terminal TUU integrado con confirmación manual
+✓ Firebase configurado y funcionando
+
+================================================================================
+                        BENEFICIOS DEL SISTEMA
+================================================================================
+
+PARA EL NEGOCIO:
+✓ Sistema híbrido con redundancia total (PC1 + PC2)
+✓ Sincronización en tiempo real entre ambas PC
+✓ Control de ingresos en tiempo real desde cualquier PC
+✓ Reducción de errores humanos en cobros
+✓ Acceso remoto VPN para supervisión segura
+✓ Notificaciones automáticas de eventos importantes
+✓ Reportes detallados para toma de decisiones
+✓ Funcionamiento offline con sincronización posterior
+
+TÉCNICOS:
+✓ Arquitectura híbrida robusta y escalable
+✓ Firebase integrado para sincronización en la nube
+✓ Interfaz moderna y responsive
+✓ Seguridad implementada (HTTPS, VPN Tailscale, autenticación, Firebase)
+✓ Backup automático y sincronización de datos
+✓ Soporte multiplataforma (Antix Linux, Windows 7+)
+✓ Notificaciones push automáticas
+
+================================================================================
+                        GARANTÍA INCLUIDA
+================================================================================
+
+🛡️ 4 MESES DE SOPORTE TÉCNICO SIN COSTO ADICIONAL:
+✓ Corrección de bugs encontrados durante el período de garantía
+✓ Dos sesiones de capacitación incluidas (una por PC)
+✓ Soporte para configuración del sistema híbrido
+✓ Actualizaciones menores durante el período de garantía
+
+================================================================================
+                        PRÓXIMOS PASOS
+================================================================================
+
+1. REVISIÓN del presupuesto actualizado y aprobación
+2. FIRMA del acuerdo de desarrollo con garantía de 4 meses
+3. ENTREGA del sistema híbrido completo (PC1 + PC2)
+4. CAPACITACIÓN del personal en ambas PC
+5. CONFIGURACIÓN del sistema híbrido y Firebase
+6. SOPORTE inicial de 4 meses incluido
+
+================================================================================
+                        RESUMEN FINANCIERO
+================================================================================
+
+┌─────────────────────────────────┬─────────────┐
+│ Concepto                        │ Valor       │
+├─────────────────────────────────┼─────────────┤
+│ Horas de trabajo                │ 90 horas    │
+│ Tarifa por hora                 │ $6 USD      │
+│ Subtotal                        │ $540 USD    │
+│ Garantía incluida               │ 4 meses     │
+│ Sesiones de capacitación        │ 2 incluidas │
+│ Soporte técnico                 │ 4 meses     │
+└─────────────────────────────────┴─────────────┘
+
+TOTAL FINAL: $540 USD
+
+================================================================================
+                    INVERSIÓN TOTAL DEL PROYECTO
+                            $540 USD
+================================================================================
+
+Desarrollado con dedicación y profesionalismo
+Sistema híbrido completo de gestión para Estacionamiento Los Ríos
+Luis Miguel Rodriguez - 22 de octubre, 2025

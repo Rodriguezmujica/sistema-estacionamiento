@@ -49,6 +49,11 @@ $rol = $_SESSION['rol'];
               <i class="fas fa-chart-bar"></i> Reportes
             </a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="./firebase-monitor.html" target="_blank">
+              <i class="fas fa-fire"></i> Monitor Firebase
+            </a>
+          </li>
           <?php if ($rol === 'admin'): ?>
           <li class="nav-item">
             <a class="nav-link text-warning fw-bold" href="./secciones/admin.php">
@@ -65,6 +70,9 @@ $rol = $_SESSION['rol'];
         </span>
         <span class="badge bg-info fs-6 me-3" id="badge-maquina-tuu" title="Máquina TUU activa">
           <i class="fas fa-desktop"></i> <span id="nombre-maquina-tuu">Cargando...</span>
+        </span>
+        <span class="badge bg-warning fs-6 me-3" id="badge-firebase-status" title="Estado Firebase">
+          <i class="fas fa-fire"></i> <span id="firebase-usage">Cargando...</span>
         </span>
         <span class="text-white me-3" id="fecha-hora"></span>
         <a href="./logout.php" class="btn btn-outline-light btn-sm">
@@ -780,6 +788,10 @@ $rol = $_SESSION['rol'];
   <script src="JS/modal-modificar-ticket.js"></script>
   <script src="JS/emergencia-tuu.js"></script>
 
+  <!-- 🔥 OPTIMIZADORES FIREBASE - Agregados para 2,189 servicios/mes -->
+  <script src="JS/firebase-optimizer-simple.js"></script>
+  <script src="JS/firebase-sync-simple.js"></script>
+
   <!-- 🔄 INTEGRACIÓN TUU + FIREBASE -->
   <?php
   // Incluir integración TUU + Firebase
@@ -946,6 +958,42 @@ $rol = $_SESSION['rol'];
       console.log('⚠️ FCM no soportado en este navegador');
       actualizarEstadoFCM('desconectado', 'No soportado');
     }
+
+    // 🔥 MONITOR FIREBASE - Actualizar indicador en tiempo real
+    function actualizarIndicadorFirebase() {
+      if (window.FirebaseOptimizer) {
+        const stats = window.FirebaseOptimizer.getUsageStats();
+        const firebaseUsage = document.getElementById('firebase-usage');
+        const badgeFirebase = document.getElementById('badge-firebase-status');
+        
+        if (firebaseUsage && badgeFirebase) {
+          // Mostrar el uso más alto (lecturas o escrituras)
+          const maxUsage = Math.max(
+            parseFloat(stats.reads.usage),
+            parseFloat(stats.writes.usage)
+          );
+          
+          firebaseUsage.textContent = `${maxUsage.toFixed(1)}%`;
+          
+          // Cambiar color según uso
+          if (maxUsage >= 95) {
+            badgeFirebase.className = 'badge bg-danger fs-6 me-3';
+          } else if (maxUsage >= 80) {
+            badgeFirebase.className = 'badge bg-warning fs-6 me-3';
+          } else if (maxUsage >= 50) {
+            badgeFirebase.className = 'badge bg-info fs-6 me-3';
+          } else {
+            badgeFirebase.className = 'badge bg-success fs-6 me-3';
+          }
+        }
+      }
+    }
+
+    // Actualizar indicador cada 30 segundos
+    setInterval(actualizarIndicadorFirebase, 30000);
+    
+    // Actualizar inmediatamente al cargar
+    setTimeout(actualizarIndicadorFirebase, 2000);
   </script>
 </body>
 </html>

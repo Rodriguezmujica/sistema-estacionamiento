@@ -40,19 +40,22 @@ export const systemConfig = {
   // Identificar qué PC es esta
   pcId: detectPC(),
   
-  // Configuración de sincronización
+  // Configuración de sincronización OPTIMIZADA
   sync: {
     enabled: true,
-    interval: 5000, // 5 segundos
-    retryAttempts: 3,
-    retryDelay: 2000 // 2 segundos
+    interval: 30000, // 30 segundos (optimizado para reducir operaciones)
+    retryAttempts: 2, // Menos reintentos
+    retryDelay: 5000, // 5 segundos
+    smartSync: true, // Solo sincronizar cambios
+    batchSize: 10 // Procesar en lotes
   },
   
-  // Configuración de conectividad
+  // Configuración de conectividad OPTIMIZADA
   connectivity: {
-    checkInterval: 10000, // 10 segundos
-    timeout: 5000, // 5 segundos
-    offlineThreshold: 30000 // 30 segundos
+    checkInterval: 30000, // 30 segundos (reducido para optimizar)
+    timeout: 10000, // 10 segundos
+    offlineThreshold: 60000, // 60 segundos
+    adaptiveInterval: true // Ajustar intervalo según actividad
   },
   
   // Configuración de impresión

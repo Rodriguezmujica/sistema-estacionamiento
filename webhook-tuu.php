@@ -1,168 +1,191 @@
 <?php
 /**
- * Webhook endpoint para recibir notificaciones de TUU cuando se completa un pago
- * Este archivo puede ser llamado por TUU para notificar cambios de estado
+ * Webhook TUU - Recibe notificaciones de pagos exitosos y fallidos
+ * Configurado manualmente por el equipo de Haulmer
  */
 
-error_reporting(E_ERROR | E_PARSE);
-ini_set('display_errors', '0');
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-require_once __DIR__ . '/conexion.php';
-
-// Configuración TUU
-if (!defined('TUU_API_URL_GET')) {
-    define('TUU_API_URL_GET', 'https://integrations.payment.haulmer.com/RemotePayment/v2/Get/');
-    define('TUU_API_KEY', 'uIAwXISF5Amug0O7QA16r72a07x10n6jdu4LNzjos3cdz736bGkHf7gM84bQ5CMsaeav0YSy8Y0qOlTdQy5pORoDE82m55HVDLybJFIuCKEwFeogRIBidkUU6nl6ux');
+// Manejar preflight requests
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    http_response_code(200);
+    exit();
 }
 
+// Solo aceptar POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['error' => 'Método no permitido']);
+    exit();
+}
+
+// Obtener datos del webhook
+$input = file_get_contents('php://input');
+$data = json_decode($input, true);
+
+// Log del webhook
+error_log("Webhook TUU recibido: " . $input);
+
+// Verificar que tenemos datos
+if (!$data) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Datos inválidos']);
+    exit();
+}
+
+// Extraer información del pago
+$transaction_id = $data['transaction_id'] ?? null;
+$status = $data['status'] ?? null;
+$amount = $data['amount'] ?? null;
+$patente = $data['patente'] ?? null;
+$fecha_pago = $data['fecha_pago'] ?? date('Y-m-d H:i:s');
+
+// Verificar datos requeridos
+if (!$transaction_id || !$status) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Faltan datos requeridos']);
+    exit();
+}
+
+// Conectar a la base de datos
+require_once 'conexion.php';
+
 try {
-    // Obtener datos del webhook (POST o GET)
-    $input = file_get_contents('php://input');
-    $webhookData = json_decode($input, true);
+    // Buscar el ticket por transaction_id_tuu
+    $stmt = $conn->prepare("
+        SELECT i.*, t.precio 
+        FROM ingresos i 
+        LEFT JOIN tickets t ON i.id = t.id_ingreso 
+        WHERE i.transaction_id_tuu = ?
+    ");
+    $stmt->bind_param("s", $transaction_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
     
-    // Si no hay datos JSON, intentar GET
-    if (!$webhookData) {
-        $webhookData = $_GET;
+    if ($result->num_rows === 0) {
+        // Ticket no encontrado
+        echo json_encode([
+            'success' => false,
+            'message' => 'Ticket no encontrado',
+            'transaction_id' => $transaction_id
+        ]);
+        exit();
     }
     
-    error_log("TUU WEBHOOK - Datos recibidos: " . json_encode($webhookData));
+    $ticket = $result->fetch_assoc();
     
-    // Validar que tenemos el transaction_id
-    $transactionId = $webhookData['transaction_id'] ?? $webhookData['id'] ?? null;
-    
-    if (!$transactionId) {
-        throw new Exception('No se recibió transaction_id en el webhook');
-    }
-    
-    // Verificar estado actual en TUU
-    $estadoTUU = consultarEstadoTUU($transactionId);
-    
-    if (!$estadoTUU) {
-        throw new Exception('No se pudo obtener estado de TUU');
-    }
-    
-    // Solo procesar si el pago se completó
-    if ($estadoTUU['status'] === 'Completed' || $estadoTUU['status'] === 'Paid') {
+    // Procesar según el estado
+    if ($status === 'success' || $status === 'approved') {
+        // Pago exitoso
+        $stmt_update = $conn->prepare("
+            UPDATE ingresos 
+            SET 
+                total_calculado_tuu = ?,
+                fecha_intento_tuu = ?,
+                estado = 'pagado'
+            WHERE transaction_id_tuu = ?
+        ");
+        $stmt_update->bind_param("dss", $amount, $fecha_pago, $transaction_id);
         
-        // Verificar si ya está registrado en nuestra BD
-        $sql_check = "SELECT id FROM salidas WHERE transaction_id = ? LIMIT 1";
-        $stmt_check = $conn->prepare($sql_check);
-        $stmt_check->bind_param('s', $transactionId);
-        $stmt_check->execute();
-        
-        if ($stmt_check->get_result()->num_rows > 0) {
-            // Ya está registrado, solo confirmar
-            echo json_encode(['success' => true, 'message' => 'Pago ya registrado']);
-            exit;
-        }
-        
-        // Extraer ID de ingreso del transaction_id (formato: EST-123-timestamp)
-        $partes = explode('-', $transactionId);
-        if (count($partes) >= 3 && is_numeric($partes[1])) {
-            $id_ingreso = intval($partes[1]);
+        if ($stmt_update->execute()) {
+            // Registrar salida
+            $stmt_salida = $conn->prepare("
+                INSERT INTO salidas (id_ingreso, fecha_salida, total_pagado, metodo_pago) 
+                VALUES (?, ?, ?, 'TUU')
+            ");
+            $stmt_salida->bind_param("isd", $ticket['id'], $fecha_pago, $amount);
+            $stmt_salida->execute();
             
-            // Obtener datos del ingreso
-            $sql_ingreso = "SELECT i.*, ti.nombre_servicio, ti.precio
-                           FROM ingresos i
-                           JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos 
-                           WHERE i.idautos_estacionados = ? AND i.salida = 0";
+            // Notificar a Firebase
+            require_once 'firebase-config.php';
             
-            $stmt_ingreso = $conn->prepare($sql_ingreso);
-            $stmt_ingreso->bind_param('i', $id_ingreso);
-            $stmt_ingreso->execute();
-            $result_ingreso = $stmt_ingreso->get_result();
+            $firebase_data = [
+                'type' => 'tuu_payment_confirmed',
+                'transaction_id' => $transaction_id,
+                'status' => 'success',
+                'amount' => $amount,
+                'patente' => $patente,
+                'timestamp' => time()
+            ];
             
-            if ($ingreso = $result_ingreso->fetch_assoc()) {
-                
-                // Registrar el pago
-                $conn->begin_transaction();
-                
-                $sql_salida = "INSERT INTO salidas (id_ingresos, fecha_salida, total, metodo_pago, tipo_pago, 
-                               transaction_id, authorization_code, card_type, card_last4) 
-                               VALUES (?, NOW(), ?, 'TUU', 'tuu', ?, ?, ?, ?)";
-                
-                $stmt_salida = $conn->prepare($sql_salida);
-                $total = floatval($ingreso['precio'] ?? 0);
-                $auth_code = $estadoTUU['paymentData']['authorizationCode'] ?? '';
-                $card_type = $estadoTUU['paymentData']['cardType'] ?? '';
-                $card_last4 = $estadoTUU['paymentData']['last4Digits'] ?? '';
-                
-                $stmt_salida->bind_param('idsssss', $id_ingreso, $total, $transactionId, 
-                                       $auth_code, $card_type, $card_last4);
-                
-                if ($stmt_salida->execute()) {
-                    
-                    // Actualizar ingreso como pagado
-                    $sql_update = "UPDATE ingresos SET salida = 1 WHERE idautos_estacionados = ?";
-                    $stmt_update = $conn->prepare($sql_update);
-                    $stmt_update->bind_param('i', $id_ingreso);
-                    $stmt_update->execute();
-                    
-                    $conn->commit();
-                    
-                    error_log("TUU WEBHOOK - Pago registrado exitosamente: $transactionId para patente {$ingreso['patente']}");
-                    
-                    echo json_encode([
-                        'success' => true,
-                        'message' => 'Pago registrado correctamente',
-                        'transaction_id' => $transactionId,
-                        'patente' => $ingreso['patente']
-                    ]);
-                } else {
-                    $conn->rollback();
-                    throw new Exception('Error al insertar en tabla salidas');
-                }
-            } else {
-                throw new Exception('No se encontró el ingreso o ya fue pagado');
-            }
+            // Enviar a Firebase
+            $firebase_ref = $database->getReference('notifications/' . uniqid());
+            $firebase_ref->set($firebase_data);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Pago confirmado exitosamente',
+                'transaction_id' => $transaction_id,
+                'status' => 'success'
+            ]);
         } else {
-            throw new Exception('Formato de transaction_id inválido');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error actualizando ticket',
+                'transaction_id' => $transaction_id
+            ]);
         }
         
+    } elseif ($status === 'failed' || $status === 'rejected') {
+        // Pago fallido
+        $stmt_update = $conn->prepare("
+            UPDATE ingresos 
+            SET 
+                fecha_intento_tuu = ?,
+                estado = 'pendiente'
+            WHERE transaction_id_tuu = ?
+        ");
+        $stmt_update->bind_param("ss", $fecha_pago, $transaction_id);
+        
+        if ($stmt_update->execute()) {
+            // Notificar a Firebase
+            require_once 'firebase-config.php';
+            
+            $firebase_data = [
+                'type' => 'tuu_payment_failed',
+                'transaction_id' => $transaction_id,
+                'status' => 'failed',
+                'amount' => $amount,
+                'patente' => $patente,
+                'timestamp' => time()
+            ];
+            
+            // Enviar a Firebase
+            $firebase_ref = $database->getReference('notifications/' . uniqid());
+            $firebase_ref->set($firebase_data);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Pago fallido registrado',
+                'transaction_id' => $transaction_id,
+                'status' => 'failed'
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error actualizando ticket',
+                'transaction_id' => $transaction_id
+            ]);
+        }
     } else {
-        // Pago no completado, solo log
-        error_log("TUU WEBHOOK - Pago no completado: $transactionId, estado: {$estadoTUU['status']}");
-        echo json_encode(['success' => true, 'message' => 'Estado actualizado, pago no completado aún']);
+        // Estado desconocido
+        echo json_encode([
+            'success' => false,
+            'message' => 'Estado desconocido: ' . $status,
+            'transaction_id' => $transaction_id
+        ]);
     }
     
 } catch (Exception $e) {
-    error_log("TUU WEBHOOK ERROR: " . $e->getMessage());
+    error_log("Error en webhook TUU: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-}
-
-function consultarEstadoTUU($transactionId) {
-    // Verificar que cURL esté disponible
-    if (!function_exists('curl_init')) {
-        error_log("TUU ERROR: Extensión cURL no disponible en webhook");
-        return null;
-    }
-    
-    $urlGet = TUU_API_URL_GET . $transactionId;
-    $ch = curl_init($urlGet);
-    
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 10,
-        CURLOPT_HTTPHEADER => [
-            'X-API-Key: ' . TUU_API_KEY,
-            'Accept: application/json'
-        ],
-        CURLOPT_SSL_VERIFYPEER => true,
-        CURLOPT_SSL_VERIFYHOST => 2,
+    echo json_encode([
+        'success' => false,
+        'error' => 'Error interno del servidor',
+        'message' => $e->getMessage()
     ]);
-    
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($httpCode === 200) {
-        return json_decode($response, true);
-    }
-    
-    return null;
 }
-
-$conn->close();
 ?>

@@ -20,8 +20,12 @@ try {
     echo "   Transaction ID: $transactionId\n";
     echo "   URL: $url\n\n";
     
+    // ⚠️ API KEY REMOVIDA POR SEGURIDAD
+    // Usar variable de entorno: TUU_API_KEY
+    $apiKey = getenv('TUU_API_KEY') ?: 'TU_API_KEY_AQUI';
+    
     $headers = [
-        'X-API-Key: uIAwXISF5Amug0O7QA16r72a07x10n6jdu4LNzjos3cdz736bGkHf7gM84bQ5CMsaeav0YSy8Y0qOlTdQy5pORoDE82m55HVDLybJFIuCKEwFeogRIBidkUU6nl6ux',
+        'X-API-Key: ' . $apiKey,
         'accept: application/json'
     ];
     

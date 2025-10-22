@@ -180,6 +180,7 @@ function consultarHistorial() {
           <div class="row">
             <div class="col-md-6">
               <p><strong>Patente:</strong> ${data.patente}</p>
+              ${ultimo.nombre_cliente ? `<p><strong>Cliente:</strong> ${ultimo.nombre_cliente}</p>` : ''}
               <p><strong>Último lavado:</strong> ${new Date(ultimo.fecha).toLocaleDateString('es-CL')}</p>
               <p><strong>Total cobrado:</strong> $${(ultimo.total || (ultimo.precio + ultimo.precio_extra)).toLocaleString('es-CL')}</p>
             </div>
@@ -212,6 +213,7 @@ function consultarHistorial() {
             <tr>
               <td>${new Date(item.fecha_ingreso).toLocaleString('es-CL')}</td>
               <td>${item.tipo_servicio}</td>
+              <td>${item.nombre_cliente || '—'}</td>
               <td>$${parseInt(item.precio || 0).toLocaleString('es-CL')}</td>
               <td>$${parseInt(item.total || 0).toLocaleString('es-CL')}</td>
               <td>${item.descripcion_extra || '—'}</td>

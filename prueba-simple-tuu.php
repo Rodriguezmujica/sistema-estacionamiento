@@ -17,7 +17,7 @@ try {
     
     echo "2. Verificando configuración TUU...\n";
     const TUU_API_BASE = 'https://integrations.payment.haulmer.com/RemotePayment/v2';
-    const TUU_API_KEY = 'uIAwXISF5Amug0O7QA16r72a07x10n6jdu4LNzjos3cdz736bGkHf7gM84bQ5CMsaeav0YSy8Y0qOlTdQy5pORoDE82m55HVDLybJFIuCKEwFeogRIBidkUU6nl6ux';
+    const TUU_API_KEY = 'getenv('TUU_API_KEY') ?: 'TU_API_KEY_AQUI'';
     echo "✅ Configuración OK\n\n";
     
     echo "3. Probando consulta a TUU con Transaction ID fijo...\n";

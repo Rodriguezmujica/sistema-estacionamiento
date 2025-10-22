@@ -12,11 +12,13 @@ import pcDetector from './pc-detector.js';
 import printingManager from './printing-manager.js';
 import tuuFirebaseSync from './tuu-firebase-sync.js';
 import tuuFirebaseIntegration from './tuu-firebase-integration.js';
+import FirebaseOptimizer from './JS/firebase-optimizer.js';
 
 class SistemaHibrido {
   constructor() {
     this.isInitialized = false;
     this.systemInfo = getSystemInfo();
+    this.optimizer = new FirebaseOptimizer(); // 🔥 Optimizador Firebase
     this.status = {
       online: navigator.onLine,
       active: false,

@@ -26,7 +26,8 @@ try {
                 s.fecha_salida,
                 COALESCE(s.motivos_extra, lp.motivos_extra) as motivos_extra,
                 COALESCE(s.descripcion_extra, lp.descripcion_extra) as descripcion_extra,
-                COALESCE(s.precio_extra, lp.precio_extra, 0) as precio_extra
+                COALESCE(s.precio_extra, lp.precio_extra, 0) as precio_extra,
+                lp.nombre_cliente as nombre_cliente
             FROM ingresos i
             JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
             LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
@@ -87,7 +88,8 @@ try {
                 'precio_extra' => floatval($ultimoLavado['precio_extra'] ?? 0),
                 'total' => floatval($ultimoLavado['total'] ?? 0),
                 'descripcion' => $ultimoLavado['descripcion_extra'] ?? '',
-                'motivos' => $motivos
+                'motivos' => $motivos,
+                'nombre_cliente' => $ultimoLavado['nombre_cliente'] ?? ''
             ],
             'historial' => $lavados
         ]);
