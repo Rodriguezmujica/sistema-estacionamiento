@@ -17,6 +17,10 @@ $fecha = $_POST["fecha"] ?? date('Y-m-d');
 $total_servicios = $_POST["total_servicios"] ?? 0;
 $total_ingresos = $_POST["total_ingresos"] ?? 0;
 
+// 🔍 DEBUG: Mostrar datos recibidos
+error_log("🔍 CIERRE CAJA DEBUG - Fecha: $fecha, Servicios: $total_servicios, Ingresos: $total_ingresos");
+error_log("🔍 CIERRE CAJA DEBUG - POST data: " . print_r($_POST, true));
+
 // Desglose de pagos (formato JSON)
 $efectivo_manual = intval($_POST["efectivo_manual"] ?? 0);
 $tuu_efectivo = intval($_POST["tuu_efectivo"] ?? 0);
@@ -155,10 +159,12 @@ try {
     $printer->pulse();
     $printer->close();
     
+    error_log("✅ CIERRE CAJA - Impresión exitosa");
     echo 1; // Respuesta exitosa
     
 } catch (Exception $e) {
-    error_log("Error en impresión de cierre de caja: " . $e->getMessage());
+    error_log("❌ CIERRE CAJA - Error en impresión: " . $e->getMessage());
+    error_log("❌ CIERRE CAJA - Stack trace: " . $e->getTraceAsString());
     echo 0; // Respuesta de error
 }
 ?>
