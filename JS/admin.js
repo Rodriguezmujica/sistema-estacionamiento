@@ -808,7 +808,30 @@ function llenarSelectorMeses() {
 
 async function cargarResumenEjecutivo() {
   const selector = document.getElementById('selector-mes-resumen');
-  if (!selector) return;
+  if (!selector) {
+    console.warn('Selector de mes no encontrado, reintentando en 100ms...');
+    setTimeout(cargarResumenEjecutivo, 100);
+    return;
+  }
+  
+  // Verificar que todos los elementos necesarios existan
+  const elementosRequeridos = [
+    'resumen-loading',
+    'resumen-contenido',
+    'kpi-ingresos-mes',
+    'kpi-vehiculos',
+    'kpi-ticket-promedio',
+    'kpi-mensuales',
+    'kpi-variacion'
+  ];
+  
+  for (const elementoId of elementosRequeridos) {
+    if (!document.getElementById(elementoId)) {
+      console.warn(`Elemento ${elementoId} no encontrado, reintentando en 100ms...`);
+      setTimeout(cargarResumenEjecutivo, 100);
+      return;
+    }
+  }
   
   const [mes, anio] = selector.value.split('-');
   
@@ -818,47 +841,103 @@ async function cargarResumenEjecutivo() {
   
   try {
     const response = await fetch(`${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`);
+    
+    // Verificar si la respuesta es válida
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     const result = await response.json();
     
     if (result.success) {
       renderizarResumenEjecutivo(result.data);
     } else {
-      throw new Error(result.error);
+      throw new Error(result.error || 'Error desconocido del servidor');
     }
   } catch (error) {
     console.error('Error cargando resumen ejecutivo:', error);
-    alert('Error al cargar resumen: ' + error.message);
+    
+    // Mostrar error más específico
+    let mensajeError = 'Error al cargar resumen: ';
+    if (error.message.includes('Failed to fetch')) {
+      mensajeError += 'No se pudo conectar al servidor. Verifica la conexión.';
+    } else if (error.message.includes('HTTP')) {
+      mensajeError += error.message;
+    } else {
+      mensajeError += error.message;
+    }
+    
+    alert(mensajeError);
+    
+    // Ocultar loading y mostrar mensaje de error
+    const loading = document.getElementById('resumen-loading');
+    const contenido = document.getElementById('resumen-contenido');
+    if (loading) loading.classList.add('d-none');
+    if (contenido) {
+      contenido.classList.remove('d-none');
+      contenido.innerHTML = `
+        <div class="alert alert-danger text-center">
+          <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+          <h5>Error al cargar resumen ejecutivo</h5>
+          <p>${mensajeError}</p>
+          <button class="btn btn-primary" onclick="cargarResumenEjecutivo()">
+            <i class="fas fa-redo"></i> Reintentar
+          </button>
+        </div>
+      `;
+    }
   }
 }
 
 function renderizarResumenEjecutivo(data) {
+  // Verificar que los elementos existan antes de usarlos
+  const elementos = {
+    loading: document.getElementById('resumen-loading'),
+    contenido: document.getElementById('resumen-contenido'),
+    kpiIngresos: document.getElementById('kpi-ingresos-mes'),
+    kpiVehiculos: document.getElementById('kpi-vehiculos'),
+    kpiTicketPromedio: document.getElementById('kpi-ticket-promedio'),
+    kpiMensuales: document.getElementById('kpi-mensuales'),
+    kpiVariacion: document.getElementById('kpi-variacion')
+  };
+  
+  // Verificar que todos los elementos críticos existan
+  for (const [nombre, elemento] of Object.entries(elementos)) {
+    if (!elemento) {
+      console.error(`Elemento crítico no encontrado: ${nombre}`);
+      return;
+    }
+  }
+  
   // Ocultar loading, mostrar contenido
-  document.getElementById('resumen-loading').classList.add('d-none');
-  document.getElementById('resumen-contenido').classList.remove('d-none');
+  elementos.loading.classList.add('d-none');
+  elementos.contenido.classList.remove('d-none');
   
   // 1. KPIs PRINCIPALES
-  document.getElementById('kpi-ingresos-mes').textContent = 
+  elementos.kpiIngresos.textContent = 
     '$' + parseInt(data.total_ingresos).toLocaleString('es-CL');
   
-  document.getElementById('kpi-vehiculos').textContent = 
+  elementos.kpiVehiculos.textContent = 
     data.total_servicios.toLocaleString('es-CL');
   
   const ticketPromedio = data.total_servicios > 0 ? data.total_ingresos / data.total_servicios : 0;
-  document.getElementById('kpi-ticket-promedio').textContent = 
+  elementos.kpiTicketPromedio.textContent = 
     '$' + parseInt(ticketPromedio).toLocaleString('es-CL');
   
-  document.getElementById('kpi-mensuales').textContent = 
+  elementos.kpiMensuales.textContent = 
     '$' + parseInt(data.total_mensuales).toLocaleString('es-CL');
   
-  document.getElementById('kpi-mensuales-count').textContent = 
-    data.total_clientes_mensuales + ' clientes';
+  const kpiMensualesCount = document.getElementById('kpi-mensuales-count');
+  if (kpiMensualesCount) {
+    kpiMensualesCount.textContent = data.total_clientes_mensuales + ' clientes';
+  }
   
   // Variación vs mes anterior
   const variacion = data.variacion_porcentaje;
   const iconoVariacion = variacion >= 0 ? '📈' : '📉';
   const colorVariacion = variacion >= 0 ? 'text-success' : 'text-danger';
   const signoVariacion = variacion >= 0 ? '+' : '';
-  document.getElementById('kpi-variacion').innerHTML = 
+  elementos.kpiVariacion.innerHTML = 
     `<span class="${colorVariacion}">${iconoVariacion} ${signoVariacion}${variacion.toFixed(1)}% vs mes anterior</span>`;
   
   // 2. META DEL MES
