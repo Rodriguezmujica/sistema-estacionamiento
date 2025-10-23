@@ -37,19 +37,16 @@ if (file_exists(__DIR__ . '/config.php')) {
         $dbname = 'estacionamiento';
         $port = 3306;
     } else {
-        // Configuración para Linux (PRODUCCIÓN)
-        // ⚠️ IMPORTANTE: Debes crear un archivo config.php
-        // Copia config.php.example y renómbralo a config.php
-        $host = 'localhost';
-        $user = 'estacionamiento_user';  // 🔧 Usuario específico para Linux
-        $pass = 'CAMBIAR_ESTA_CONTRASEÑA';  // 🔧 ¡DEBES CAMBIAR ESTO!
+        // Configuración para Linux (ANTIX) - Conecta a Windows 7
+        // 🔌 CONEXIÓN REMOTA A SERVIDOR WINDOWS 7
+        $host = '192.168.3.101';  // IP de Windows 7
+        $user = 'antix';          // Usuario MySQL en Windows 7
+        $pass = '733';            // Contraseña MySQL
         $dbname = 'estacionamiento';
         $port = 3306;
         
-        // Advertencia si no hay config.php en Linux
-        if ($pass === 'CAMBIAR_ESTA_CONTRASEÑA') {
-            error_log("⚠️ ADVERTENCIA: Usando contraseña por defecto. Crea config.php desde config.php.example");
-        }
+        // Log de conexión remota
+        error_log("🔌 ANTIX: Conectando a servidor Windows 7 en $host:$port");
     }
 }
 
