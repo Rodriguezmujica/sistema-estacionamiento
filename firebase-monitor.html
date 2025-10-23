@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 Monitor Firebase - Sistema Híbrido</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .usage-bar {
+            height: 25px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .usage-critical {
+            background: linear-gradient(90deg, #dc3545, #ff6b6b);
+            animation: pulse 1s infinite;
+        }
+        .usage-warning {
+            background: linear-gradient(90deg, #ffc107, #ffeb3b);
+        }
+        .usage-ok {
+            background: linear-gradient(90deg, #28a745, #4caf50);
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        .stat-card {
+            border-left: 4px solid #007bff;
+            transition: transform 0.2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .optimization-tip {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3 text-primary">
+                        <i class="fas fa-fire me-2"></i>
+                        Monitor Firebase - Sistema Híbrido
+                    </h1>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-primary" onclick="refreshStats()">
+                            <i class="fas fa-sync-alt me-1"></i> Actualizar
+                        </button>
+                        <button class="btn btn-outline-success" onclick="clearCache()">
+                            <i class="fas fa-broom me-1"></i> Limpiar Caché
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas de Uso -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card stat-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">
+                            <i class="fas fa-book-open me-2"></i>Lecturas Diarias
+                        </h5>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="h4 mb-0" id="reads-current">0</span>
+                            <span class="text-muted" id="reads-limit">/ 50,000</span>
+                        </div>
+                        <div class="progress mb-2">
+                            <div class="progress-bar usage-bar" id="reads-bar" role="progressbar" style="width: 0%">
+                                <span id="reads-percentage">0%</span>
+                            </div>
+                        </div>
+                        <small class="text-muted" id="reads-status">Estado: OK</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card stat-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">
+                            <i class="fas fa-edit me-2"></i>Escrituras Diarias
+                        </h5>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="h4 mb-0" id="writes-current">0</span>
+                            <span class="text-muted" id="writes-limit">/ 20,000</span>
+                        </div>
+                        <div class="progress mb-2">
+                            <div class="progress-bar usage-bar" id="writes-bar" role="progressbar" style="width: 0%">
+                                <span id="writes-percentage">0%</span>
+                            </div>
+                        </div>
+                        <small class="text-muted" id="writes-status">Estado: OK</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Proyección Mensual -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>Proyección Mensual
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6 class="text-muted">Servicios Estimados</h6>
+                                    <h4 class="text-primary" id="estimated-services">2,189</h4>
+                                    <small class="text-muted">Basado en febrero (mes más movido)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6 class="text-muted">Lecturas Estimadas</h6>
+                                    <h4 class="text-info" id="estimated-reads">0</h4>
+                                    <small class="text-muted">Por mes</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6 class="text-muted">Escrituras Estimadas</h6>
+                                    <h4 class="text-success" id="estimated-writes">0</h4>
+                                    <small class="text-muted">Por mes</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Optimizaciones Aplicadas -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cogs me-2"></i>Optimizaciones Aplicadas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        <strong>Sincronización:</strong> 30s (era 5s) - <span class="text-muted">Reducción 83%</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        <strong>Caché Local:</strong> 30s TTL - <span class="text-muted">Reduce lecturas</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        <strong>Sincronización Inteligente:</strong> Solo cambios - <span class="text-muted">Reduce escrituras</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        <strong>Procesamiento en Lotes:</strong> 10 operaciones - <span class="text-muted">Eficiencia</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        <strong>Intervalo Adaptativo:</strong> Según actividad - <span class="text-muted">Dinámico</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        <strong>Monitoreo Automático:</strong> Alertas 80% - <span class="text-muted">Prevención</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recomendaciones -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>Recomendaciones de Optimización
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="optimization-tips">
+                            <!-- Las recomendaciones se cargarán dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial de Uso -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>Historial de Uso (Últimos 7 días)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="usageChart" width="400" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="JS/firebase-optimizer.js"></script>
+    <script>
+        let usageChart;
+
+        // Actualizar estadísticas
+        function refreshStats() {
+            if (window.FirebaseOptimizer) {
+                const stats = window.FirebaseOptimizer.getUsageStats();
+                updateStatsDisplay(stats);
+                updateProjections();
+                updateOptimizationTips();
+            }
+        }
+
+        // Actualizar display de estadísticas
+        function updateStatsDisplay(stats) {
+            // Lecturas
+            document.getElementById('reads-current').textContent = stats.reads.current.toLocaleString();
+            document.getElementById('reads-percentage').textContent = stats.reads.usage;
+            document.getElementById('reads-bar').style.width = stats.reads.usage;
+            document.getElementById('reads-status').textContent = `Estado: ${stats.status.toUpperCase()}`;
+            
+            // Escrituras
+            document.getElementById('writes-current').textContent = stats.writes.current.toLocaleString();
+            document.getElementById('writes-percentage').textContent = stats.writes.usage;
+            document.getElementById('writes-bar').style.width = stats.writes.usage;
+            document.getElementById('writes-status').textContent = `Estado: ${stats.status.toUpperCase()}`;
+
+            // Aplicar clases de estado
+            const readsBar = document.getElementById('reads-bar');
+            const writesBar = document.getElementById('writes-bar');
+            
+            [readsBar, writesBar].forEach(bar => {
+                bar.className = 'progress-bar usage-bar';
+                if (stats.status === 'critical') {
+                    bar.classList.add('usage-critical');
+                } else if (stats.status === 'warning') {
+                    bar.classList.add('usage-warning');
+                } else {
+                    bar.classList.add('usage-ok');
+                }
+            });
+        }
+
+        // Actualizar proyecciones
+        function updateProjections() {
+            const services = 2189; // Servicios en febrero
+            const daysInMonth = 28;
+            const servicesPerDay = services / daysInMonth;
+            
+            // Estimación conservadora con optimizaciones
+            const readsPerService = 2; // Reducido de 3 a 2 con caché
+            const writesPerService = 1; // Reducido de 3 a 1 con sincronización inteligente
+            const dashboardReads = 2880; // 12 horas * 240 refrescos (30s)
+            
+            const estimatedReads = Math.round((servicesPerDay * readsPerService + dashboardReads) * 30);
+            const estimatedWrites = Math.round(servicesPerDay * writesPerService * 30);
+            
+            document.getElementById('estimated-reads').textContent = estimatedReads.toLocaleString();
+            document.getElementById('estimated-writes').textContent = estimatedWrites.toLocaleString();
+        }
+
+        // Actualizar recomendaciones
+        function updateOptimizationTips() {
+            if (window.FirebaseOptimizer) {
+                const tips = window.FirebaseOptimizer.getOptimizationTips();
+                const container = document.getElementById('optimization-tips');
+                
+                if (tips.length === 0) {
+                    container.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>¡Sistema optimizado! No se requieren cambios adicionales.</div>';
+                } else {
+                    container.innerHTML = tips.map(tip => 
+                        `<div class="optimization-tip"><i class="fas fa-lightbulb me-2"></i>${tip}</div>`
+                    ).join('');
+                }
+            }
+        }
+
+        // Limpiar caché
+        function clearCache() {
+            if (window.FirebaseOptimizer) {
+                window.FirebaseOptimizer.clearCache();
+                alert('🧹 Caché limpiado correctamente');
+                refreshStats();
+            }
+        }
+
+        // Inicializar gráfico
+        function initChart() {
+            const ctx = document.getElementById('usageChart').getContext('2d');
+            usageChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                    datasets: [{
+                        label: 'Lecturas',
+                        data: [0, 0, 0, 0, 0, 0, 0],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }, {
+                        label: 'Escrituras',
+                        data: [0, 0, 0, 0, 0, 0, 0],
+                        borderColor: 'rgb(255, 99, 132)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Actualizar cada 30 segundos
+        setInterval(refreshStats, 30000);
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            initChart();
+            refreshStats();
+        });
+    </script>
+</body>
+</html>

@@ -41,10 +41,10 @@ $rol = $_SESSION['rol'];
             <a class="nav-link active" href="./cobro.php"><i class="fas fa-money-bill-wave"></i> Cobro</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="./lavados.html"><i class="fas fa-car-wash"></i> Servicios Lavado</a>
+            <a class="nav-link" href="./lavados.php"><i class="fas fa-car-wash"></i> Servicios Lavado</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="./reporte.html"><i class="fas fa-chart-bar"></i> Reportes</a>
+            <a class="nav-link" href="./reporte.php"><i class="fas fa-chart-bar"></i> Reportes</a>
           </li>
           <?php if ($rol === 'admin'): ?>
           <li class="nav-item">

@@ -36,7 +36,7 @@ function establecerFechasPorDefecto() {
 
 function cargarReportesUnificados() {
   // Determinar la ruta correcta según la página actual
-  const isReportesPage = window.location.pathname.includes('reporte.html');
+  const isReportesPage = window.location.pathname.includes('reporte.php');
   const apiPath = isReportesPage ? '../api/api_reportes_unificados.php' : './api/api_reportes_unificados.php';
   
   fetch(apiPath)
@@ -55,7 +55,7 @@ function cargarReportesUnificados() {
         if (totalHoyEl) totalHoyEl.textContent = data.diario.servicios;
         if (ingresosHoyEl) ingresosHoyEl.textContent = '$' + data.diario.ingresos.toLocaleString('es-CL');
 
-        // --- Actualizar estadísticas de la página de Reportes (reporte.html) ---
+        // --- Actualizar estadísticas de la página de Reportes (reporte.php) ---
         const serviciosDiarioEl = document.getElementById('servicios-diario');
         const ingresosDiarioEl = document.getElementById('ingresos-diario');
         if (serviciosDiarioEl) serviciosDiarioEl.textContent = data.diario.servicios;

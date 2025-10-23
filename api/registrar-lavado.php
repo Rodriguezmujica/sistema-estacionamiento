@@ -69,6 +69,7 @@ try {
     
     // 3. Guardar o actualizar información adicional en la tabla 'lavados_pendientes'
     $motivos_json = json_encode($motivos_extra, JSON_UNESCAPED_UNICODE);
+    $tipo_lavado = $servicio['nombre_servicio']; // Usar el nombre del servicio como tipo de lavado
     
     // Verificar si ya existe un registro
     $sql_check = "SELECT id FROM lavados_pendientes WHERE id_ingreso = ?";
@@ -83,25 +84,27 @@ try {
         // Actualizar registro existente
         $sql_update_pendiente = "UPDATE lavados_pendientes SET 
             patente = ?, 
+            tipo_lavado = ?,
             motivos_extra = ?, 
             descripcion_extra = ?, 
             precio_extra = ?, 
             nombre_cliente = ?
             WHERE id_ingreso = ?";
         $stmt_pendiente = $conexion->prepare($sql_update_pendiente);
-        $stmt_pendiente->bind_param("sssdsi", $patente, $motivos_json, $descripcion_extra, $precio_extra, $nombre_cliente, $id_ingreso);
+        $stmt_pendiente->bind_param("ssssdsi", $patente, $tipo_lavado, $motivos_json, $descripcion_extra, $precio_extra, $nombre_cliente, $id_ingreso);
     } else {
         // Insertar nuevo registro
         $sql_pendiente = "INSERT INTO lavados_pendientes (
             id_ingreso, 
             patente, 
+            tipo_lavado,
             motivos_extra, 
             descripcion_extra, 
             precio_extra, 
             nombre_cliente
-        ) VALUES (?, ?, ?, ?, ?, ?)";
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt_pendiente = $conexion->prepare($sql_pendiente);
-        $stmt_pendiente->bind_param("isssds", $id_ingreso, $patente, $motivos_json, $descripcion_extra, $precio_extra, $nombre_cliente);
+        $stmt_pendiente->bind_param("issssds", $id_ingreso, $patente, $tipo_lavado, $motivos_json, $descripcion_extra, $precio_extra, $nombre_cliente);
     }
     
     $stmt_pendiente->execute();

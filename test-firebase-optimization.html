@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test Firebase Optimization</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .test-card {
+            border-left: 4px solid #007bff;
+            margin-bottom: 20px;
+        }
+        .test-success {
+            border-left-color: #28a745;
+        }
+        .test-error {
+            border-left-color: #dc3545;
+        }
+        .test-warning {
+            border-left-color: #ffc107;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="h3 text-primary mb-4">
+                    <i class="fas fa-vial me-2"></i>
+                    Test de Optimización Firebase
+                </h1>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Esta página verifica que las optimizaciones de Firebase estén funcionando correctamente.
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 1: Carga de Scripts -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card test-card" id="test-scripts">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-code me-2"></i>Test 1: Carga de Scripts
+                        </h5>
+                        <div id="test-scripts-result">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            Verificando scripts...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 2: Optimizador Firebase -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card test-card" id="test-optimizer">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-fire me-2"></i>Test 2: Optimizador Firebase
+                        </h5>
+                        <div id="test-optimizer-result">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            Verificando optimizador...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 3: Sincronización Optimizada -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card test-card" id="test-sync">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-sync me-2"></i>Test 3: Sincronización Optimizada
+                        </h5>
+                        <div id="test-sync-result">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            Verificando sincronización...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 4: Monitoreo de Límites -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card test-card" id="test-monitoring">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-line me-2"></i>Test 4: Monitoreo de Límites
+                        </h5>
+                        <div id="test-monitoring-result">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            Verificando monitoreo...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 5: Simulación de Operaciones -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card test-card" id="test-operations">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-cogs me-2"></i>Test 5: Simulación de Operaciones
+                        </h5>
+                        <div id="test-operations-result">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            Simulando operaciones...
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-primary" onclick="simularOperaciones()">
+                                <i class="fas fa-play me-1"></i> Simular 10 Operaciones
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-clipboard-check me-2"></i>Resumen de Tests
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="test-summary">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">Ejecutando tests...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enlaces -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="card-title">Enlaces Útiles</h6>
+                        <a href="firebase-monitor.html" class="btn btn-outline-primary me-2" target="_blank">
+                            <i class="fas fa-fire me-1"></i> Monitor Firebase
+                        </a>
+                        <a href="index.php" class="btn btn-outline-success me-2">
+                            <i class="fas fa-home me-1"></i> Dashboard Principal
+                        </a>
+                        <button class="btn btn-outline-info" onclick="location.reload()">
+                            <i class="fas fa-redo me-1"></i> Reiniciar Tests
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="JS/firebase-optimizer-simple.js"></script>
+    <script src="JS/firebase-sync-simple.js"></script>
+    
+    <script>
+        let testResults = {
+            scripts: false,
+            optimizer: false,
+            sync: false,
+            monitoring: false,
+            operations: false
+        };
+
+        // Test 1: Verificar carga de scripts
+        function testScripts() {
+            const result = document.getElementById('test-scripts-result');
+            const card = document.getElementById('test-scripts');
+            
+            try {
+                if (typeof FirebaseOptimizer !== 'undefined' && typeof firebaseSync !== 'undefined') {
+                    result.innerHTML = '<i class="fas fa-check text-success me-2"></i>Scripts cargados correctamente';
+                    card.classList.add('test-success');
+                    testResults.scripts = true;
+                } else {
+                    throw new Error('Scripts no encontrados');
+                }
+            } catch (error) {
+                result.innerHTML = `<i class="fas fa-times text-danger me-2"></i>Error: ${error.message}`;
+                card.classList.add('test-error');
+            }
+        }
+
+        // Test 2: Verificar optimizador
+        function testOptimizer() {
+            const result = document.getElementById('test-optimizer-result');
+            const card = document.getElementById('test-optimizer');
+            
+            try {
+                if (window.FirebaseOptimizer) {
+                    const stats = window.FirebaseOptimizer.getUsageStats();
+                    result.innerHTML = `
+                        <i class="fas fa-check text-success me-2"></i>
+                        Optimizador funcionando - Lecturas: ${stats.reads.usage}, Escrituras: ${stats.writes.usage}
+                    `;
+                    card.classList.add('test-success');
+                    testResults.optimizer = true;
+                } else {
+                    throw new Error('Optimizador no inicializado');
+                }
+            } catch (error) {
+                result.innerHTML = `<i class="fas fa-times text-danger me-2"></i>Error: ${error.message}`;
+                card.classList.add('test-error');
+            }
+        }
+
+        // Test 3: Verificar sincronización
+        function testSync() {
+            const result = document.getElementById('test-sync-result');
+            const card = document.getElementById('test-sync');
+            
+            try {
+                if (window.firebaseSync) {
+                    const stats = window.firebaseSync.getSyncStats();
+                    result.innerHTML = `
+                        <i class="fas fa-check text-success me-2"></i>
+                        Sincronización funcionando - Cola: ${stats.queue.pending}, Intervalo: ${stats.syncInterval}ms
+                    `;
+                    card.classList.add('test-success');
+                    testResults.sync = true;
+                } else {
+                    throw new Error('Sincronización no inicializada');
+                }
+            } catch (error) {
+                result.innerHTML = `<i class="fas fa-times text-danger me-2"></i>Error: ${error.message}`;
+                card.classList.add('test-error');
+            }
+        }
+
+        // Test 4: Verificar monitoreo
+        function testMonitoring() {
+            const result = document.getElementById('test-monitoring-result');
+            const card = document.getElementById('test-monitoring');
+            
+            try {
+                if (window.FirebaseOptimizer) {
+                    const canRead = window.FirebaseOptimizer.canPerformOperation('reads');
+                    const canWrite = window.FirebaseOptimizer.canPerformOperation('writes');
+                    
+                    result.innerHTML = `
+                        <i class="fas fa-check text-success me-2"></i>
+                        Monitoreo funcionando - Lecturas: ${canRead ? 'OK' : 'BLOQUEADO'}, Escrituras: ${canWrite ? 'OK' : 'BLOQUEADO'}
+                    `;
+                    card.classList.add('test-success');
+                    testResults.monitoring = true;
+                } else {
+                    throw new Error('Monitoreo no disponible');
+                }
+            } catch (error) {
+                result.innerHTML = `<i class="fas fa-times text-danger me-2"></i>Error: ${error.message}`;
+                card.classList.add('test-error');
+            }
+        }
+
+        // Test 5: Simular operaciones
+        async function simularOperaciones() {
+            const result = document.getElementById('test-operations-result');
+            const card = document.getElementById('test-operations');
+            
+            try {
+                result.innerHTML = '<div class="spinner-border spinner-border-sm me-2" role="status"></div>Simulando operaciones...';
+                
+                // Simular 10 operaciones de estacionamiento
+                const operaciones = [];
+                for (let i = 0; i < 10; i++) {
+                    const ingresoData = {
+                        id: `test_${Date.now()}_${i}`,
+                        patente: `TEST${i.toString().padStart(3, '0')}`,
+                        fecha_ingreso: new Date().toISOString(),
+                        tipo_servicio: 'estacionamiento'
+                    };
+                    
+                    const resultado = await window.firebaseSync.syncEstacionamiento(ingresoData);
+                    operaciones.push(resultado);
+                }
+                
+                const exitosas = operaciones.filter(op => op.success).length;
+                
+                result.innerHTML = `
+                    <i class="fas fa-check text-success me-2"></i>
+                    Simulación completada - ${exitosas}/10 operaciones exitosas
+                `;
+                card.classList.add('test-success');
+                testResults.operations = true;
+                
+                updateSummary();
+            } catch (error) {
+                result.innerHTML = `<i class="fas fa-times text-danger me-2"></i>Error: ${error.message}`;
+                card.classList.add('test-error');
+            }
+        }
+
+        // Actualizar resumen
+        function updateSummary() {
+            const summary = document.getElementById('test-summary');
+            const totalTests = Object.keys(testResults).length;
+            const passedTests = Object.values(testResults).filter(result => result).length;
+            
+            let statusClass = 'text-success';
+            let statusIcon = 'fas fa-check-circle';
+            let statusText = 'Todos los tests pasaron';
+            
+            if (passedTests === 0) {
+                statusClass = 'text-danger';
+                statusIcon = 'fas fa-times-circle';
+                statusText = 'Ningún test pasó';
+            } else if (passedTests < totalTests) {
+                statusClass = 'text-warning';
+                statusIcon = 'fas fa-exclamation-triangle';
+                statusText = 'Algunos tests fallaron';
+            }
+            
+            summary.innerHTML = `
+                <div class="text-center">
+                    <i class="${statusIcon} ${statusClass} fa-3x mb-3"></i>
+                    <h5 class="${statusClass}">${statusText}</h5>
+                    <p class="text-muted">${passedTests}/${totalTests} tests exitosos</p>
+                    
+                    <div class="progress mb-3">
+                        <div class="progress-bar ${statusClass.replace('text-', 'bg-')}" 
+                             style="width: ${(passedTests/totalTests)*100}%"></div>
+                    </div>
+                    
+                    <div class="row text-start">
+                        <div class="col-6">
+                            <small class="text-muted">
+                                <i class="fas fa-code me-1"></i> Scripts: ${testResults.scripts ? '✅' : '❌'}<br>
+                                <i class="fas fa-fire me-1"></i> Optimizador: ${testResults.optimizer ? '✅' : '❌'}<br>
+                                <i class="fas fa-sync me-1"></i> Sincronización: ${testResults.sync ? '✅' : '❌'}
+                            </small>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">
+                                <i class="fas fa-chart-line me-1"></i> Monitoreo: ${testResults.monitoring ? '✅' : '❌'}<br>
+                                <i class="fas fa-cogs me-1"></i> Operaciones: ${testResults.operations ? '✅' : '❌'}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Ejecutar tests al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                testScripts();
+                testOptimizer();
+                testSync();
+                testMonitoring();
+                updateSummary();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -10,8 +10,8 @@ if (typeof getBasePath === 'undefined') {
   };
 }
 
-// Usar la función global definida en main.js
-// No declarar BASE_PATH aquí para evitar conflictos
+// Usar la variable global ya declarada en main.js
+// No redeclarar BASE_PATH para evitar conflictos
 
 // Función para mostrar alertas elegantes
 function mostrarAlerta(mensaje, tipo = 'info') {
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Buscar en la API
-      fetch(`${window.getBasePathValue()}/api/api_reporte.php`)
+      fetch(`${BASE_PATH}/api/api_reporte.php`)
         .then(res => res.json())
         .then(data => {
           console.log('📊 Datos de API:', data);
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (esEstacionamientoOError && seleccionoLavado) {
           mostrarAlerta('🧽 Redirigiendo a la sección de lavados para gestionar este servicio...', 'info');
           setTimeout(() => {
-            window.location.href = `./secciones/lavados.html?patente=${patente}`;
+            window.location.href = `./secciones/lavados.php?patente=${patente}`;
           }, 2000);
           return;
         }
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (valorSeleccionado === 'lavado') {
         mostrarAlerta('🧽 Redirigiendo a la sección de lavados...', 'info');
         setTimeout(() => {
-          window.location.href = `./secciones/lavados.html?patente=${patente}`;
+          window.location.href = `./secciones/lavados.php?patente=${patente}`;
         }, 2000);
         return;
       }
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Procedemos a guardar en la base de datos
       console.log('📤 Enviando:', { patente, idServicio: valorSeleccionado });
       
-      fetch(`${window.getBasePathValue()}/api/modificar_ticket.php`, {
+      fetch(`${BASE_PATH}/api/modificar_ticket.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ 

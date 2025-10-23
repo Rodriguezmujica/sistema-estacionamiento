@@ -1,0 +1,355 @@
+<?php
+session_start();
+if (!isset($_SESSION['usuario'])) {
+    header("Location: ../login.php");
+    exit();
+}
+$rol = $_SESSION['rol'];
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema de gestión de servicios de lavado - Estacionamiento Los Ríos">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../scss/main.css">
+  <link rel="shortcut icon" href="../imagenes/Logo_sin_fondo.png">
+  <title>Servicios de Lavado | Estacionamiento Los Ríos</title>
+</head>
+
+<body class="bg-light">
+  <!-- NAVEGACIÓN -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold d-flex align-items-center" href="../index.php">
+        <img src="../imagenes/Logo_sin_fondo.png" alt="Logo" height="40" class="me-2">
+        Estacionamiento Los Ríos
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="../index.php">
+              <i class="fas fa-home"></i> Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="./lavados.php">
+              <i class="fas fa-car-wash"></i> Servicios Lavado
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="./reporte.php">
+              <i class="fas fa-chart-bar"></i> Reportes
+            </a>
+          </li>
+          <?php if ($rol === 'admin'): ?>
+          <li class="nav-item">
+            <a class="nav-link text-warning fw-bold" href="./admin.php">
+              <i class="fas fa-cog"></i> Administración
+            </a>
+          </li>
+          <?php endif; ?>
+        </ul>
+      </div>
+
+      <div class="d-flex align-items-center">
+        <span class="badge bg-success fs-6 me-3">
+          <i class="fas fa-dollar-sign"></i> $35/min
+        </span>
+        <span class="text-white me-3" id="fecha-hora"></span>
+        <a href="../logout.php" class="btn btn-outline-light btn-sm">
+          <i class="fas fa-sign-out-alt"></i> Salir
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="container py-4">
+    
+    <!-- CONSULTA DE HISTORIAL -->
+    <div class="card border-info shadow-sm mb-4">
+      <div class="card-header bg-info text-white">
+        <h4 class="mb-0">
+          <i class="fas fa-history"></i> Consultar Historial de Lavados
+        </h4>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <label for="patente-consulta" class="form-label">Patente a Consultar</label>
+            <div class="input-group">
+              <input type="text" class="form-control text-uppercase" id="patente-consulta" 
+                     placeholder="ABC123 o XNX" maxlength="6">
+              <button class="btn btn-primary" type="button" id="btn-consultar-historial">
+                <i class="fas fa-search"></i> Consultar
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Resultado de la consulta -->
+        <div id="resultado-consulta" class="mt-3 d-none">
+          <div class="alert alert-info">
+            <h5><i class="fas fa-car"></i> Información del Vehículo</h5>
+            <div id="info-vehiculo"></div>
+            
+            <!-- Historial completo -->
+            <div class="accordion mt-3" id="accordionHistorial">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingHistorial">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                          data-bs-target="#collapseHistorial">
+                    <i class="fas fa-list"></i> Ver historial completo de lavados
+                  </button>
+                </h2>
+                <div id="collapseHistorial" class="accordion-collapse collapse">
+                  <div class="accordion-body">
+                    <div class="table-responsive">
+                      <table id="tabla-historial" class="table table-striped">
+                        <thead class="table-dark">
+                          <tr>
+                            <th>Fecha</th>
+                            <th>Servicio</th>
+                            <th>Precio</th>
+                            <th>Total</th>
+                            <th>Cliente</th>
+                            <th>Descripción</th>
+                          </tr>
+                        </thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REGISTRO O MODIFICACIÓN DE LAVADO -->
+    <div class="card border-success shadow-sm mb-4">
+      <div class="card-header bg-success text-white">
+        <h4 class="mb-0">
+          <i class="fas fa-edit"></i> Registrar o Modificar Servicio de Lavado
+        </h4>
+      </div>
+      <div class="card-body">
+        <!-- Alerta de ticket existente -->
+        <div id="alerta-ticket-existente" class="alert alert-info d-none mb-3">
+          <i class="fas fa-info-circle"></i>
+          <span id="mensaje-ticket-existente"></span>
+        </div>
+        
+        <form id="form-lavado">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label for="patente-lavado" class="form-label">
+                <i class="fas fa-car"></i> Patente
+              </label>
+              <input type="text" class="form-control text-uppercase" id="patente-lavado" 
+                     maxlength="6" placeholder="ABC123" required>
+              <button type="button" class="btn btn-sm btn-outline-primary mt-1 w-100" id="btn-verificar-patente">
+                <i class="fas fa-search"></i> Verificar Ticket
+              </button>
+            </div>
+
+            <div class="col-md-3">
+              <label for="tipo-lavado" class="form-label">
+                <i class="fas fa-soap"></i> Tipo de Lavado
+              </label>
+              <select class="form-select" id="tipo-lavado" required>
+                <option value="">Seleccionar servicio...</option>
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label for="nombre-cliente-lavado" class="form-label">
+                <i class="fas fa-user"></i> Cliente (Opcional)
+              </label>
+              <input type="text" class="form-control" id="nombre-cliente-lavado" 
+                     placeholder="Nombre del cliente">
+            </div>
+
+            <div class="col-md-3">
+              <label for="precio-extra" class="form-label">
+                <i class="fas fa-dollar-sign"></i> Precio Extra
+              </label>
+              <input type="number" class="form-control" id="precio-extra" min="0" value="0">
+            </div>
+          </div>
+          
+          <!-- Motivos de cobro extra -->
+          <div class="mt-4">
+            <label class="form-label fw-bold">Motivos de Cobro Extra</label>
+            <div class="row g-2">
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="motivo-hongos" value="hongos">
+                  <label class="form-check-label" for="motivo-hongos">
+                    <i class="fas fa-circle text-warning"></i> Hongos
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="motivo-pelos" value="pelos">
+                  <label class="form-check-label" for="motivo-pelos">
+                    <i class="fas fa-circle text-brown"></i> Pelos de perros
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="motivo-barro" value="barro">
+                  <label class="form-check-label" for="motivo-barro">
+                    <i class="fas fa-circle text-secondary"></i> Barro excesivo
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="motivo-grasa" value="grasa">
+                  <label class="form-check-label" for="motivo-grasa">
+                    <i class="fas fa-circle text-dark"></i> Grasa/aceite
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="motivo-insectos" value="insectos">
+                  <label class="form-check-label" for="motivo-insectos">
+                    <i class="fas fa-circle text-success"></i> Insectos
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="motivo-pintura" value="pintura">
+                  <label class="form-check-label" for="motivo-pintura">
+                    <i class="fas fa-circle text-danger"></i> Pintura dañada
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="motivo-interior" value="interior">
+                  <label class="form-check-label" for="motivo-interior">
+                    <i class="fas fa-circle text-info"></i> Interior sucio
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="motivo-otro" value="otro">
+                  <label class="form-check-label" for="motivo-otro">
+                    <i class="fas fa-circle text-muted"></i> Otro
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Descripción adicional -->
+          <div class="mt-3">
+            <label for="descripcion-extra" class="form-label">
+              <i class="fas fa-comment-alt"></i> Descripción Adicional (Opcional)
+            </label>
+            <textarea class="form-control" id="descripcion-extra" rows="2" 
+                      placeholder="Describe cualquier detalle adicional sobre el estado del vehículo..."></textarea>
+          </div>
+          
+          <div class="mt-4">
+            <button type="submit" class="btn btn-success btn-lg">
+              <i class="fas fa-check"></i> Registrar Lavado
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- LAVADOS PENDIENTES -->
+    <div class="card border-warning shadow-sm mb-4">
+      <div class="card-header bg-warning text-dark">
+        <h4 class="mb-0">
+          <i class="fas fa-clock"></i> Lavados Pendientes de Cobro
+        </h4>
+      </div>
+      <div class="card-body">
+        <div id="lavados-pendientes">
+          <div class="text-center text-muted py-4">
+            <i class="fas fa-spinner fa-spin"></i> Cargando lavados pendientes...
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL DE CONFIRMACIÓN DE LAVADO -->
+  <div class="modal fade" id="modalConfirmarLavado" tabindex="-1" aria-labelledby="modalConfirmarLavadoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content shadow-lg">
+        <div class="modal-header" id="confirmarLavadoHeader">
+          <h5 class="modal-title" id="confirmarLavadoTitulo">
+            <!-- Título dinámico -->
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="confirmarLavadoBody">
+          <!-- El resumen se insertará aquí dinámicamente -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-success" id="btn-confirmar-lavado-accion">
+            <i class="fas fa-check me-1"></i> Confirmar Operación
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-4 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h5><i class="fas fa-car"></i> Estacionamiento Los Ríos</h5>
+          <p>Sistema de gestión integral para estacionamiento y servicios de lavado.</p>
+        </div>
+        <div class="col-md-4">
+          <h5><i class="fas fa-phone"></i> Contacto</h5>
+          <p>Teléfono: [TU_TELEFONO]<br>Valdivia, Los Ríos</p>
+        </div>
+        <div class="col-md-4">
+          <h5><i class="fas fa-cog"></i> Sistema</h5>
+          <p>Versión: 2.0<br>Actualización: <span id="fecha-sistema"></span></p>
+        </div>
+      </div>
+      <hr>
+      <div class="text-center">
+        <p class="mb-0">&copy; 2024 Estacionamiento Los Ríos</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../JS/main.js"></script>
+  
+  <!-- 🖨️ Servicio de impresión térmica (Windows 7 compatible) -->
+  <script src="../JS/print-service-client-win7.js"></script>
+  
+  <script src="../JS/lavados.js"></script>
+</body>
+</html>

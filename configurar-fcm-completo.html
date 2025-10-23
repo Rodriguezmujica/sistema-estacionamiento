@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar FCM - Sistema Estacionamiento</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .status-box { padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 5px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; margin: 10px 0; word-break: break-all; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Configurar Firebase Cloud Messaging</h1>
+        
+        <div class="status-box info">
+            <strong>🔑 Clave FCM Configurada:</strong><br>
+            BL38f3jX5zj-73XuxYytU9m6bCMKA2mKHcxBwJWUI0u1I_IDfFjAtuUw91DSH1gLEgsLr1XCrdqOp9IqmfK8yDI
+        </div>
+        
+        <div class="status-box">
+            <h3>📱 Paso 1: Solicitar Permisos de Notificación</h3>
+            <button class="btn-primary" onclick="solicitarPermisos()">Solicitar Permisos</button>
+            <div id="permisos-resultado"></div>
+        </div>
+        
+        <div class="status-box">
+            <h3>🔑 Paso 2: Obtener Token FCM</h3>
+            <button class="btn-success" onclick="obtenerTokenFCM()">Obtener Token FCM</button>
+            <div id="token-resultado"></div>
+        </div>
+        
+        <div class="status-box">
+            <h3>🧪 Paso 3: Probar Notificación</h3>
+            <button class="btn-warning" onclick="probarNotificacion()">Probar Notificación</button>
+            <div id="test-resultado"></div>
+        </div>
+        
+        <div class="status-box">
+            <h3>📋 Paso 4: Configurar Webhook TUU</h3>
+            <p>Usa esta configuración en TUU/Haulmer:</p>
+            <div class="code">
+URL: https://fcm.googleapis.com/fcm/send
+Método: POST
+Headers:
+  Authorization: key=BL38f3jX5zj-73XuxYytU9m6bCMKA2mKHcxBwJWUI0u1I_IDfFjAtuUw91DSH1gLEgsLr1XCrdqOp9IqmfK8yDI
+  Content-Type: application/json
+
+Body (ejemplo):
+{
+  "to": "TOKEN_FCM_AQUI",
+  "notification": {
+    "title": "Pago Confirmado",
+    "body": "Transacción #700024107682 pagada exitosamente"
+  },
+  "data": {
+    "transaction_id": "700024107682",
+    "status": "completed",
+    "amount": "200"
+  }
+}
+            </div>
+        </div>
+        
+        <div class="status-box">
+            <h3>📝 Log de Actividad</h3>
+            <div id="log" class="log"></div>
+            <button onclick="limpiarLog()">Limpiar Log</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-messaging.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnkbFxK2e7jw6O_6E8CDfHWOZH9AT3MKg",
+            authDomain: "sistemaestacionamiento-46735.firebaseapp.com",
+            projectId: "sistemaestacionamiento-46735",
+            storageBucket: "sistemaestacionamiento-46735.firebasestorage.app",
+            messagingSenderId: "570161231939",
+            appId: "1:570161231939:web:50a5f88fcd65e98fa03cf6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+        
+        // VAPID Key (necesaria para web push)
+        const vapidKey = "BL38f3jX5zj-73XuxYytU9m6bCMKA2mKHcxBwJWUI0u1I_IDfFjAtuUw91DSH1gLEgsLr1XCrdqOp9IqmfK8yDI";
+        
+        let fcmToken = null;
+        let logElement = document.getElementById('log');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function limpiarLog() {
+            logElement.innerHTML = '';
+        }
+        
+        // Solicitar permisos de notificación
+        window.solicitarPermisos = async function() {
+            const resultado = document.getElementById('permisos-resultado');
+            log('🔔 Solicitando permisos de notificación...');
+            
+            try {
+                const permission = await Notification.requestPermission();
+                
+                if (permission === 'granted') {
+                    resultado.innerHTML = '<div class="status-box success">✅ Permisos de notificación concedidos</div>';
+                    log('✅ Permisos de notificación concedidos');
+                } else if (permission === 'denied') {
+                    resultado.innerHTML = '<div class="status-box error">❌ Permisos de notificación denegados. Ve a configuración del navegador.</div>';
+                    log('❌ Permisos de notificación denegados');
+                } else {
+                    resultado.innerHTML = '<div class="status-box warning">⚠️ Permisos de notificación cancelados</div>';
+                    log('⚠️ Permisos de notificación cancelados');
+                }
+            } catch (error) {
+                resultado.innerHTML = `<div class="status-box error">❌ Error: ${error.message}</div>`;
+                log(`❌ Error solicitando permisos: ${error.message}`);
+            }
+        };
+        
+        // Obtener token FCM
+        window.obtenerTokenFCM = async function() {
+            const resultado = document.getElementById('token-resultado');
+            log('🔑 Obteniendo token FCM...');
+            
+            try {
+                fcmToken = await getToken(messaging, { vapidKey });
+                
+                if (fcmToken) {
+                    resultado.innerHTML = `
+                        <div class="status-box success">
+                            ✅ <strong>Token FCM Obtenido:</strong><br>
+                            <div class="code">${fcmToken}</div>
+                            <button onclick="copiarToken()">Copiar Token</button>
+                        </div>
+                    `;
+                    log(`✅ Token FCM obtenido: ${fcmToken.substring(0, 50)}...`);
+                    
+                    // Guardar token en localStorage
+                    localStorage.setItem('fcm_token', fcmToken);
+                } else {
+                    resultado.innerHTML = '<div class="status-box error">❌ No se pudo obtener token FCM</div>';
+                    log('❌ No se pudo obtener token FCM');
+                }
+            } catch (error) {
+                resultado.innerHTML = `<div class="status-box error">❌ Error: ${error.message}</div>`;
+                log(`❌ Error obteniendo token: ${error.message}`);
+            }
+        };
+        
+        // Copiar token al portapapeles
+        window.copiarToken = function() {
+            if (fcmToken) {
+                navigator.clipboard.writeText(fcmToken).then(() => {
+                    log('📋 Token copiado al portapapeles');
+                    alert('Token copiado al portapapeles');
+                });
+            }
+        };
+        
+        // Probar notificación
+        window.probarNotificacion = function() {
+            const resultado = document.getElementById('test-resultado');
+            log('🧪 Probando notificación...');
+            
+            if (Notification.permission === 'granted') {
+                const notification = new Notification('Test FCM', {
+                    body: 'Esta es una notificación de prueba',
+                    icon: '/imagenes/logo.png',
+                    tag: 'test-notification'
+                });
+                
+                resultado.innerHTML = '<div class="status-box success">✅ Notificación de prueba enviada</div>';
+                log('✅ Notificación de prueba enviada');
+                
+                notification.onclick = function() {
+                    log('🔔 Notificación clickeada');
+                    notification.close();
+                };
+            } else {
+                resultado.innerHTML = '<div class="status-box error">❌ Primero solicita permisos de notificación</div>';
+                log('❌ Permisos de notificación requeridos');
+            }
+        };
+        
+        // Escuchar mensajes FCM en primer plano
+        onMessage(messaging, (payload) => {
+            console.log('📨 Mensaje FCM recibido:', payload);
+            log(`📨 Mensaje FCM recibido: ${JSON.stringify(payload)}`);
+            
+            // Mostrar notificación
+            if (payload.notification) {
+                const notification = new Notification(payload.notification.title, {
+                    body: payload.notification.body,
+                    icon: '/imagenes/logo.png',
+                    tag: 'tuu-payment'
+                });
+                
+                notification.onclick = function() {
+                    log('🔔 Notificación TUU clickeada');
+                    notification.close();
+                    
+                    // Actualizar estado del pago
+                    if (payload.data?.transaction_id) {
+                        verificarPagoTUU(payload.data.transaction_id);
+                    }
+                };
+            }
+            
+            // Actualizar estado del pago automáticamente
+            if (payload.data?.transaction_id) {
+                log(`🔄 Actualizando pago: ${payload.data.transaction_id}`);
+                verificarPagoTUU(payload.data.transaction_id);
+            }
+        });
+        
+        // Función para verificar pago TUU
+        async function verificarPagoTUU(transactionId) {
+            try {
+                const response = await fetch(`tuu-status-websocket.php?action=check_status&transaction_id=${encodeURIComponent(transactionId)}`);
+                const data = await response.json();
+                
+                if (data.success && data.status === 'completed') {
+                    log(`✅ Pago confirmado automáticamente: ${transactionId}`);
+                    // Aquí puedes actualizar la UI del sistema
+                } else {
+                    log(`⚠️ Pago aún pendiente: ${transactionId}`);
+                }
+            } catch (error) {
+                log(`❌ Error verificando pago: ${error.message}`);
+            }
+        }
+        
+        // Inicializar automáticamente
+        log('🚀 Sistema FCM iniciado');
+        
+        // Verificar si ya tenemos permisos
+        if (Notification.permission === 'granted') {
+            log('✅ Permisos ya concedidos');
+            obtenerTokenFCM();
+        }
+    </script>
+</body>
+</html>

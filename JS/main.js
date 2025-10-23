@@ -127,8 +127,14 @@ function inicializarToggleEstadisticas() {
   const totalHoy = document.getElementById('total-hoy');
   
   if (toggleServicios && totalHoy) {
+    // Por defecto, ocultar la información al cargar la página
+    totalHoy.classList.add('d-none');
+    const icono = toggleServicios.querySelector('i');
+    icono.className = 'fas fa-eye-slash text-muted';
+    icono.style.fontSize = '12px';
+    toggleServicios.title = 'Mostrar información';
+    
     toggleServicios.addEventListener('click', () => {
-      const icono = toggleServicios.querySelector('i');
       const estaVisible = !totalHoy.classList.contains('d-none');
       
       if (estaVisible) {
@@ -152,8 +158,14 @@ function inicializarToggleEstadisticas() {
   const ingresosHoy = document.getElementById('ingresos-hoy');
   
   if (toggleIngresos && ingresosHoy) {
+    // Por defecto, ocultar la información al cargar la página
+    ingresosHoy.classList.add('d-none');
+    const icono = toggleIngresos.querySelector('i');
+    icono.className = 'fas fa-eye-slash text-muted';
+    icono.style.fontSize = '12px';
+    toggleIngresos.title = 'Mostrar información';
+    
     toggleIngresos.addEventListener('click', () => {
-      const icono = toggleIngresos.querySelector('i');
       const estaVisible = !ingresosHoy.classList.contains('d-none');
       
       if (estaVisible) {

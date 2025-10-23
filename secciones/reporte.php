@@ -1,0 +1,438 @@
+<?php
+session_start();
+if (!isset($_SESSION['usuario'])) {
+    header("Location: ../login.php");
+    exit();
+}
+$rol = $_SESSION['rol'];
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Reportes y estadísticas del sistema - Estacionamiento Los Ríos">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../scss/main.css">
+  <link rel="shortcut icon" href="../imagenes/Logo_sin_fondo.png">
+  <title>Reportes | Estacionamiento Los Ríos</title>
+</head>
+
+<body class="bg-light">
+  <!-- NAVEGACIÓN -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold d-flex align-items-center" href="../index.php">
+        <img src="../imagenes/Logo_sin_fondo.png" alt="Logo" height="40" class="me-2">
+        Estacionamiento Los Ríos
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="../index.php">
+              <i class="fas fa-home"></i> Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="./lavados.php">
+              <i class="fas fa-car-wash"></i> Servicios Lavado
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="./reporte.php">
+              <i class="fas fa-chart-bar"></i> Reportes
+            </a>
+          </li>
+          <?php if ($rol === 'admin'): ?>
+          <li class="nav-item">
+            <a class="nav-link text-warning fw-bold" href="./admin.php">
+              <i class="fas fa-cog"></i> Administración
+            </a>
+          </li>
+          <?php endif; ?>
+        </ul>
+      </div>
+
+      <div class="d-flex align-items-center">
+        <span class="badge bg-success fs-6 me-3">
+          <i class="fas fa-dollar-sign"></i> $35/min
+        </span>
+        <span class="text-white me-3" id="fecha-hora"></span>
+        <a href="../logout.php" class="btn btn-outline-light btn-sm">
+          <i class="fas fa-sign-out-alt"></i> Salir
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="container py-4">
+    
+    <!-- TÍTULO -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h1 class="display-6 text-primary">
+          <i class="fas fa-chart-line"></i> Reportes y Estadísticas
+        </h1>
+        <p class="lead text-muted">Resumen de actividad y servicios completados</p>
+      </div>
+    </div>
+
+    <!-- ESTADÍSTICAS PRINCIPALES -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-4">
+        <div class="card text-bg-success mb-3 shadow-sm">
+          <div class="card-header">
+            <i class="fas fa-calendar-day"></i> Total Diario
+          </div>
+          <div class="card-body">
+            <h5 class="card-title" id="servicios-diario">0</h5>
+            <p class="card-text">Servicios completados hoy.</p>
+            <p class="card-text">
+              <strong>Ingresos: $<span id="ingresos-diario">0</span></strong>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card text-bg-primary mb-3 shadow-sm">
+          <div class="card-header">
+            <i class="fas fa-calendar-week"></i> Mensual (L-V)
+          </div>
+          <div class="card-body">
+            <h5 class="card-title" id="servicios-mensual-lv">0</h5>
+            <p class="card-text">Servicios de Lunes a Viernes.</p>
+            <p class="card-text">
+              <strong>Ingresos: $<span id="ingresos-mensual-lv">0</span></strong>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card text-bg-dark mb-3 shadow-sm">
+          <div class="card-header">
+            <i class="fas fa-calendar"></i> Mensual Completo
+          </div>
+          <div class="card-body">
+            <h5 class="card-title" id="servicios-mensual-completo">0</h5>
+            <p class="card-text">Incluye fines de semana.</p>
+            <p class="card-text">
+              <strong>Ingresos: $<span id="ingresos-mensual-completo">0</span></strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SERVICIOS ACTIVOS -->
+    <div class="card border-warning shadow-sm mb-4">
+      <div class="card-header bg-warning text-dark">
+        <h4 class="mb-0">
+          <i class="fas fa-clock"></i> Servicios Activos (No Cobrados)
+        </h4>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0" id="tabla-reporte">
+            <thead class="table-dark">
+              <tr>
+                <th><i class="fas fa-car"></i> Patente</th>
+                <th><i class="fas fa-user"></i> Cliente</th>
+                <th><i class="fas fa-cog"></i> Tipo de Servicio</th>
+                <th><i class="fas fa-clock"></i> Hora de Ingreso</th>
+                <th><i class="fas fa-soap"></i> Lavado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                  <i class="fas fa-spinner fa-spin"></i> Cargando servicios activos...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTRO POR FECHAS -->
+    <div class="card border-info shadow-sm">
+      <div class="card-header bg-info text-white">
+        <h4 class="mb-0">
+          <i class="fas fa-calendar-alt"></i> Consulta por Rango de Fechas
+        </h4>
+      </div>
+      <div class="card-body">
+        <!-- Controles de fecha -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label for="fecha-desde" class="form-label">
+              <i class="fas fa-calendar-plus"></i> Desde:
+            </label>
+            <input type="date" class="form-control" id="fecha-desde" value="">
+          </div>
+          <div class="col-md-4">
+            <label for="fecha-hasta" class="form-label">
+              <i class="fas fa-calendar-minus"></i> Hasta:
+            </label>
+            <input type="date" class="form-control" id="fecha-hasta" value="">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">&nbsp;</label>
+            <div>
+              <button class="btn btn-primary w-100" onclick="consultarPorFechas()">
+                <i class="fas fa-search"></i> Consultar
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Resumen de consulta -->
+        <div class="row g-3 mb-3" id="resumen-fechas" style="display: none;">
+          <div class="col-md-6">
+            <div class="alert alert-success mb-0">
+              <i class="fas fa-chart-line"></i> 
+              <strong>Total Servicios:</strong> <span id="total-servicios-fecha">0</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="alert alert-success mb-0">
+              <i class="fas fa-dollar-sign"></i> 
+              <strong>Total Ingresos:</strong> $<span id="total-ingresos-fecha">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla de categorías -->
+        <div class="table-responsive">
+          <table class="table table-striped mb-0">
+            <thead class="table-secondary">
+              <tr>
+                <th><i class="fas fa-tags"></i> Categoría</th>
+                <th><i class="fas fa-list"></i> Tipos de Servicios</th>
+                <th><i class="fas fa-chart-bar"></i> Cantidad</th>
+                <th><i class="fas fa-dollar-sign"></i> Total</th>
+                <th><i class="fas fa-eye"></i> Ver Detalles</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-fechas-body">
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                  <i class="fas fa-info-circle"></i> Selecciona un rango de fechas para consultar
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Tabla de detalles (oculta por defecto) -->
+        <div id="detalles-container" style="display: none;" class="mt-3">
+          <h6><i class="fas fa-list-alt"></i> Detalles de Servicios</h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+              <thead class="table-dark">
+                <tr>
+                  <th>#</th>
+                  <th><i class="fas fa-car"></i> Patente</th>
+                  <th><i class="fas fa-calendar"></i> Fecha Salida</th>
+                  <th><i class="fas fa-cog"></i> Servicio</th>
+                  <th><i class="fas fa-dollar-sign"></i> Total</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-detalles-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CIERRE DE CAJA -->
+    <div class="card border-success shadow-sm mt-4">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+          <i class="fas fa-cash-register"></i> Cierre de Caja
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-md-4">
+            <label for="fecha-cierre" class="form-label">Seleccionar Fecha:</label>
+            <input type="date" class="form-control" id="fecha-cierre">
+          </div>
+          <div class="col-md-8">
+            <label class="form-label">&nbsp;</label>
+            <div class="d-flex gap-2">
+              <button class="btn btn-success" onclick="generarCierreCaja()">
+                <i class="fas fa-file-invoice-dollar"></i> Ver Cierre de Caja
+              </button>
+              <button class="btn btn-primary" onclick="imprimirCierreCaja()">
+                <i class="fas fa-print"></i> Imprimir en Térmica
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Contenedor del cierre de caja (oculto por defecto) -->
+        <div id="contenedor-cierre-caja" class="mt-4 d-none">
+          <hr>
+          <h6 class="text-success"><i class="fas fa-file-invoice"></i> Cierre de Caja - <span id="fecha-cierre-titulo"></span></h6>
+          
+          <!-- Resumen -->
+          <div class="row text-center mb-3">
+            <div class="col-md-6">
+              <div class="alert alert-info mb-0">
+                <h5 id="cierre-total-servicios">0</h5>
+                <small>Servicios Cobrados</small>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="alert alert-success mb-0">
+                <h4 id="cierre-total-ingresos">$0</h4>
+                <small>Total Ingresos</small>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Desglose por Método de Pago -->
+          <div class="card mb-3">
+            <div class="card-header bg-light">
+              <strong>💳 Desglose por Método de Pago</strong>
+            </div>
+            <div class="card-body">
+              <table class="table table-sm mb-0">
+                <tbody id="tabla-desglose-pago">
+                </tbody>
+              </table>
+              
+              <hr>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="alert alert-warning mb-0">
+                    <strong>💵 Efectivo en Caja Física:</strong><br>
+                    <h4 class="mb-0" id="efectivo-en-caja">$0</h4>
+                    <small class="text-muted">Efectivo manual + TUU efectivo</small>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="alert alert-info mb-0">
+                    <strong>💳 Pagos Electrónicos:</strong><br>
+                    <h4 class="mb-0" id="pagos-electronicos">$0</h4>
+                    <small class="text-muted">Débito + Crédito + Transferencia</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Desglose por Categoría -->
+          <div class="card">
+            <div class="card-header bg-light">
+              <strong>📊 Desglose por Tipo de Servicio</strong>
+            </div>
+            <div class="card-body">
+              <table class="table table-sm mb-0">
+                <tbody id="tabla-categorias-cierre">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ACCIONES RÁPIDAS -->
+    <div class="card border-secondary shadow-sm mt-4">
+      <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">
+          <i class="fas fa-tools"></i> Acciones Rápidas
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-2">
+          <div class="col-md-3">
+            <button class="btn btn-outline-success w-100" onclick="exportarReporteExcel()">
+              <i class="fas fa-file-excel"></i> Exportar Excel
+            </button>
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-outline-danger w-100" onclick="exportarReportePDF()">
+              <i class="fas fa-file-pdf"></i> Exportar PDF
+            </button>
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-outline-primary w-100" onclick="actualizarReporte()">
+              <i class="fas fa-sync-alt"></i> Actualizar
+            </button>
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-outline-info w-100" onclick="imprimirReporte()">
+              <i class="fas fa-print"></i> Imprimir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-4 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h5><i class="fas fa-car"></i> Estacionamiento Los Ríos</h5>
+          <p>Sistema de gestión integral para estacionamiento y servicios de lavado.</p>
+        </div>
+        <div class="col-md-4">
+          <h5><i class="fas fa-phone"></i> Contacto</h5>
+          <p>Teléfono: [TU_TELEFONO]<br>Valdivia, Los Ríos</p>
+        </div>
+        <div class="col-md-4">
+          <h5><i class="fas fa-cog"></i> Sistema</h5>
+          <p>Versión: 2.0<br>Actualización: <span id="fecha-sistema"></span></p>
+        </div>
+      </div>
+      <hr>
+      <div class="text-center">
+        <p class="mb-0">&copy; 2024 Estacionamiento Los Ríos</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../JS/main.js"></script>
+  
+  <!-- 🖨️ Servicio de impresión térmica (Windows 7 compatible) -->
+  <script src="../JS/print-service-client-win7.js"></script>
+  
+  <script src="../JS/reporte.js"></script>
+
+  <script>
+    // Funciones adicionales para las acciones rápidas
+    function exportarReporteExcel() {
+      alert('Exportando reporte a Excel...');
+      // Implementar exportación a Excel
+    }
+
+    function exportarReportePDF() {
+      alert('Exportando reporte a PDF...');
+      // Implementar exportación a PDF
+    }
+
+    function actualizarReporte() {
+      location.reload();
+    }
+
+    function imprimirReporte() {
+      window.print();
+    }
+  </script>
+</body>
+</html>

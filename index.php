@@ -40,12 +40,12 @@ $rol = $_SESSION['rol'];
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="./secciones/lavados.html">
+            <a class="nav-link" href="./secciones/lavados.php">
               <i class="fas fa-car-wash"></i> Servicios Lavado
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="./secciones/reporte.html">
+            <a class="nav-link" href="./secciones/reporte.php">
               <i class="fas fa-chart-bar"></i> Reportes
             </a>
           </li>
@@ -212,7 +212,7 @@ $rol = $_SESSION['rol'];
       <div class="card-body">
         <div class="row g-2">
           <div class="col-md-3">
-            <a href="./secciones/reporte.html" class="btn btn-outline-primary w-100">
+            <a href="./secciones/reporte.php" class="btn btn-outline-primary w-100">
               <i class="fas fa-chart-bar"></i> Informe Diario
             </a>
           </div>

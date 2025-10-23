@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración Webhook TUU - Sistema de Estacionamiento</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background: #f8f9fa;
+            padding: 30px;
+            border: 1px solid #dee2e6;
+        }
+        .footer {
+            background: #6c757d;
+            color: white;
+            padding: 15px;
+            border-radius: 0 0 8px 8px;
+            font-size: 14px;
+        }
+        .highlight {
+            background: #e3f2fd;
+            padding: 15px;
+            border-left: 4px solid #2196f3;
+            margin: 15px 0;
+        }
+        .code-block {
+            background: #f1f3f4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .info-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .section {
+            margin: 25px 0;
+        }
+        .section h3 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 Configuración de Webhook TUU</h1>
+        <p><strong>Sistema de Estacionamiento Los Ríos</strong></p>
+        <p>Integración con Firebase para Sistema Local</p>
+    </div>
+
+    <div class="content">
+        <div class="info-box">
+            <strong>📋 Asunto del Correo:</strong><br>
+            <code>Configuración de Webhook TUU - Sistema de Estacionamiento Los Ríos</code>
+        </div>
+
+        <div class="section">
+            <h3>👋 Saludo</h3>
+            <p>Estimado equipo de Haulmer,</p>
+            <p>Espero se encuentren bien. Me pongo en contacto con ustedes para solicitar la configuración del webhook de TUU para nuestro sistema de estacionamiento.</p>
+        </div>
+
+        <div class="section">
+            <h3>🏢 Información del Comercio</h3>
+            <div class="highlight">
+                <strong>Datos del Comercio:</strong><br>
+                • <strong>Nombre:</strong> INVERSIONES ROSNER<br>
+                • <strong>RUT:</strong> [Tu RUT empresarial]<br>
+                • <strong>Dirección:</strong> [Tu dirección comercial]<br>
+                • <strong>Teléfono:</strong> [Tu teléfono de contacto]<br>
+                • <strong>Email:</strong> [Tu email de contacto]<br>
+                • <strong>Actividad:</strong> Estacionamiento y Servicios de Lavado<br>
+                • <strong>Proyecto ID TUU:</strong> 5bd29bb6-d922-4eac-ae36-37635b0b8cd9
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🎯 Objetivo de la Solicitud</h3>
+            <p>Necesitamos configurar el webhook de TUU para nuestro sistema de estacionamiento híbrido que opera en red local. Como no disponemos de dominio público, proponemos utilizar Firebase como intermediario para recibir las notificaciones de pagos.</p>
+        </div>
+
+        <div class="section">
+            <h3>🔧 Configuración Técnica Solicitada</h3>
+            <div class="code-block">
+<strong>URL del Webhook:</strong>
+https://sistemaestacionamiento-46735-default-rtdb.firebaseio.com/tuu_webhook_notifications
+
+<strong>Método HTTP:</strong> POST
+<strong>Content-Type:</strong> application/json
+<strong>Autenticación:</strong> Ninguna (pública)
+<strong>Notificaciones requeridas:</strong> success, failed, pending
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📱 Formato de Datos Esperado</h3>
+            <div class="code-block">
+{
+    "transaction_id": "EST-123456-1234567890",
+    "status": "success",
+    "amount": 2000,
+    "patente": "ABC123",
+    "fecha_pago": "2025-10-22 15:30:00",
+    "timestamp": 1761145835,
+    "comercio_id": "5bd29bb6-d922-4eac-ae36-37635b0b8cd9"
+}
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🏗️ Arquitectura del Sistema</h3>
+            <ul>
+                <li><strong>Sistema Híbrido:</strong> Opera entre PC1 (Antix) y PC2 (Windows 7)</li>
+                <li><strong>Base de Datos:</strong> MySQL local sincronizada con Firebase</li>
+                <li><strong>Firebase:</strong> Intermediario para notificaciones en tiempo real</li>
+                <li><strong>Integración:</strong> TUU → Firebase → Sistema Local</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>✅ Beneficios de la Integración</h3>
+            <ul>
+                <li>Confirmación automática de pagos exitosos</li>
+                <li>Notificación inmediata de pagos fallidos</li>
+                <li>Sincronización en tiempo real entre ambas PC</li>
+                <li>Eliminación de confirmación manual de pagos</li>
+                <li>Mayor precisión en la conciliación de caja</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>🔍 Información Adicional</h3>
+            <div class="warning-box">
+                <strong>Nota Importante:</strong><br>
+                Nuestro sistema opera en red local sin dominio público, por lo que Firebase actúa como puente de comunicación. La URL proporcionada es estable y está configurada para recibir notificaciones 24/7.
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📞 Datos de Contacto</h3>
+            <p>Para cualquier consulta técnica o aclaración:</p>
+            <ul>
+                <li><strong>Email:</strong> [tu-email@ejemplo.com]</li>
+                <li><strong>Teléfono:</strong> [tu-teléfono]</li>
+                <li><strong>Horario de atención:</strong> Lunes a Viernes, 8:00 - 18:00</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>🙏 Agradecimiento</h3>
+            <p>Agradecemos de antemano su colaboración y esperamos su pronta respuesta para poder implementar esta funcionalidad que mejorará significativamente la operación de nuestro negocio.</p>
+            <p>Quedamos atentos a sus comentarios y requerimientos adicionales.</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>Sistema de Estacionamiento Los Ríos</strong></p>
+        <p>Desarrollado con integración TUU + Firebase</p>
+        <p>Fecha: 22 de Octubre de 2025</p>
+    </div>
+</body>
+</html>
+
+
+
+

@@ -159,13 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // Usar window.BASE_PATH para evitar conflictos de redeclaración
-  if (typeof window.BASE_PATH === 'undefined') {
-    window.BASE_PATH = getBasePath();
-  }
-
-  // Usar la variable global
-  const BASE_PATH = window.BASE_PATH;
+  // Usar la variable global ya declarada en main.js
+  // No redeclarar BASE_PATH para evitar conflictos
 
   // --- FUNCIONES AUXILIARES ---
 
