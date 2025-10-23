@@ -23,8 +23,9 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
   <header>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
       <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="../index.php">
-          <i class="fas fa-car"></i> Estacionamiento Los Ríos
+        <a class="navbar-brand fw-bold d-flex align-items-center" href="../index.php">
+          <img src="../imagenes/Logo_sin_fondo.png" alt="Logo" height="40" class="me-2">
+          Estacionamiento Los Ríos
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
