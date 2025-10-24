@@ -52,3 +52,6 @@ debug.log
 *.sql.gz
 *.sql.zip
 backup_*.sql
+
+# Carpeta de entrega al cliente (contiene credenciales)
+ENTREGA_JEFE/
