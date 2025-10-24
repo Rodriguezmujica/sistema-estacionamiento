@@ -180,9 +180,6 @@ $rol = $_SESSION['rol'];
               <button class="btn btn-warning btn-lg" id="btn-cobrar-ticket" disabled>
                 <i class="fas fa-file-invoice"></i> Pago Manual (Comprobante Interno)
               </button>
-              <small class="text-muted text-center">
-                <i class="fas fa-exclamation-circle"></i> Usar solo si TUU está caído o no hay Internet
-              </small>
               <button class="btn btn-success btn-lg" id="btn-pagar-tuu" disabled>
                 <i class="fas fa-receipt"></i> Pagar con TUU (Boleta Oficial)
               </button>
