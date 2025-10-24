@@ -107,8 +107,7 @@ Se ha desarrollado un sistema completo de gestión de estacionamiento y servicio
 - **Días laborables:** ~10 días × 2 horas = **20 horas**
 - **Fines de semana:** ~5 días × 7 horas promedio = **35 horas**
 - **Horas adicionales debugging:** **5 horas**
-- **Implementación sistema híbrido:** **10 horas**
-- **TOTAL HORAS REALES:** **70 horas**
+- **TOTAL HORAS REALES:** **60 horas**
 
 ### **Distribución de Horas por Actividad:**
 
@@ -131,16 +130,14 @@ Se ha desarrollado un sistema completo de gestión de estacionamiento y servicio
 | Sistema de Reportes | 3h | Tablas básicas, visualización |
 | Impresión Frontend | 2h | Cliente impresión básico |
 
-#### **Configuración y Debugging - 25 horas**
+#### **Configuración y Debugging - 15 horas**
 | Módulo | Horas Realizadas | Descripción |
 |--------|------------------|-------------|
 | Base de Datos | 3h | Setup inicial, scripts SQL |
 | Configuración Servidor | 4h | Apache, PHP, permisos básicos |
-| Sistema Híbrido | 8h | Windows 7 + Antix, conexión red local |
-| VPN Tailscale | 3h | Configuración acceso remoto seguro |
-| Configuración Impresora | 3h | Drivers, servicios |
-| Optimización y Respaldo | 2h | MySQL, respaldo automático |
-| Debugging y Testing | 2h | Pruebas funcionales, correcciones |
+| Sistema Híbrido | 4h | Windows 7 + Antix, conexión red local |
+| VPN Tailscale | 2h | Configuración acceso remoto seguro |
+| Configuración Impresora | 2h | Drivers, servicios |
 
 ---
 
@@ -150,20 +147,19 @@ Se ha desarrollado un sistema completo de gestión de estacionamiento y servicio
 |-----------|--------------|
 | **Desarrollo Backend** | 25h |
 | **Desarrollo Frontend** | 20h |
-| **Configuración y Debugging** | 25h |
-| **TOTAL HORAS REALES** | **70h** |
+| **Configuración y Debugging** | 15h |
+| **TOTAL HORAS REALES** | **60h** |
 
 ### **Cálculo del Costo**
 - **Tarifa por hora:** $9 USD (Junior Developer)
-- **Total horas reales:** 70 horas
-- **Total del proyecto:** **$630 USD**
+- **Total horas reales:** 60 horas
+- **Total del proyecto:** **$540 USD**
 
 ### **Cronograma de Trabajo Real:**
 - **Días laborables (lunes-viernes):** 2 horas/día × 10 días = 20 horas
 - **Fines de semana:** ~7 horas/día × 5 días = 35 horas  
 - **Debugging adicional:** 5 horas
-- **Sistema híbrido:** 10 horas
-- **Total:** **70 horas** distribuidas en 15 días
+- **Total:** **60 horas** distribuidas en 15 días
 
 ---
 
@@ -226,7 +222,7 @@ Se ha desarrollado un sistema completo de gestión de estacionamiento y servicio
 
 ## ⚡ Propuesta Comercial
 
-**Inversión Total:** $630 USD
+**Inversión Total:** $540 USD
 
 
 ### **Garantía:**
