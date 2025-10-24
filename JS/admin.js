@@ -10,15 +10,6 @@ if (typeof getBasePath === 'undefined') {
 // BASE_PATH se declara en main.js, solo lo usamos aquí
 // No declarar para evitar conflictos de redeclaración
 
-// Función para esperar a que BASE_PATH esté disponible
-function esperarBasePath(callback) {
-  if (typeof BASE_PATH !== 'undefined' && BASE_PATH) {
-    callback();
-  } else {
-    setTimeout(() => esperarBasePath(callback), 100);
-  }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
   const modalClienteElement = document.getElementById('modalCliente');
   const modalCliente = new bootstrap.Modal(modalClienteElement);
@@ -935,15 +926,7 @@ function llenarSelectorMeses() {
 
 async function cargarResumenEjecutivo() {
   console.log('🔍 Iniciando cargarResumenEjecutivo');
-  
-  // Esperar a que BASE_PATH esté disponible
-  esperarBasePath(() => {
-    console.log('BASE_PATH:', typeof BASE_PATH, BASE_PATH);
-    ejecutarCargarResumenEjecutivo();
-  });
-}
-
-async function ejecutarCargarResumenEjecutivo() {
+  console.log('BASE_PATH:', typeof BASE_PATH, BASE_PATH);
   
   const selector = document.getElementById('selector-mes-resumen');
   if (!selector) {

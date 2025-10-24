@@ -22,8 +22,8 @@ if (typeof window.getBasePathValue === 'undefined') {
   };
 }
 
-// Usar la función global
-const BASE_PATH = window.getBasePathValue();
+// Usar la función global - declarar como var para evitar conflictos
+var BASE_PATH = window.getBasePathValue();
 
 document.addEventListener('DOMContentLoaded', () => {
   // Inicializar el reloj en todas las páginas que tengan el elemento #fecha-hora
