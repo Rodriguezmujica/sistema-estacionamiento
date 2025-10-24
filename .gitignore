@@ -41,6 +41,7 @@ config_seguridad.php
 ACCESOS.private.md
 credenciales.txt
 passwords.txt
+CREDENCIALES_SISTEMA.md
 
 # Logs del sistema (pueden contener info sensible)
 /logs/*.log
