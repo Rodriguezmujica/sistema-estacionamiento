@@ -343,6 +343,36 @@ async function optimizarSistema() {
   }
 }
 
+async function respaldarDatos() {
+  if (!confirm('¿Desea crear un respaldo de la base de datos? Esto puede tomar unos minutos.')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${BASE_PATH}/api/api_respaldo.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        tipo: 'completo',
+        incluir_datos: true
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert(`✅ Respaldo creado exitosamente\n\nArchivo: ${result.archivo}\nTamaño: ${result.tamaño}\nUbicación: ${result.ubicacion}`);
+    } else {
+      throw new Error(result.error);
+    }
+    
+  } catch (error) {
+    console.error('Error creando respaldo:', error);
+    alert('❌ Error al crear respaldo: ' + error.message);
+  }
+}
 
 async function exportarReporte() {
   const fechaInicio = prompt('Fecha de inicio (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
