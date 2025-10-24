@@ -1007,12 +1007,8 @@ async function cargarResumenEjecutivo() {
   document.getElementById('resumen-contenido').classList.add('d-none');
   
   try {
-    // Crear AbortController para timeout personalizado
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      console.log('⏰ Timeout alcanzado, abortando fetch...');
-      controller.abort();
-    }, 30000); // 30 segundos
+    // Temporalmente sin AbortController para debuggear
+    console.log('🔧 Usando fetch sin AbortController para debuggear...');
     
       // Construir URL completa usando el valor dinámico
       let url;
@@ -1028,10 +1024,8 @@ async function cargarResumenEjecutivo() {
       console.log('🌐 URL de la petición:', url);
     
     console.log('🌐 Intentando fetch a:', url);
-    console.log('🌐 Signal state:', controller.signal.aborted);
     
     const response = await fetch(url, {
-      signal: controller.signal,
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -1041,8 +1035,6 @@ async function cargarResumenEjecutivo() {
     
     console.log('✅ Response recibida:', response.status, response.statusText);
     console.log('✅ Response headers:', [...response.headers.entries()]);
-    
-    clearTimeout(timeoutId);
     
     // Verificar si la respuesta es válida
     if (!response.ok) {
