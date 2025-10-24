@@ -4,13 +4,13 @@ require_once __DIR__ . '/../config/conexion.php';
 
 try {
     // Obtener la última salida con información del ingreso
-    $sql = "SELECT s.id_ingresos, s.fecha_salida, s.hora_salida, s.total, s.metodo_pago,
-                   i.patente, i.fecha_ingreso, i.hora_ingreso, i.nombre_cliente,
+    $sql = "SELECT s.id_ingresos, s.fecha_salida, s.total, s.metodo_pago,
+                   i.patente, i.fecha_ingreso,
                    ti.nombre_servicio
             FROM salidas s
             JOIN ingresos i ON s.id_ingresos = i.idautos_estacionados
             JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
-            ORDER BY s.fecha_salida DESC, s.hora_salida DESC
+            ORDER BY s.fecha_salida DESC
             LIMIT 1";
     
     $result = $conn->query($sql);

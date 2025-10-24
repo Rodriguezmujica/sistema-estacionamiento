@@ -4,8 +4,8 @@ require_once __DIR__ . '/../config/conexion.php';
 
 try {
     // Obtener el último ingreso con información completa
-    $sql = "SELECT i.idautos_estacionados, i.patente, i.fecha_ingreso, i.hora_ingreso, 
-                   i.nombre_cliente, ti.nombre_servicio
+    $sql = "SELECT i.idautos_estacionados, i.patente, i.fecha_ingreso, 
+                   ti.nombre_servicio
             FROM ingresos i
             JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
             ORDER BY i.idautos_estacionados DESC
