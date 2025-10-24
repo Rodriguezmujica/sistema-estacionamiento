@@ -926,7 +926,10 @@ function llenarSelectorMeses() {
 
 async function cargarResumenEjecutivo() {
   console.log('🔍 Iniciando cargarResumenEjecutivo');
-  console.log('BASE_PATH:', typeof BASE_PATH, BASE_PATH);
+  
+  // Obtener BASE_PATH dinámicamente para evitar problemas de navegación
+  const currentBasePath = window.getBasePathValue ? window.getBasePathValue() : '/sistemaEstacionamiento';
+  console.log('BASE_PATH actual:', typeof currentBasePath, currentBasePath);
   
   const selector = document.getElementById('selector-mes-resumen');
   if (!selector) {
@@ -965,16 +968,16 @@ async function cargarResumenEjecutivo() {
     const controller = new AbortController(); // 🚀 Aumentamos el timeout a 60 segundos para consultas pesadas
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 segundos
     
-      // Construir URL completa para evitar problemas de rutas relativas
+      // Construir URL completa usando el valor dinámico
       let url;
-      if (BASE_PATH.startsWith('http')) {
+      if (currentBasePath.startsWith('http')) {
         // Si ya es una URL completa
-        url = `${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`;
+        url = `${currentBasePath}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`;
       } else {
         // Si es una ruta relativa, construir URL completa
         const protocol = window.location.protocol;
         const host = window.location.host;
-        url = `${protocol}//${host}${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`;
+        url = `${protocol}//${host}${currentBasePath}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`;
       }
       console.log('🌐 URL de la petición:', url);
     
