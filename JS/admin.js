@@ -38,14 +38,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const button = event.relatedTarget;
     const esEditar = button ? button.getAttribute('data-id') : null;
 
-    const form = document.getElementById('form-cliente-mensual');
-    form.reset();
-    document.getElementById('cliente-id-mensual').value = '';
-
-    if (esEditar) {
-      // Modo Editar (se maneja en la función editarClienteMensual)
-    } else {
-      // Modo Agregar
+    // Solo resetear si no estamos editando (si no hay ID en el formulario)
+    const clienteId = document.getElementById('cliente-id-mensual').value;
+    if (!clienteId) {
+      const form = document.getElementById('form-cliente-mensual');
+      form.reset();
+      document.getElementById('cliente-id-mensual').value = '';
       document.getElementById('titulo-modal-cliente').innerText = 'Agregar Nuevo Cliente Mensual';
     }
   });
