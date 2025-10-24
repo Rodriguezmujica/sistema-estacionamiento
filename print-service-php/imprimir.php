@@ -33,41 +33,13 @@ require_once __DIR__ . '/../ImpresionTermica/ticket/autoload.php';
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\EscposImage;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
-use Mike42\Escpos\PrintConnectors\FilePrintConnector;
-use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
-
-/**
- * Función para crear el conector de impresión apropiado según el sistema operativo
- */
-function crearConectorImpresion($nombreImpresora) {
-    $os = php_uname('s');
-    
-    // Si es Windows, usar WindowsPrintConnector
-    if (stripos($os, 'Windows') !== false) {
-        return new WindowsPrintConnector($nombreImpresora);
-    }
-    
-    // Para Linux/Antix, intentar diferentes métodos
-    try {
-        // 1. Intentar NetworkPrintConnector (IP de impresora)
-        if (filter_var($nombreImpresora, FILTER_VALIDATE_IP)) {
-            return new NetworkPrintConnector($nombreImpresora);
-        }
-        
-        // 2. Intentar FilePrintConnector como fallback
-        return new FilePrintConnector($nombreImpresora);
-    } catch (Exception $e) {
-        // Si todo falla, lanzar error
-        throw new Exception("No se pudo conectar a la impresora '$nombreImpresora' en sistema '$os': " . $e->getMessage());
-    }
-}
 
 /**
  * Función para imprimir ticket de ingreso
  */
 function imprimirTicketIngreso($datos, $nombreImpresora) {
     try {
-        $connector = crearConectorImpresion($nombreImpresora);
+        $connector = new WindowsPrintConnector($nombreImpresora);
         $printer = new Printer($connector);
 
         // --- INICIO DE LA SECCIÓN CORREGIDA ---
@@ -101,11 +73,10 @@ function imprimirTicketIngreso($datos, $nombreImpresora) {
         $printer->text("INVERSIONES ROSNER\n");
         $printer->setEmphasis(false);
         $printer->text("Estacionamiento y Lavado\n");
-        $printer->text("================================\n");
         $printer->text("Perez Rosales #733-C\n");
         $printer->text("Los Rios, Chile\n");
         $printer->text("Tel: +56 9 3395 8739\n");
-        $printer->text("================================\n\n");
+        $printer->text("================================\n");
         
         // Título del ticket
         date_default_timezone_set("America/Santiago");
@@ -114,13 +85,13 @@ function imprimirTicketIngreso($datos, $nombreImpresora) {
         $printer->setEmphasis(false);
         $printer->text("Fecha: $fecha_ingreso\n");
         $printer->text("Hora:  $hora_ingreso\n");
-        $printer->text("--------------------------------\n\n");
+        $printer->text("--------------------------------\n");
         
         // ========================================
         // 🚗 DETALLES DEL SERVICIO
         // ========================================
         $printer->setJustification(Printer::JUSTIFY_LEFT);
-        $printer->text("Tipo Vehículo: " . $tipo_vehiculo . "\n");
+        $printer->text("Servicio: " . $tipo_vehiculo . "\n");
         $printer->text("--------------------------------\n");
         
         // ========================================
@@ -159,7 +130,7 @@ function imprimirTicketIngreso($datos, $nombreImpresora) {
  */
 function imprimirTicketSalida($datos, $nombreImpresora) {
     try {
-        $connector = crearConectorImpresion($nombreImpresora);
+        $connector = new WindowsPrintConnector($nombreImpresora);
         $printer = new Printer($connector);
         // ========================================
         // 🖼️ LOGO DEL NEGOCIO
@@ -185,11 +156,10 @@ function imprimirTicketSalida($datos, $nombreImpresora) {
         $printer->text("INVERSIONES ROSNER\n");
         $printer->setEmphasis(false);
         $printer->text("Estacionamiento y Lavado\n");
-        $printer->text("================================\n");
         $printer->text("Perez Rosales #733-C\n");
         $printer->text("Los Rios, Chile\n");
         $printer->text("Tel: +56 9 3395 8739\n");
-        $printer->text("================================\n\n");
+        $printer->text("================================\n");
 
         // Título del ticket
         date_default_timezone_set("America/Santiago");
@@ -244,7 +214,7 @@ function imprimirTicketLavado($datos, $nombreImpresora) {
     $connector = null;
     
     try {
-        $connector = crearConectorImpresion($nombreImpresora);
+        $connector = new WindowsPrintConnector($nombreImpresora);
         $printer = new Printer($connector);
         
         // ========================================
@@ -273,7 +243,7 @@ function imprimirTicketLavado($datos, $nombreImpresora) {
         $printer->text("INVERSIONES ROSNER\n");
         $printer->setEmphasis(false);
         $printer->text("Estacionamiento y Lavado\n");
-        $printer->text("================================\n");
+       $printer->text("Tel: +56 9 3395 8739\n");
         $printer->text("Perez Rosales #733-C\n");
         $printer->text("Los Rios, Chile\n");
         $printer->text("================================\n\n");
@@ -287,7 +257,6 @@ function imprimirTicketLavado($datos, $nombreImpresora) {
 
         // Detalles
         $printer->setJustification(Printer::JUSTIFY_LEFT);
-        $printer->text("Ticket: " . ($datos['ticket_id'] ?? 'N/A') . "\n");
         $printer->text("Patente: " . strtoupper($datos['patente'] ?? 'N/A') . "\n");
         $printer->text("Servicio: " . ($datos['servicio'] ?? 'Lavado Simple') . "\n");
         $printer->text("--------------------------------\n");
@@ -354,7 +323,7 @@ function imprimirTicketLavado($datos, $nombreImpresora) {
  */
 function imprimirCierreCaja($datos, $nombreImpresora) {
     try {
-        $connector = crearConectorImpresion($nombreImpresora);
+        $connector = new WindowsPrintConnector($nombreImpresora);
         $printer = new Printer($connector);
         
         $printer->setJustification(Printer::JUSTIFY_CENTER);
@@ -420,7 +389,7 @@ function imprimirCierreCaja($datos, $nombreImpresora) {
  */
 function imprimirTest($datos, $nombreImpresora) {
     try {
-        $connector = crearConectorImpresion($nombreImpresora);
+        $connector = new WindowsPrintConnector($nombreImpresora);
         $printer = new Printer($connector);
         
         $printer->setJustification(Printer::JUSTIFY_CENTER);
