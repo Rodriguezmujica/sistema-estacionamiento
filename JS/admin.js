@@ -7,13 +7,17 @@ if (typeof getBasePath === 'undefined') {
   };
 }
 
-// Usar window.BASE_PATH para evitar conflictos de redeclaración
-if (typeof window.BASE_PATH === 'undefined') {
-  window.BASE_PATH = getBasePath();
-}
+// BASE_PATH se declara en main.js, solo lo usamos aquí
+// No declarar para evitar conflictos de redeclaración
 
-// Usar la variable global (sin const para evitar redeclaración)
-var BASE_PATH = window.BASE_PATH;
+// Función para esperar a que BASE_PATH esté disponible
+function esperarBasePath(callback) {
+  if (typeof BASE_PATH !== 'undefined' && BASE_PATH) {
+    callback();
+  } else {
+    setTimeout(() => esperarBasePath(callback), 100);
+  }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
   const modalClienteElement = document.getElementById('modalCliente');
@@ -931,14 +935,15 @@ function llenarSelectorMeses() {
 
 async function cargarResumenEjecutivo() {
   console.log('🔍 Iniciando cargarResumenEjecutivo');
-  console.log('BASE_PATH:', typeof BASE_PATH, BASE_PATH);
   
-  // Verificar que BASE_PATH esté definido
-  if (typeof BASE_PATH === 'undefined' || !BASE_PATH) {
-    console.error('❌ BASE_PATH no está definido, reintentando en 100ms...');
-    setTimeout(cargarResumenEjecutivo, 100);
-    return;
-  }
+  // Esperar a que BASE_PATH esté disponible
+  esperarBasePath(() => {
+    console.log('BASE_PATH:', typeof BASE_PATH, BASE_PATH);
+    ejecutarCargarResumenEjecutivo();
+  });
+}
+
+async function ejecutarCargarResumenEjecutivo() {
   
   const selector = document.getElementById('selector-mes-resumen');
   if (!selector) {
