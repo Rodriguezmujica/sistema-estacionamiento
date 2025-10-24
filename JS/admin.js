@@ -10,6 +10,47 @@ if (typeof getBasePath === 'undefined') {
 // BASE_PATH se declara en main.js, solo lo usamos aquí
 // No declarar para evitar conflictos de redeclaración
 
+// === SISTEMA DE TOASTS ===
+function showToast(type, message, duration = 5000) {
+  const toastElement = document.getElementById(`toast-${type}`);
+  const toastBody = document.getElementById(`toast-${type}-body`);
+  
+  if (!toastElement || !toastBody) {
+    console.error('Toast element not found:', type);
+    return;
+  }
+  
+  // Convertir saltos de línea a <br>
+  const formattedMessage = message.replace(/\n/g, '<br>');
+  toastBody.innerHTML = formattedMessage;
+  
+  // Crear instancia del toast
+  const toast = new bootstrap.Toast(toastElement, {
+    autohide: true,
+    delay: duration
+  });
+  
+  // Mostrar el toast
+  toast.show();
+}
+
+// Funciones específicas para cada tipo de toast
+function showSuccess(message, duration = 4000) {
+  showToast('success', message, duration);
+}
+
+function showError(message, duration = 6000) {
+  showToast('error', message, duration);
+}
+
+function showWarning(message, duration = 5000) {
+  showToast('warning', message, duration);
+}
+
+function showInfo(message, duration = 4000) {
+  showToast('info', message, duration);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   const modalClienteElement = document.getElementById('modalCliente');
   const modalCliente = new bootstrap.Modal(modalClienteElement);
@@ -216,13 +257,13 @@ async function guardarUsuario() {
 
   // Validaciones
   if (!usuarioData.usuario) {
-    alert('Por favor, ingrese el nombre de usuario.');
+    showWarning('Por favor, ingrese el nombre de usuario.');
     return;
   }
 
   // Si es un nuevo usuario (sin id), la contraseña es obligatoria
   if (!usuarioData.id && !usuarioData.password) {
-    alert('Por favor, ingrese una contraseña para el nuevo usuario.');
+    showWarning('Por favor, ingrese una contraseña para el nuevo usuario.');
     return;
   }
 
@@ -239,7 +280,7 @@ async function guardarUsuario() {
     });
     const result = await response.json();
     if (result.success) {
-      alert(result.message);
+      showSuccess(result.message);
       bootstrap.Modal.getInstance(document.getElementById('modalUsuario')).hide();
       cargarUsuarios();
       // Limpiar el formulario
@@ -249,7 +290,7 @@ async function guardarUsuario() {
       throw new Error(result.error);
     }
   } catch (error) {
-    alert('Error al guardar el usuario: ' + error.message);
+    showError('Error al guardar el usuario: ' + error.message);
     console.error('Error completo:', error);
   }
 }
@@ -552,7 +593,7 @@ async function guardarClienteMensual() {
   };
 
   if (!clienteData.patente || !clienteData.nombres || !clienteData.dia_pago_mensual || !clienteData.fecha_proximo_vencimiento || !clienteData.monto_plan) {
-    alert('Por favor, complete todos los campos obligatorios.');
+    showWarning('Por favor, complete todos los campos obligatorios.');
     return;
   }
 
@@ -564,14 +605,14 @@ async function guardarClienteMensual() {
     });
     const result = await response.json();
     if (result.success) {
-      alert(result.message);
+      showSuccess(result.message);
       bootstrap.Modal.getInstance(document.getElementById('modalCliente')).hide();
       cargarClientesMensuales(); // Recarga la lista completa
     } else {
       throw new Error(result.error);
     }
   } catch (error) {
-    alert('Error al guardar el cliente: ' + error.message);
+    showError('Error al guardar el cliente: ' + error.message);
   }
 }
 
@@ -596,10 +637,10 @@ async function editarClienteMensual(button) {
       
       new bootstrap.Modal(document.getElementById('modalCliente')).show();
     } else {
-      alert('No se encontró el cliente para editar.');
+      showError('No se encontró el cliente para editar.');
     }
   } catch (error) {
-    alert('Error al cargar datos del cliente: ' + error.message);
+    showError('Error al cargar datos del cliente: ' + error.message);
   }
 }
 
@@ -710,7 +751,7 @@ async function guardarServicio() {
   };
 
   if (!servicioData.nombre_servicio || !servicioData.precio) {
-    alert('Por favor, complete el nombre y el precio del servicio.');
+    showWarning('Por favor, complete el nombre y el precio del servicio.');
     return;
   }
 
@@ -829,17 +870,17 @@ async function guardarPrecios(event) {
   
   // Validaciones
   if (!precioMinuto || precioMinuto < 1) {
-    alert('El precio por minuto debe ser mayor a 0');
+    showWarning('El precio por minuto debe ser mayor a 0');
     return;
   }
   
   if (precioMinimo < 0) {
-    alert('El precio mínimo no puede ser negativo');
+    showWarning('El precio mínimo no puede ser negativo');
     return;
   }
   
   if (precioMinimo > 0 && precioMinimo < precioMinuto) {
-    alert(`El precio mínimo ($${precioMinimo}) debe ser mayor o igual al precio por minuto ($${precioMinuto})`);
+    showWarning(`El precio mínimo ($${precioMinimo}) debe ser mayor o igual al precio por minuto ($${precioMinuto})`);
     return;
   }
   

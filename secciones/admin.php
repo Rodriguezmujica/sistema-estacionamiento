@@ -780,6 +780,57 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
     </div>
   </div>
 
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+    <!-- Toast de éxito -->
+    <div id="toast-success" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header bg-success text-white">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong class="me-auto">Éxito</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" id="toast-success-body">
+        <!-- Mensaje dinámico -->
+      </div>
+    </div>
+
+    <!-- Toast de error -->
+    <div id="toast-error" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header bg-danger text-white">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <strong class="me-auto">Error</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" id="toast-error-body">
+        <!-- Mensaje dinámico -->
+      </div>
+    </div>
+
+    <!-- Toast de advertencia -->
+    <div id="toast-warning" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header bg-warning text-dark">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong class="me-auto">Advertencia</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" id="toast-warning-body">
+        <!-- Mensaje dinámico -->
+      </div>
+    </div>
+
+    <!-- Toast de información -->
+    <div id="toast-info" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header bg-info text-white">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong class="me-auto">Información</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" id="toast-info-body">
+        <!-- Mensaje dinámico -->
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../JS/main.js"></script>
   <script src="../JS/admin.js"></script>
