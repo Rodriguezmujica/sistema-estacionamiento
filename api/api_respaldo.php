@@ -52,17 +52,39 @@ function crearRespaldo($tipo, $incluirDatos) {
     $rutaCompleta = $directorioRespaldos . $nombreArchivo;
     
     // Obtener configuración de conexión
-    $host = $conn->host_info;
-    $usuario = 'root'; // Ajustar según configuración
-    $contraseña = '';  // Ajustar según configuración
+    $host = 'localhost';
+    $usuario = 'root';
+    $contraseña = '';
     $baseDatos = 'estacionamiento';
     
+    // Verificar que mysqldump esté disponible
+    $mysqldumpPath = '';
+    $possiblePaths = [
+        'C:\\xampp\\mysql\\bin\\mysqldump.exe',
+        'mysqldump',
+        'C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe'
+    ];
+    
+    foreach ($possiblePaths as $path) {
+        if ($path === 'mysqldump' || file_exists($path)) {
+            $mysqldumpPath = $path;
+            break;
+        }
+    }
+    
+    if (empty($mysqldumpPath)) {
+        throw new Exception("No se encontró mysqldump. Verifique la instalación de MySQL.");
+    }
+    
     // Comando mysqldump
-    $comando = "mysqldump -h localhost -u $usuario";
+    $comando = "\"$mysqldumpPath\" -h $host -u $usuario";
     if (!empty($contraseña)) {
         $comando .= " -p$contraseña";
     }
-    $comando .= " $baseDatos > \"$rutaCompleta\"";
+    $comando .= " $baseDatos > \"$rutaCompleta\" 2>&1";
+    
+    // Log del comando (sin contraseña)
+    error_log("Comando respaldo: " . str_replace($contraseña, '***', $comando));
     
     // Ejecutar respaldo
     $output = [];
@@ -70,7 +92,9 @@ function crearRespaldo($tipo, $incluirDatos) {
     exec($comando, $output, $returnCode);
     
     if ($returnCode !== 0) {
-        throw new Exception("Error al crear respaldo: " . implode("\n", $output));
+        $errorMsg = "Error al crear respaldo (código: $returnCode): " . implode("\n", $output);
+        error_log($errorMsg);
+        throw new Exception($errorMsg);
     }
     
     // Verificar que el archivo se creó
