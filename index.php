@@ -223,8 +223,8 @@ $rol = $_SESSION['rol'];
             </button>
           </div>
           <div class="col-md-3">
-            <button class="btn btn-outline-info w-100" id="btn-refresh">
-              <i class="fas fa-sync-alt"></i> Actualizar Datos
+            <button class="btn btn-outline-info w-100" id="btn-imprimir-ticket" data-bs-toggle="modal" data-bs-target="#modalImprimirTicket">
+              <i class="fas fa-print"></i> Imprimir Último Ticket
             </button>
           </div>
           <div class="col-md-3">
@@ -713,6 +713,68 @@ $rol = $_SESSION['rol'];
     </div>
   </div>
 
+  <!-- Modal para Imprimir Último Ticket -->
+  <div class="modal fade" id="modalImprimirTicket" tabindex="-1" aria-labelledby="modalImprimirTicketLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title" id="modalImprimirTicketLabel">
+            <i class="fas fa-print"></i> Imprimir Último Ticket
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center mb-4">
+            <p class="text-muted">Selecciona qué tipo de ticket deseas imprimir:</p>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="card h-100 border-primary">
+                <div class="card-body text-center">
+                  <i class="fas fa-ticket-alt fa-3x text-primary mb-3"></i>
+                  <h5 class="card-title">Último Ingreso</h5>
+                  <p class="card-text text-muted">Imprime el ticket de ingreso más reciente</p>
+                  <div id="ultimo-ingreso-info" class="small text-muted">
+                    <i class="fas fa-spinner fa-spin"></i> Cargando...
+                  </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                  <button type="button" class="btn btn-primary w-100" id="btn-imprimir-ingreso" disabled>
+                    <i class="fas fa-print"></i> Imprimir Ingreso
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="card h-100 border-success">
+                <div class="card-body text-center">
+                  <i class="fas fa-receipt fa-3x text-success mb-3"></i>
+                  <h5 class="card-title">Última Salida</h5>
+                  <p class="card-text text-muted">Imprime el ticket de salida más reciente</p>
+                  <div id="ultima-salida-info" class="small text-muted">
+                    <i class="fas fa-spinner fa-spin"></i> Cargando...
+                  </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                  <button type="button" class="btn btn-success w-100" id="btn-imprimir-salida" disabled>
+                    <i class="fas fa-print"></i> Imprimir Salida
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="bg-dark text-white py-4 mt-5">
     <div class="container">
@@ -751,5 +813,120 @@ $rol = $_SESSION['rol'];
   <script src="JS/modal-lavado.js"></script>
   <script src="JS/modal-modificar-ticket.js"></script>
   <script src="JS/emergencia-tuu.js"></script>
+  
+  <!-- Script para imprimir último ticket -->
+  <script>
+    // Variables globales para almacenar datos
+    let ultimoIngreso = null;
+    let ultimaSalida = null;
+
+    // Cargar datos cuando se abre el modal
+    document.getElementById('modalImprimirTicket').addEventListener('show.bs.modal', function () {
+      cargarDatosTickets();
+    });
+
+    async function cargarDatosTickets() {
+      try {
+        // Cargar último ingreso y última salida en paralelo
+        const [ingresoResponse, salidaResponse] = await Promise.all([
+          fetch(`${BASE_PATH}/api/ultimo-ingreso.php`),
+          fetch(`${BASE_PATH}/api/ultima-salida.php`)
+        ]);
+
+        const ingresoData = await ingresoResponse.json();
+        const salidaData = await salidaResponse.json();
+
+        // Procesar último ingreso
+        if (ingresoData.success && ingresoData.ingreso) {
+          ultimoIngreso = ingresoData.ingreso;
+          const info = document.getElementById('ultimo-ingreso-info');
+          info.innerHTML = `
+            <strong>Patente:</strong> ${ultimoIngreso.patente}<br>
+            <strong>Servicio:</strong> ${ultimoIngreso.nombre_servicio}<br>
+            <strong>Fecha:</strong> ${ultimoIngreso.fecha_ingreso}
+          `;
+          document.getElementById('btn-imprimir-ingreso').disabled = false;
+        } else {
+          document.getElementById('ultimo-ingreso-info').innerHTML = 
+            '<span class="text-danger">No hay ingresos registrados</span>';
+        }
+
+        // Procesar última salida
+        if (salidaData.success && salidaData.salida) {
+          ultimaSalida = salidaData.salida;
+          const info = document.getElementById('ultima-salida-info');
+          info.innerHTML = `
+            <strong>Patente:</strong> ${ultimaSalida.patente}<br>
+            <strong>Total:</strong> $${ultimaSalida.total}<br>
+            <strong>Fecha:</strong> ${ultimaSalida.fecha_salida}
+          `;
+          document.getElementById('btn-imprimir-salida').disabled = false;
+        } else {
+          document.getElementById('ultima-salida-info').innerHTML = 
+            '<span class="text-danger">No hay salidas registradas</span>';
+        }
+
+      } catch (error) {
+        console.error('Error cargando datos:', error);
+        showError('Error al cargar los datos de tickets');
+      }
+    }
+
+    // Event listeners para los botones de impresión
+    document.getElementById('btn-imprimir-ingreso').addEventListener('click', function() {
+      if (ultimoIngreso) {
+        imprimirTicket('ingreso', ultimoIngreso.idautos_estacionados);
+      }
+    });
+
+    document.getElementById('btn-imprimir-salida').addEventListener('click', function() {
+      if (ultimaSalida) {
+        imprimirTicket('salida', ultimaSalida.id_ingresos);
+      }
+    });
+
+    async function imprimirTicket(tipo, id) {
+      try {
+        const response = await fetch(`${BASE_PATH}/api/imprimir-ticket.php`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `tipo=${tipo}&id=${id}`
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showSuccess(`✅ ${result.message}`);
+          // Cerrar el modal
+          bootstrap.Modal.getInstance(document.getElementById('modalImprimirTicket')).hide();
+        } else {
+          showError(`❌ Error: ${result.error}`);
+        }
+
+      } catch (error) {
+        console.error('Error imprimiendo ticket:', error);
+        showError('❌ Error al imprimir el ticket: ' + error.message);
+      }
+    }
+
+    // Funciones de toast (reutilizar las de admin.js si están disponibles)
+    function showSuccess(message) {
+      if (typeof showToast === 'function') {
+        showToast('success', message);
+      } else {
+        alert(message);
+      }
+    }
+
+    function showError(message) {
+      if (typeof showToast === 'function') {
+        showToast('error', message);
+      } else {
+        alert(message);
+      }
+    }
+  </script>
 </body>
 </html>
