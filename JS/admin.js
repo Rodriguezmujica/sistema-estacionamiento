@@ -928,6 +928,13 @@ async function cargarResumenEjecutivo() {
   console.log('🔍 Iniciando cargarResumenEjecutivo');
   console.log('BASE_PATH:', typeof BASE_PATH, BASE_PATH);
   
+  // Verificar que BASE_PATH esté definido
+  if (typeof BASE_PATH === 'undefined' || !BASE_PATH) {
+    console.error('❌ BASE_PATH no está definido, reintentando en 100ms...');
+    setTimeout(cargarResumenEjecutivo, 100);
+    return;
+  }
+  
   const selector = document.getElementById('selector-mes-resumen');
   if (!selector) {
     console.warn('Selector de mes no encontrado, reintentando en 100ms...');
@@ -965,7 +972,10 @@ async function cargarResumenEjecutivo() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos
     
-    const response = await fetch(`${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`, {
+    const url = `${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`;
+    console.log('🌐 URL de la petición:', url);
+    
+    const response = await fetch(url, {
       signal: controller.signal
     });
     
