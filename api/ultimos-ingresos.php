@@ -1,5 +1,4 @@
 <?php
-<?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/conexion.php'; // Ajusta la ruta si tu archivo de conexión está en otro lugar
 

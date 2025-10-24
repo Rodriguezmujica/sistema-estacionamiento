@@ -820,13 +820,27 @@ $rol = $_SESSION['rol'];
     let ultimoIngreso = null;
     let ultimaSalida = null;
 
+    // Esperar a que BASE_PATH esté disponible
+    function esperarBasePath(callback) {
+      if (typeof BASE_PATH !== 'undefined' && BASE_PATH) {
+        callback();
+      } else {
+        setTimeout(() => esperarBasePath(callback), 100);
+      }
+    }
+
     // Cargar datos cuando se abre el modal
     document.getElementById('modalImprimirTicket').addEventListener('show.bs.modal', function () {
-      cargarDatosTickets();
+      esperarBasePath(() => {
+        cargarDatosTickets();
+      });
     });
 
     async function cargarDatosTickets() {
       try {
+        console.log('🔍 Cargando datos de tickets...');
+        console.log('BASE_PATH:', BASE_PATH);
+        
         // Cargar último ingreso y última salida en paralelo
         const [ingresoResponse, salidaResponse] = await Promise.all([
           fetch(`${BASE_PATH}/api/ultimo-ingreso.php`),
@@ -835,6 +849,9 @@ $rol = $_SESSION['rol'];
 
         const ingresoData = await ingresoResponse.json();
         const salidaData = await salidaResponse.json();
+
+        console.log('📊 Datos de ingreso:', ingresoData);
+        console.log('📊 Datos de salida:', salidaData);
 
         // Procesar último ingreso
         if (ingresoData.success && ingresoData.ingreso) {
