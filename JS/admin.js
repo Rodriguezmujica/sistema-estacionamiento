@@ -925,6 +925,9 @@ function llenarSelectorMeses() {
 }
 
 async function cargarResumenEjecutivo() {
+  console.log('🔍 Iniciando cargarResumenEjecutivo');
+  console.log('BASE_PATH:', typeof BASE_PATH, BASE_PATH);
+  
   const selector = document.getElementById('selector-mes-resumen');
   if (!selector) {
     console.warn('Selector de mes no encontrado, reintentando en 100ms...');
@@ -982,6 +985,9 @@ async function cargarResumenEjecutivo() {
     }
   } catch (error) {
     console.error('Error cargando resumen ejecutivo:', error);
+    console.error('Tipo de error:', typeof error);
+    console.error('Mensaje de error:', error.message);
+    console.error('Stack trace:', error.stack);
     
     // Mostrar error más específico
     let mensajeError = 'Error al cargar resumen: ';
@@ -989,8 +995,10 @@ async function cargarResumenEjecutivo() {
       mensajeError += 'No se pudo conectar al servidor. Verifica la conexión.';
     } else if (error.message.includes('HTTP')) {
       mensajeError += error.message;
-    } else {
+    } else if (error.message) {
       mensajeError += error.message;
+    } else {
+      mensajeError += 'Error desconocido: ' + JSON.stringify(error);
     }
     
     alert(mensajeError);
