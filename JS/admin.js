@@ -12,8 +12,8 @@ if (typeof window.BASE_PATH === 'undefined') {
   window.BASE_PATH = getBasePath();
 }
 
-// Usar la variable global
-const BASE_PATH = window.BASE_PATH;
+// Usar la variable global (sin const para evitar redeclaración)
+var BASE_PATH = window.BASE_PATH;
 
 document.addEventListener('DOMContentLoaded', function() {
   const modalClienteElement = document.getElementById('modalCliente');
