@@ -299,6 +299,129 @@ if (selectorMesResumen) {
 }
 
 // ============================================
+// OPTIMIZACIÓN Y MANTENIMIENTO
+// ============================================
+
+async function optimizarSistema() {
+  if (!confirm('¿Desea ejecutar la optimización del sistema? Esto puede tomar unos minutos.')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${BASE_PATH}/optimizar-mysql-windows7.php`);
+    const result = await response.text();
+    
+    // Mostrar resultado en modal
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">🚀 Optimización del Sistema</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div style="max-height: 400px; overflow-y: auto;">
+              ${result.replace(/\n/g, '<br>')}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    // Limpiar modal después de cerrar
+    modal.addEventListener('hidden.bs.modal', () => {
+      document.body.removeChild(modal);
+    });
+    
+  } catch (error) {
+    console.error('Error optimizando sistema:', error);
+    alert('❌ Error al ejecutar optimización: ' + error.message);
+  }
+}
+
+async function respaldarDatos() {
+  if (!confirm('¿Desea crear un respaldo de la base de datos? Esto puede tomar unos minutos.')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${BASE_PATH}/api/api_respaldo.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        tipo: 'completo',
+        incluir_datos: true
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert(`✅ Respaldo creado exitosamente\n\nArchivo: ${result.archivo}\nTamaño: ${result.tamaño}\nUbicación: ${result.ubicacion}`);
+    } else {
+      throw new Error(result.error);
+    }
+    
+  } catch (error) {
+    console.error('Error creando respaldo:', error);
+    alert('❌ Error al crear respaldo: ' + error.message);
+  }
+}
+
+async function exportarReporte() {
+  const fechaInicio = prompt('Fecha de inicio (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+  if (!fechaInicio) return;
+  
+  const fechaFin = prompt('Fecha de fin (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+  if (!fechaFin) return;
+  
+  try {
+    const response = await fetch(`${BASE_PATH}/api/api_exportar_reporte.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin,
+        formato: 'txt'
+      })
+    });
+    
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `reporte_${fechaInicio}_${fechaFin}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      alert('✅ Reporte exportado exitosamente');
+    } else {
+      throw new Error('Error al generar reporte');
+    }
+    
+  } catch (error) {
+    console.error('Error exportando reporte:', error);
+    alert('❌ Error al exportar reporte: ' + error.message);
+  }
+}
+
+// ============================================
 // GESTIÓN DE CLIENTES MENSUALES
 // ============================================
 

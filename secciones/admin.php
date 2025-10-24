@@ -568,6 +568,11 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
                     </button>
                   </div>
                   <div class="col-md-3 mb-2">
+                    <button class="btn btn-success w-100" onclick="optimizarSistema()">
+                      <i class="fas fa-tachometer-alt"></i> Optimización
+                    </button>
+                  </div>
+                  <div class="col-md-3 mb-2">
                     <button class="btn btn-secondary w-100" onclick="exportarReporte()">
                       <i class="fas fa-file-export"></i> Exportar Reporte
                     </button>
