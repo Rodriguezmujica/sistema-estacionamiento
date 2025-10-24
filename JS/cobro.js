@@ -481,6 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnConfirmarPagoManual.addEventListener('click', () => {
       const motivoPagoManual = document.getElementById('motivo-pago-manual').value;
       const metodoPagoManual = document.getElementById('metodo-pago-manual').value;
+      const imprimirTicket = document.getElementById('imprimir-ticket-manual').checked;
       
       // Validar que se haya seleccionado un motivo
       if (!motivoPagoManual) {
@@ -492,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (modalPagoManual) modalPagoManual.hide();
       
       // Procesar el pago manual
-      procesarPagoManual(metodoPagoManual, motivoPagoManual);
+      procesarPagoManual(metodoPagoManual, motivoPagoManual, imprimirTicket);
     });
   }
   
@@ -572,7 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  async function procesarPagoManual(metodoPago, motivoManual) {
+  async function procesarPagoManual(metodoPago, motivoManual, imprimirTicket = true) {
     if (!ticketCobroActual) {
       mostrarAlerta('⚠️ No hay ticket para cobrar', 'warning');
       return;
@@ -602,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (dataPago.success) {
         mostrarAlerta(`✅ Pago manual de $${totalFinal.toLocaleString('es-CL')} registrado correctamente.`, 'success');
-        await finalizarCobroExitoso('MANUAL', totalFinal, dataPago);
+        await finalizarCobroExitoso('MANUAL', totalFinal, dataPago, imprimirTicket);
       } else {
         mostrarAlerta(`❌ Error al procesar pago manual: ${dataPago.error || 'Error desconocido'}`, 'danger');
         btnCobrarTicket.disabled = false;
@@ -620,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function finalizarCobroExitoso(metodo, total, dataPago) {
+  async function finalizarCobroExitoso(metodo, total, dataPago, imprimirTicket = true) {
     let mensaje = '';
     
     if (metodo === 'MANUAL') {
@@ -634,8 +635,8 @@ document.addEventListener('DOMContentLoaded', () => {
       mostrarAlerta(mensaje, 'success');
     }
 
-    // Intentar imprimir comprobante interno solo para pagos MANUALES
-    if (metodo === 'MANUAL') {
+    // Intentar imprimir comprobante interno solo para pagos MANUALES y si está habilitado
+    if (metodo === 'MANUAL' && imprimirTicket) {
       try {
         // 🆕 INTENTAR CON NUEVO SERVICIO PRIMERO
         if (typeof PrintService !== 'undefined') {
@@ -699,6 +700,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Limpiar UI independientemente del resultado de la impresión
         resetearCobro();
       }
+    } else if (metodo === 'MANUAL' && !imprimirTicket) {
+      // Pago manual sin impresión
+      console.log('ℹ️ Pago manual procesado sin imprimir ticket (opción del usuario)');
+      mostrarAlerta('✅ Pago registrado sin imprimir ticket', 'info');
+      resetearCobro();
     } else {
       // Para pagos con TUU (incluyendo efectivo), el POS imprime el voucher.
       console.log(`ℹ️ Pago con ${metodo}. La impresión la maneja el terminal POS.`);

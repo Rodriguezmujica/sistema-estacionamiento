@@ -523,6 +523,14 @@ $rol = $_SESSION['rol'];
           </div>
         </div>
         <div class="modal-footer">
+          <div class="d-flex align-items-center me-auto">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="imprimir-ticket-manual" checked>
+              <label class="form-check-label" for="imprimir-ticket-manual">
+                <i class="fas fa-print"></i> Imprimir ticket
+              </label>
+            </div>
+          </div>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
             <i class="fas fa-times"></i> Cancelar
           </button>
