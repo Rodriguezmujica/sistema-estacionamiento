@@ -972,7 +972,17 @@ async function cargarResumenEjecutivo() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos
     
-    const url = `${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`;
+    // Construir URL completa
+    let url;
+    if (BASE_PATH.startsWith('http')) {
+      // Si ya es una URL completa
+      url = `${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`;
+    } else {
+      // Si es una ruta relativa, construir URL completa
+      const protocol = window.location.protocol;
+      const host = window.location.host;
+      url = `${protocol}//${host}${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`;
+    }
     console.log('🌐 URL de la petición:', url);
     
     const response = await fetch(url, {
