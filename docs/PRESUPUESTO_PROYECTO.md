@@ -77,7 +77,7 @@ Se ha desarrollado un sistema completo de gestión de estacionamiento y servicio
 - ✅ Cliente Antix Linux conectado por red local
 - ✅ VPN Tailscale para acceso remoto seguro
 - ✅ Conexión directa a base de datos MySQL
-- ✅ Sin dependencia de servicios externos (Firebase)
+- ✅ Sin dependencia de servicios externos
 
 **Complejidad:** Alta - Arquitectura distribuida y configuración de red
 
@@ -85,7 +85,6 @@ Se ha desarrollado un sistema completo de gestión de estacionamiento y servicio
 - ✅ Panel de administración completo
 - ✅ Configuración de precios
 - ✅ Gestión de usuarios
-- ✅ Configuración de TUU
 - ✅ Optimización de base de datos
 - ✅ Respaldo automático semanal
 
@@ -216,7 +215,7 @@ Se ha desarrollado un sistema completo de gestión de estacionamiento y servicio
 - **Seguridad implementada** (HTTPS, VPN Tailscale)
 - **Backup automático** de datos
 - **Soporte multiplataforma** (Windows 7, Antix Linux)
-- **Sin dependencias externas** (no Firebase)
+- **Sin dependencias externas**
 
 ---
 
@@ -226,9 +225,9 @@ Se ha desarrollado un sistema completo de gestión de estacionamiento y servicio
 
 
 ### **Garantía:**
-- 30 días de soporte técnico sin costo adicional
-- Corrección de bugs encontrados durante el primer mes
-- Una sesión de capacitación incluida
+- 3 meses de soporte técnico sin costo adicional
+- Corrección de bugs encontrados
+
 
 ---
 
@@ -237,8 +236,7 @@ Se ha desarrollado un sistema completo de gestión de estacionamiento y servicio
 1. **Revisión del presupuesto** y aprobación
 2. **Firma del acuerdo** de desarrollo
 3. **Entrega del sistema** completo
-4. **Capacitación** del personal
-5. **Soporte inicial** de 30 días
+
 
 ---
 
