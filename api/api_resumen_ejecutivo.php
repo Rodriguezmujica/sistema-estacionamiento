@@ -8,9 +8,9 @@ require_once __DIR__ . '/../conexion.php';
  * OPTIMIZADO PARA WINDOWS 7
  */
 
-// Aumentar timeout para consultas complejas
-set_time_limit(60);
-ini_set('max_execution_time', 60);
+// 🚀 Aumentar timeout a 120 segundos para consultas muy pesadas de resumen ejecutivo
+set_time_limit(120);
+ini_set('max_execution_time', 120);
 
 $method = $_SERVER['REQUEST_METHOD'];
 $mes = isset($_GET['mes']) ? intval($_GET['mes']) : date('n');
