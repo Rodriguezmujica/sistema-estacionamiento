@@ -29,10 +29,14 @@ echo "<h3>2. Prueba de conectividad de red:</h3>";
 $ping_result = shell_exec("ping -c 3 $host 2>&1");
 if ($ping_result) {
     echo "<pre>$ping_result</pre>";
-    if (strpos($ping_result, '3 received') !== false) {
-        echo "✅ <strong>Ping exitoso</strong> - La red funciona<br>";
+    // Verificar diferentes formatos de respuesta de ping
+    if (strpos($ping_result, '3 received') !== false || 
+        strpos($ping_result, '3 packets received') !== false ||
+        strpos($ping_result, '0% loss') !== false ||
+        strpos($ping_result, '0% packet loss') !== false) {
+        echo "✅ <strong>Ping exitoso</strong> - La red funciona correctamente<br>";
     } else {
-        echo "❌ <strong>Ping fallido</strong> - Problema de red<br>";
+        echo "⚠️ <strong>Ping parcial</strong> - Revisar respuesta completa arriba<br>";
     }
 } else {
     echo "⚠️ No se pudo ejecutar ping<br>";
