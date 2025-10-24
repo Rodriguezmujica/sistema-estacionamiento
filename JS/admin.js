@@ -1025,16 +1025,19 @@ async function cargarResumenEjecutivo() {
     
     console.log('🌐 Intentando fetch a:', url);
     
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    console.log('✅ Response recibida:', response.status, response.statusText);
-    console.log('✅ Response headers:', [...response.headers.entries()]);
+    // Fetch simple sin headers personalizados
+    let response;
+    try {
+      response = await fetch(url);
+      console.log('✅ Response recibida:', response.status, response.statusText);
+      console.log('✅ Response headers:', [...response.headers.entries()]);
+    } catch (fetchError) {
+      console.error('❌ Error en fetch:', fetchError);
+      console.error('❌ Tipo de error:', typeof fetchError);
+      console.error('❌ Mensaje:', fetchError.message);
+      console.error('❌ Stack:', fetchError.stack);
+      throw fetchError;
+    }
     
     // Verificar si la respuesta es válida
     if (!response.ok) {
