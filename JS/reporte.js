@@ -444,18 +444,16 @@ async function imprimirCierreCaja() {
       const totalLavado = datoCierreCajaActual.categorias.find(c => c.categoria.includes('Lavado'))?.total || 0;
       const totalEfectivo = (desglose.efectivo_manual.total || 0) + (desglose.tuu_efectivo.total || 0);
 
-      // Preparar datos para el nuevo servicio
+      // Preparar datos para el nuevo servicio (formato correcto para imprimir.php)
       const datosCierre = {
         fecha: datoCierreCajaActual.fecha,
         hora: new Date().toLocaleTimeString('es-AR'),
         usuario: 'Usuario', // Ajustar si tienes la info del usuario
-        efectivo_caja: totalEfectivo,
-        total_electronico: (desglose.tuu_debito.total || 0) + (desglose.tuu_credito.total || 0) + (desglose.transferencia.total || 0),
-        total_estacionamiento: totalEstacionamiento,
-        total_lavado: totalLavado,
-        total_general: datoCierreCajaActual.resumen.total_ingresos || 0,
-        desglose_pago: datoCierreCajaActual.desglose_pago,
-        desglose_categorias: datoCierreCajaActual.categorias
+        efectivo_estacionamiento: totalEstacionamiento, // Efectivo total de estacionamiento
+        tuu_estacionamiento: 0, // TUU de estacionamiento (si hay separación)
+        efectivo_lavado: totalLavado, // Efectivo total de lavado
+        tuu_lavado: 0, // TUU de lavado (si hay separación)
+        total: datoCierreCajaActual.resumen.total_ingresos || 0
       };
       
       console.log('📝 Datos preparados para impresión:', datosCierre);

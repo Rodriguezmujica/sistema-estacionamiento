@@ -541,6 +541,9 @@ function renderizarTablaClientes(clientes) {
           <button class="btn btn-sm btn-outline-danger" onclick="eliminarClienteMensual(${cliente.id})">
             <i class="fas fa-trash"></i>
           </button>
+          ${esVencido ? `<button class="btn btn-sm btn-success" onclick="pagarClienteMensual(${cliente.id})" title="Marcar como pagado">
+            <i class="fas fa-check"></i> Pagar
+          </button>` : ''}
         </td>
       </tr>
     `;
@@ -662,6 +665,35 @@ async function eliminarClienteMensual(id) {
     }
   } catch (error) {
     alert('Error al eliminar el cliente: ' + error.message);
+  }
+}
+
+async function pagarClienteMensual(id) {
+  if (!confirm('¿Confirmar el pago de este cliente? Esto actualizará la fecha de vencimiento al próximo mes.')) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${BASE_PATH}/api/api_clientes_mensuales.php`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: id,
+        action: 'pagar'
+      })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      showSuccess('✅ Cliente marcado como pagado. La fecha de vencimiento se ha actualizado.');
+      cargarClientesMensuales(); // Recargar la tabla para mostrar el cambio
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    showError('Error al procesar el pago: ' + error.message);
   }
 }
 

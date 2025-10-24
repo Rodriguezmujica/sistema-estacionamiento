@@ -61,6 +61,59 @@ try {
             }
             break;
 
+        case 'PUT':
+            // Actualizar estado de pago de un cliente
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            if (!isset($data['id'], $data['action'])) {
+                throw new Exception("Faltan datos requeridos para la actualización.");
+            }
+            
+            $id = intval($data['id']);
+            $action = $data['action'];
+            
+            if ($action === 'pagar') {
+                // Obtener datos del cliente actual
+                $sqlCliente = "SELECT * FROM clientes WHERE idclientes = $id";
+                $result = $conn->query($sqlCliente);
+                
+                if ($result->num_rows === 0) {
+                    throw new Exception("No se encontró el cliente con ID $id.");
+                }
+                
+                $cliente = $result->fetch_assoc();
+                $diaPago = intval($cliente['dia_pago_mensual']);
+                
+                // Calcular nueva fecha de vencimiento (próximo mes)
+                $fechaActual = new DateTime();
+                $proximoMes = clone $fechaActual;
+                $proximoMes->modify('+1 month');
+                
+                // Ajustar al día de pago del cliente
+                $nuevaFechaVencimiento = $proximoMes->format('Y-m-' . str_pad($diaPago, 2, '0', STR_PAD_LEFT));
+                
+                // Si el día de pago ya pasó este mes, usar el próximo mes
+                if ($diaPago < $fechaActual->format('d')) {
+                    $proximoMes->modify('+1 month');
+                    $nuevaFechaVencimiento = $proximoMes->format('Y-m-' . str_pad($diaPago, 2, '0', STR_PAD_LEFT));
+                }
+                
+                // Actualizar la fecha de vencimiento
+                $sql = "UPDATE clientes SET fecha_proximo_vencimiento = '$nuevaFechaVencimiento' WHERE idclientes = $id";
+                
+                if ($conn->query($sql)) {
+                    echo json_encode([
+                        'success' => true, 
+                        'message' => 'Cliente marcado como pagado. Nueva fecha de vencimiento: ' . $nuevaFechaVencimiento
+                    ]);
+                } else {
+                    throw new Exception("Error al actualizar la fecha de vencimiento: " . $conn->error);
+                }
+            } else {
+                throw new Exception("Acción no válida.");
+            }
+            break;
+
         case 'DELETE':
             // Eliminar un cliente
             $id = $_GET['id'] ?? null;

@@ -25,13 +25,13 @@ try {
         
         if ($row = $result->fetch_assoc()) {
             // Preparar datos para impresión de ingreso usando print-service-php
+            $fecha_ingreso = new DateTime($row['fecha_ingreso']);
             $datos_impresion = [
-                'tipo' => 'ingreso',
-                'nombre_cliente' => 'Cliente General',
-                'servicio_cliente' => $row['nombre_servicio'],
                 'patente' => $row['patente'],
-                'tipo_ingreso' => $row['nombre_servicio'],
-                'fecha_ingreso' => $row['fecha_ingreso']
+                'tipo_vehiculo' => 'Vehículo',
+                'ticket_id' => $row['idautos_estacionados'],
+                'fecha_ingreso' => $fecha_ingreso->format('d-m-Y'),
+                'hora_ingreso' => $fecha_ingreso->format('H:i:s')
             ];
             
         } else {
@@ -55,14 +55,20 @@ try {
         
         if ($row = $result->fetch_assoc()) {
             // Preparar datos para impresión de salida usando print-service-php
+            $fecha_ingreso = new DateTime($row['fecha_ingreso']);
+            $fecha_salida = new DateTime($row['fecha_salida']);
+            
+            // Calcular tiempo de estadía
+            $intervalo = $fecha_ingreso->diff($fecha_salida);
+            $tiempo_estadia = $intervalo->format('%H:%I:%S');
+            
             $datos_impresion = [
-                'tipo' => 'salida',
-                'hora_ingreso' => $row['fecha_ingreso'],
-                'hora_egreso' => $row['fecha_salida'],
-                'total' => $row['total'],
                 'patente' => $row['patente'],
-                'metodo_pago' => $row['metodo_pago'] ?: 'MANUAL',
-                'nombre_cliente' => 'Cliente General'
+                'fecha_ingreso' => $fecha_ingreso->format('d-m-Y H:i:s'),
+                'fecha_salida' => $fecha_salida->format('d-m-Y H:i:s'),
+                'tiempo_estadia' => $tiempo_estadia,
+                'monto' => $row['total'],
+                'metodo_pago' => $row['metodo_pago'] ?: 'MANUAL'
             ];
             
         } else {
@@ -75,14 +81,21 @@ try {
     // Llamar al servicio de impresión PHP
     $url_impresion = 'http://localhost:8080/sistemaEstacionamiento/print-service-php/imprimir.php';
     
+    // Preparar datos en el formato correcto que espera imprimir.php
+    $payload = [
+        'tipo' => $tipo,
+        'datos' => $datos_impresion,
+        'impresora' => 'POSESTACIONAMIENTO'
+    ];
+    
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url_impresion);
     curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($datos_impresion));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 15);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/x-www-form-urlencoded'
+        'Content-Type: application/json'
     ]);
     
     $response = curl_exec($ch);
