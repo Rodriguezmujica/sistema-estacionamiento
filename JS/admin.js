@@ -968,9 +968,11 @@ async function cargarResumenEjecutivo() {
   
   // Obtener BASE_PATH directamente de la URL actual - más confiable
   const currentPath = window.location.pathname;
+  console.log('🔍 currentPath:', currentPath);
   const baseMatch = currentPath.match(/^(.*?sistemaEstacionamiento)/);
+  console.log('🔍 baseMatch:', baseMatch);
   const currentBasePath = baseMatch ? baseMatch[1] : '/sistemaEstacionamiento';
-  console.log('BASE_PATH actual:', typeof currentBasePath, currentBasePath);
+  console.log('🔍 BASE_PATH actual:', typeof currentBasePath, currentBasePath);
   
   const selector = document.getElementById('selector-mes-resumen');
   if (!selector) {
@@ -1022,9 +1024,11 @@ async function cargarResumenEjecutivo() {
       }
       console.log('🌐 URL de la petición:', url);
     
+    console.log('🌐 Intentando fetch a:', url);
     const response = await fetch(url, {
       signal: controller.signal
     });
+    console.log('✅ Response recibida:', response.status, response.statusText);
     
     clearTimeout(timeoutId);
     
