@@ -2,8 +2,8 @@
 
 **Cliente:** Estacionamiento Los Ríos  
 **Desarrollador:** Luis Miguel Rodriguez  
-**Fecha:** 18/10/2025  
-**Duración del proyecto:** 3 de octubre - 18 de octubre, 2025 (15 días de desarrollo)
+**Fecha:** 24/10/2025  
+**Duración del proyecto:** 3 de octubre - 24 de octubre, 2025 (21 días de desarrollo)
 
 ---
 
