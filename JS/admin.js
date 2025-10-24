@@ -7,8 +7,13 @@ if (typeof getBasePath === 'undefined') {
   };
 }
 
-// BASE_PATH ya está declarado en main.js, solo lo usamos
-// No declarar nuevamente para evitar conflictos
+// Usar window.BASE_PATH para evitar conflictos de redeclaración
+if (typeof window.BASE_PATH === 'undefined') {
+  window.BASE_PATH = getBasePath();
+}
+
+// Usar la variable global (sin const para evitar redeclaración)
+var BASE_PATH = window.BASE_PATH;
 
 document.addEventListener('DOMContentLoaded', function() {
   const modalClienteElement = document.getElementById('modalCliente');
