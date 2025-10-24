@@ -557,29 +557,14 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
               </div>
               <div class="card-body">
                 <div class="row">
-                  <div class="col-md-3 mb-2">
-                    <button class="btn btn-info w-100" onclick="respaldarDatos()">
-                      <i class="fas fa-database"></i> Respaldar Datos
-                    </button>
-                  </div>
-                  <div class="col-md-3 mb-2">
-                    <button class="btn btn-warning w-100" onclick="limpiarHistorial()">
-                      <i class="fas fa-broom"></i> Limpiar Historial
-                    </button>
-                  </div>
-                  <div class="col-md-3 mb-2">
+                  <div class="col-md-6 mb-2">
                     <button class="btn btn-success w-100" onclick="optimizarSistema()">
                       <i class="fas fa-tachometer-alt"></i> Optimización
                     </button>
                   </div>
-                  <div class="col-md-3 mb-2">
+                  <div class="col-md-6 mb-2">
                     <button class="btn btn-secondary w-100" onclick="exportarReporte()">
                       <i class="fas fa-file-export"></i> Exportar Reporte
-                    </button>
-                  </div>
-                  <div class="col-md-3 mb-2">
-                    <button class="btn btn-outline-danger w-100" onclick="reiniciarSistema()">
-                      <i class="fas fa-power-off"></i> Reiniciar Sistema
                     </button>
                   </div>
                 </div>
