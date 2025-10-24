@@ -963,8 +963,20 @@ function llenarSelectorMeses() {
   }
 }
 
+// Flag para evitar múltiples ejecuciones simultáneas
+let cargandoResumen = false;
+
 async function cargarResumenEjecutivo() {
   console.log('🔍 Iniciando cargarResumenEjecutivo');
+  
+  // Verificar si ya se está cargando
+  if (cargandoResumen) {
+    console.log('⚠️ Ya se está cargando el resumen, ignorando llamada duplicada');
+    return;
+  }
+  
+  // Marcar como cargando
+  cargandoResumen = true;
   
   // Obtener BASE_PATH directamente de la URL actual - más confiable
   const currentPath = window.location.pathname;
@@ -1051,6 +1063,9 @@ async function cargarResumenEjecutivo() {
     } else {
       throw new Error(result.error || 'Error desconocido del servidor');
     }
+    
+    // Reset del flag al finalizar exitosamente
+    cargandoResumen = false;
   } catch (error) {
     console.error('Error cargando resumen ejecutivo:', error);
     console.error('Tipo de error:', typeof error);
@@ -1088,6 +1103,9 @@ async function cargarResumenEjecutivo() {
         </div>
       `;
     }
+    
+    // Reset del flag en caso de error
+    cargandoResumen = false;
   }
 }
 
