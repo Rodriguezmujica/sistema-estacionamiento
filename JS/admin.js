@@ -927,8 +927,10 @@ function llenarSelectorMeses() {
 async function cargarResumenEjecutivo() {
   console.log('🔍 Iniciando cargarResumenEjecutivo');
   
-  // Obtener BASE_PATH dinámicamente para evitar problemas de navegación
-  const currentBasePath = window.getBasePathValue ? window.getBasePathValue() : '/sistemaEstacionamiento';
+  // Obtener BASE_PATH directamente de la URL actual - más confiable
+  const currentPath = window.location.pathname;
+  const baseMatch = currentPath.match(/^(.*?sistemaEstacionamiento)/);
+  const currentBasePath = baseMatch ? baseMatch[1] : '/sistemaEstacionamiento';
   console.log('BASE_PATH actual:', typeof currentBasePath, currentBasePath);
   
   const selector = document.getElementById('selector-mes-resumen');
