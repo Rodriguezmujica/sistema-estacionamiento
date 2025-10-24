@@ -14,7 +14,7 @@ echo "===========================\n\n";
 
 try {
     echo "1. Probando conexión a base de datos...\n";
-    require_once __DIR__ . '/../conexion.php';
+    require_once __DIR__ . '/conexion.php';
     
     if (!isset($conn) || $conn->connect_error) {
         throw new Exception("Error de conexión: " . ($conn->connect_error ?? 'Conexión no establecida'));
@@ -49,7 +49,7 @@ function crearRespaldo($tipo, $incluirDatos) {
     
     // Configuración
     $fecha = date('Y-m-d_H-i-s');
-    $directorioRespaldos = __DIR__ . '/../backups_emergencia/';
+    $directorioRespaldos = __DIR__ . '/backups_emergencia/';
     
     // Crear directorio si no existe
     if (!is_dir($directorioRespaldos)) {
