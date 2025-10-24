@@ -962,21 +962,21 @@ async function cargarResumenEjecutivo() {
   
   try {
     // Crear AbortController para timeout personalizado
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos
+    const controller = new AbortController(); // 🚀 Aumentamos el timeout a 60 segundos para consultas pesadas
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 segundos
     
-    // Construir URL completa
-    let url;
-    if (BASE_PATH.startsWith('http')) {
-      // Si ya es una URL completa
-      url = `${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`;
-    } else {
-      // Si es una ruta relativa, construir URL completa
-      const protocol = window.location.protocol;
-      const host = window.location.host;
-      url = `${protocol}//${host}${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`;
-    }
-    console.log('🌐 URL de la petición:', url);
+      // Construir URL completa para evitar problemas de rutas relativas
+      let url;
+      if (BASE_PATH.startsWith('http')) {
+        // Si ya es una URL completa
+        url = `${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`;
+      } else {
+        // Si es una ruta relativa, construir URL completa
+        const protocol = window.location.protocol;
+        const host = window.location.host;
+        url = `${protocol}//${host}${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`;
+      }
+      console.log('🌐 URL de la petición:', url);
     
     const response = await fetch(url, {
       signal: controller.signal
