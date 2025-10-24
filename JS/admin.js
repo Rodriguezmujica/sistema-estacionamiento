@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Evento para abrir modal en modo "Agregar"
   modalClienteElement.addEventListener('show.bs.modal', function (event) {
     const button = event.relatedTarget;
-    const esEditar = button.getAttribute('data-id');
+    const esEditar = button ? button.getAttribute('data-id') : null;
 
     const form = document.getElementById('form-cliente-mensual');
     form.reset();
