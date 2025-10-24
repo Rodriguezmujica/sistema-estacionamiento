@@ -8,7 +8,7 @@ error_reporting(E_ERROR | E_PARSE);
 ini_set('display_errors', '0');
 header('Content-Type: application/json');
 
-require_once __DIR__ . '/conexion.php';
+require_once __DIR__ . '/../config/conexion.php';
 
 // Configuración TUU
 if (!defined('TUU_API_URL_GET')) {

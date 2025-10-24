@@ -7,7 +7,7 @@ ini_set('log_errors', '1');
 header('Content-Type: application/json');
 
 try {
-    require_once __DIR__ . '/../conexion.php';
+    require_once __DIR__ . '/../config/conexion.php';
     
     // Verificar que la conexión esté disponible
     if (!isset($conn) || $conn->connect_error) {

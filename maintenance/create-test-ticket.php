@@ -1,5 +1,5 @@
 <?php
-require_once 'conexion.php';
+require_once '../config/conexion.php';
 
 echo "<h1>Crear Ticket de Prueba</h1>";
 

@@ -8,7 +8,7 @@ echo "<h2>🚀 Optimización MySQL para Windows 7</h2>";
 echo "<hr>";
 
 try {
-    require_once 'conexion.php';
+    require_once '../config/conexion.php';
     
     if (!$conn || $conn->connect_error) {
         throw new Exception("No se pudo conectar a la base de datos");

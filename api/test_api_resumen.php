@@ -10,7 +10,7 @@ ini_set('display_errors', 1);
 echo "<h2>Test de API Resumen Ejecutivo</h2>";
 
 // Incluir conexión
-require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../config/conexion.php';
 
 echo "<p>✅ Conexión incluida correctamente</p>";
 

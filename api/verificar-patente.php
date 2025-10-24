@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../config/conexion.php';
 
 $patente = isset($_POST['patente']) ? strtoupper(trim($_POST['patente'])) : '';
 

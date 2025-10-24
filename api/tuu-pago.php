@@ -39,7 +39,7 @@ define('TUU_API_KEY', 'uIAwXISF5Amug0O7QA16r72a07x10n6jdu4LNzjos3cdz736bGkHf7gM8
 define('TUU_TIMEOUT', 90); // Timeout de 90 segundos para dar tiempo al cliente a pagar
 define('TUU_MODO_PRUEBA', false); // ✅ MODO PRODUCCIÓN ACTIVADO
 
-require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../config/conexion.php';
 require_once __DIR__ . '/../utils/redondeo_chile.php';
 
 // Verificar conexión a BD inmediatamente

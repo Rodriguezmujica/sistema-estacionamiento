@@ -1,5 +1,5 @@
 <?php
-include 'conexion.php';
+include '../config/conexion.php';
 
 echo "=== ESTRUCTURA DE LA TABLA TICKETS ===\n";
 $result = $conn->query('DESCRIBE tickets');

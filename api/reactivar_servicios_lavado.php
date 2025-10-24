@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: text/html; charset=utf-8');
-require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../config/conexion.php';
 
 echo "<h2>🔧 Gestión de Servicios - Ver Estado y Reactivar</h2>";
 echo "<hr>";

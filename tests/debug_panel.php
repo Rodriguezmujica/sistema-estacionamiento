@@ -160,7 +160,7 @@ function medirTiempo($callback, $nombre) {
         $db_test = medirTiempo(function() {
             if (file_exists(__DIR__ . '/conexion.php')) {
                 try {
-                    require_once __DIR__ . '/conexion.php';
+                    require_once __DIR__ . '/../config/conexion.php';
                     
                     // Usar $conn en lugar de $conexion (como está en conexion.php)
                     if (isset($conn) && $conn) {

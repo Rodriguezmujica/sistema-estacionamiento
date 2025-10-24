@@ -27,7 +27,7 @@ echo "<div class='container'>";
 echo "<h1>🔍 Diagnóstico de Resumen Ejecutivo</h1>";
 
 try {
-    require_once 'conexion.php';
+    require_once '../config/conexion.php';
     
     if (!$conn || $conn->connect_error) {
         throw new Exception("Error de conexión: " . ($conn->connect_error ?? 'Conexión nula'));

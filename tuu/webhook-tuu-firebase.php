@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-require_once __DIR__ . '/conexion.php';
+require_once __DIR__ . '/../config/conexion.php';
 require_once __DIR__ . '/firebase-config.php';
 
 // Configuración TUU

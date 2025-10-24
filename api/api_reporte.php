@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../config/conexion.php';
 
 // Consulta para obtener ingresos activos (sin salida registrada) con información de lavados
 $sql = "

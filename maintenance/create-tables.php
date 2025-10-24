@@ -4,7 +4,7 @@
  * Sistema de Estacionamiento Los Ríos
  */
 
-require_once 'conexion.php';
+require_once '../config/conexion.php';
 
 echo "<h1>🔧 Crear Tablas del Sistema</h1>";
 

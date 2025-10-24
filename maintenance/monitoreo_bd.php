@@ -21,7 +21,7 @@ $resultado = [
 // ============================================
 
 try {
-    require_once __DIR__ . '/conexion.php';
+    require_once __DIR__ . '/../config/conexion.php';
     
     if ($conn->ping()) {
         $resultado['checks']['conexion'] = 'OK';

@@ -12,7 +12,7 @@ echo "========================\n\n";
 
 try {
     echo "1. Verificando conexión a base de datos...\n";
-    require_once __DIR__ . '/conexion.php';
+    require_once __DIR__ . '/../config/conexion.php';
     echo "✅ Conexión OK\n\n";
     
     echo "2. Verificando configuración TUU...\n";

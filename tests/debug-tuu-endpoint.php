@@ -29,7 +29,7 @@ echo "<h1>🔍 Diagnóstico de Endpoint TUU</h1>";
 // 1. Verificar conexión a base de datos
 echo "<h2>1. Verificación de Conexión</h2>";
 try {
-    require_once 'conexion.php';
+    require_once '../config/conexion.php';
     
     if ($conn && !$conn->connect_error) {
         echo "<div class='success'>✅ Conexión a base de datos exitosa</div>";

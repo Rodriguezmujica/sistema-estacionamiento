@@ -90,7 +90,7 @@ echo "</div>";
 echo "<div class='section'>";
 echo "<h2>2. Base de Datos</h2>";
 
-require_once 'conexion.php';
+require_once '../config/conexion.php';
 
 if ($conn && !$conn->connect_error) {
     echo "<div class='success'>";

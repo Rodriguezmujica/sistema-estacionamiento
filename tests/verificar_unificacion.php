@@ -61,7 +61,7 @@ echo "<h2>1. Verificación de Archivo Principal</h2>";
 if (file_exists('conexion.php')) {
     echo "<p class='ok'>✅ Archivo conexion.php encontrado</p>";
     
-    require_once __DIR__ . '/conexion.php';
+    require_once __DIR__ . '/../config/conexion.php';
     
     if (isset($conn) && $conn->ping()) {
         echo "<p class='ok'>✅ Conexión a base de datos exitosa</p>";

@@ -15,7 +15,7 @@ header('Content-Type: application/json');
  * Genera un comprobante interno sin boleta oficial
  */
 
-require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../config/conexion.php';
 
 // Obtener datos del POST
 $id_ingreso = isset($_POST['id_ingreso']) ? intval($_POST['id_ingreso']) : 0;

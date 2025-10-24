@@ -151,7 +151,7 @@ ini_set('display_errors', 1);
         echo "<h5>Test 3: Probar conexión con conexion.php</h5>";
         
         try {
-            require_once __DIR__ . '/conexion.php';
+            require_once __DIR__ . '/../config/conexion.php';
             
             if (isset($conn) && !$conn->connect_error) {
                 echo "✅ <strong>¡Conexión exitosa usando conexion.php!</strong><br>";

@@ -26,7 +26,7 @@ logMessage("🚀 Iniciando respaldo automático semanal");
 
 try {
     // Incluir conexión
-    require_once __DIR__ . '/../conexion.php';
+    require_once __DIR__ . '/../config/conexion.php';
     
     if (!isset($conn) || $conn->connect_error) {
         throw new Exception("Error de conexión a la base de datos");

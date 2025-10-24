@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../config/conexion.php';
 require_once __DIR__ . '/../utils/redondeo_chile.php';
 
 // Obtener datos del POST

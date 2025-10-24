@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/conexion.php';
+require_once __DIR__ . '/../config/conexion.php';
 
 echo "<h3>🔧 Actualizando tabla 'clientes' para pagos recurrentes...</h3>";
 

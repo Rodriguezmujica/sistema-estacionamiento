@@ -1,7 +1,7 @@
 <?php
 <?php
 header('Content-Type: application/json');
-require_once __DIR__ . '/../conexion.php'; // Ajusta la ruta si tu archivo de conexión está en otro lugar
+require_once __DIR__ . '/../config/conexion.php'; // Ajusta la ruta si tu archivo de conexión está en otro lugar
 
 $sql = "SELECT i.idautos_estacionados, i.patente, i.fecha_ingreso, t.nombre_servicio 
         FROM ingresos i

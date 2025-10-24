@@ -88,7 +88,7 @@ echo "<hr>";
 // 5. Prueba del archivo de conexión del sistema
 echo "<h3>6. Prueba del archivo conexion.php del sistema:</h3>";
 try {
-    require_once 'conexion.php';
+    require_once '../config/conexion.php';
     
     if (isset($conn) && $conn) {
         echo "✅ <strong>conexion.php funciona correctamente</strong><br>";

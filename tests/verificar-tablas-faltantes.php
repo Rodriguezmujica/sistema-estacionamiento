@@ -36,7 +36,7 @@ echo "<p>Sistema de Estacionamiento - Análisis Completo</p>";
 echo "</div>";
 
 try {
-    require_once 'conexion.php';
+    require_once '../config/conexion.php';
     
     if (!$conn || $conn->connect_error) {
         throw new Exception("Error de conexión: " . ($conn->connect_error ?? 'Conexión nula'));

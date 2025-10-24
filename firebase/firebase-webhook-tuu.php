@@ -22,7 +22,7 @@ function procesarNotificacionTUU($data) {
     }
     
     // Conectar a la base de datos local
-    require_once 'conexion.php';
+    require_once '../config/conexion.php';
     
     try {
         // Buscar el ticket por transaction_id_tuu

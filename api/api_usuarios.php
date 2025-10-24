@@ -1,7 +1,7 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../config/conexion.php';
 
 // Solo los administradores pueden gestionar usuarios
 if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'admin') {

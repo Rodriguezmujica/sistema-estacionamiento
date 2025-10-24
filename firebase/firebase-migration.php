@@ -6,7 +6,7 @@
  * Este archivo ayuda a migrar datos existentes de MySQL a Firestore
  */
 
-require_once __DIR__ . '/conexion.php';
+require_once __DIR__ . '/../config/conexion.php';
 require_once __DIR__ . '/firebase-config.php';
 
 class FirebaseMigration {

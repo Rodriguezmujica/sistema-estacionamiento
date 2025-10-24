@@ -69,7 +69,7 @@ echo "<hr>";
 // Probar conexión directa a la base de datos
 echo "<h2>🗄️ Probando Conexión Directa a Base de Datos</h2>";
 
-require_once 'conexion.php';
+require_once '../config/conexion.php';
 
 try {
     if ($conn->connect_error) {

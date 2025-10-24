@@ -1,5 +1,5 @@
 <?php
-include 'conexion.php';
+include '../config/conexion.php';
 
 echo "=== AGREGANDO COLUMNAS TUU A LA TABLA INGRESOS ===\n";
 

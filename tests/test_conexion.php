@@ -68,7 +68,7 @@ echo "<hr>";
 // Test 4: Probar conexion.php
 echo "<h3>Test 4: Probar archivo conexion.php</h3>";
 try {
-    require_once __DIR__ . '/conexion.php';
+    require_once __DIR__ . '/../config/conexion.php';
     
     if (isset($conn) && $conn->ping()) {
         echo "<p style='color: green;'>✅ conexion.php funciona correctamente</p>";

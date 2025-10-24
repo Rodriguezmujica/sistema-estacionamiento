@@ -40,7 +40,7 @@ echo "<hr>";
 // 3. Verificar conexión a base de datos
 echo "<h3>3. Conexión Base de Datos</h3>";
 try {
-    require_once 'conexion.php';
+    require_once '../config/conexion.php';
     
     if (isset($conn) && $conn) {
         echo "✅ Conexión establecida<br>";

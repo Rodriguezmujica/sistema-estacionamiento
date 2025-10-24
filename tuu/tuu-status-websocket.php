@@ -4,7 +4,7 @@
  * Para uso en red local sin dependencias externas
  */
 
-require_once __DIR__ . '/conexion.php';
+require_once __DIR__ . '/../config/conexion.php';
 
 // Configuración básica de WebSocket (PHP puro)
 ini_set('max_execution_time', 0);

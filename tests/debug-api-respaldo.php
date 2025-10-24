@@ -14,7 +14,7 @@ echo "===========================\n\n";
 
 try {
     echo "1. Probando conexión a base de datos...\n";
-    require_once __DIR__ . '/conexion.php';
+    require_once __DIR__ . '/../config/conexion.php';
     
     if (!isset($conn) || $conn->connect_error) {
         throw new Exception("Error de conexión: " . ($conn->connect_error ?? 'Conexión no establecida'));

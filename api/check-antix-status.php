@@ -86,7 +86,7 @@ try {
         
         // Si existe el archivo de conexión, intentar usarlo
         if (file_exists(__DIR__ . '/conexion.php')) {
-            require_once __DIR__ . '/conexion.php';
+            require_once __DIR__ . '/../config/conexion.php';
             
             if (isset($conn) && $conn && $conn->ping()) {
                 $dbInfo['host'] = defined('DB_HOST') ? DB_HOST : 'localhost';
