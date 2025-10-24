@@ -1034,19 +1034,32 @@ async function cargarResumenEjecutivo() {
     
     console.log('🌐 Intentando fetch a:', url);
     
-    // Fetch simple sin headers personalizados
-    let response;
-    try {
-      response = await fetch(url);
-      console.log('✅ Response recibida:', response.status, response.statusText);
-      console.log('✅ Response headers:', [...response.headers.entries()]);
-    } catch (fetchError) {
-      console.error('❌ Error en fetch:', fetchError);
-      console.error('❌ Tipo de error:', typeof fetchError);
-      console.error('❌ Mensaje:', fetchError.message);
-      console.error('❌ Stack:', fetchError.stack);
-      throw fetchError;
-    }
+    // Usar XMLHttpRequest como alternativa a fetch
+    const response = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log('✅ Response recibida:', xhr.status, xhr.statusText);
+            resolve({
+              ok: true,
+              status: xhr.status,
+              statusText: xhr.statusText,
+              json: () => Promise.resolve(JSON.parse(xhr.responseText))
+            });
+          } else {
+            console.error('❌ Error HTTP:', xhr.status, xhr.statusText);
+            reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+          }
+        }
+      };
+      xhr.onerror = function() {
+        console.error('❌ Error de red en XMLHttpRequest');
+        reject(new Error('Error de red'));
+      };
+      xhr.send();
+    });
     
     // Verificar si la respuesta es válida
     if (!response.ok) {
