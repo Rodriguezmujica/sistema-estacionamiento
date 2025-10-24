@@ -5,7 +5,12 @@ require_once __DIR__ . '/../conexion.php';
 /**
  * API para Resumen Ejecutivo Mensual
  * Proporciona estadísticas completas para el jefe
+ * OPTIMIZADO PARA WINDOWS 7
  */
+
+// Aumentar timeout para consultas complejas
+set_time_limit(60);
+ini_set('max_execution_time', 60);
 
 $method = $_SERVER['REQUEST_METHOD'];
 $mes = isset($_GET['mes']) ? intval($_GET['mes']) : date('n');

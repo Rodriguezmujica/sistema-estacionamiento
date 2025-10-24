@@ -840,7 +840,15 @@ async function cargarResumenEjecutivo() {
   document.getElementById('resumen-contenido').classList.add('d-none');
   
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`);
+    // Crear AbortController para timeout personalizado
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos
+    
+    const response = await fetch(`${BASE_PATH}/api/api_resumen_ejecutivo.php?mes=${mes}&anio=${anio}`, {
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
     
     // Verificar si la respuesta es válida
     if (!response.ok) {
