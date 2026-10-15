@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRESUPUESTO - Sistema de Estacionamiento Los Ríos</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: white;
+            color: black;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2c5aa0;
+            padding-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c5aa0;
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #d4af37;
+            margin-bottom: 5px;
+        }
+        
+        .project-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            color: #2c5aa0;
+            margin-bottom: 15px;
+            font-weight: bold;
+            border-bottom: 2px solid #d4af37;
+            padding-bottom: 5px;
+        }
+        
+        .subsection-title {
+            font-size: 14px;
+            color: #2c5aa0;
+            margin-bottom: 10px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        
+        .summary-box {
+            background: #f8f9fa;
+            border: 2px solid #2c5aa0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .summary-title {
+            font-size: 16px;
+            color: #2c5aa0;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .summary-item {
+            font-size: 12px;
+            margin: 5px 0;
+            color: #333;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 11px;
+        }
+        
+        .table th {
+            background: #2c5aa0;
+            color: white;
+            padding: 8px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .table td {
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .highlight-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 5px;
+        }
+        
+        .cost-box {
+            background: #e7f3ff;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .cost-title {
+            font-size: 18px;
+            color: #004085;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .cost-amount {
+            font-size: 24px;
+            color: #004085;
+            font-weight: bold;
+        }
+        
+        .module-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+        
+        .module-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 11px;
+        }
+        
+        .module-list li:before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .hours-breakdown {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .hours-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+        
+        .hours-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 11px;
+        }
+        
+        .hours-item:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            background: #e9ecef;
+            padding: 5px;
+            margin-top: 5px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        
+        .guarantee-box {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .guarantee-title {
+            font-size: 14px;
+            color: #155724;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .guarantee-item {
+            font-size: 11px;
+            margin: 5px 0;
+            color: #155724;
+        }
+        
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">PRESUPUESTO ACTUALIZADO</h1>
+            <h2 class="subtitle">Sistema de Estacionamiento Los Ríos</h2>
+            <div class="project-info">
+                <strong>Cliente:</strong> Estacionamiento Los Ríos<br>
+                <strong>Desarrollador:</strong> Luis Miguel Rodriguez<br>
+                <strong>Fecha:</strong> 22/10/2025<br>
+                <strong>Duración:</strong> 3 de octubre - 22 de octubre, 2025 (20 días)
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🎯 Resumen Ejecutivo</h2>
+            <div class="summary-box">
+                <div class="summary-title">SISTEMA HÍBRIDO COMPLETO DESARROLLADO</div>
+                <div class="summary-item">• Sistema Híbrido PC1/PC2 con sincronización en tiempo real</div>
+                <div class="summary-item">• Integración Firebase completa (Firestore, Storage, FCM)</div>
+                <div class="summary-item">• Gestión completa de ingresos/salidas y servicios de lavado</div>
+                <div class="summary-item">• Integración TUU con confirmación manual de pagos</div>
+                <div class="summary-item">• Sistema de impresión térmica local y remota</div>
+                <div class="summary-item">• Acceso remoto seguro con HTTPS y DuckDNS</div>
+                <div class="summary-item">• Notificaciones push automáticas</div>
+                <div class="summary-item">• Backup automático y sistema de respaldo</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📊 Análisis del Sistema Desarrollado</h2>
+            
+            <div class="subsection-title">Archivos del Proyecto:</div>
+            <ul class="module-list">
+                <li>150+ archivos PHP - Backend, APIs y sistema híbrido</li>
+                <li>25+ archivos JavaScript - Frontend, Firebase, sincronización</li>
+                <li>20+ archivos HTML - Interfaces de usuario y documentación</li>
+                <li>70+ archivos de documentación - Guías completas</li>
+                <li><strong>Total: 265+ archivos de código fuente y documentación</strong></li>
+            </ul>
+
+            <div class="subsection-title">Módulos Principales Implementados:</div>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Módulo</th>
+                        <th>Complejidad</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1. Sistema de Gestión de Estacionamiento</td>
+                        <td>Alta</td>
+                        <td>Registro de ingresos/salidas, cálculo de tarifas, validación</td>
+                    </tr>
+                    <tr>
+                        <td>2. Sistema de Cobros y Pagos</td>
+                        <td>Alta</td>
+                        <td>Integración TUU, múltiples métodos de pago, transacciones</td>
+                    </tr>
+                    <tr>
+                        <td>3. Sistema de Impresión Térmica</td>
+                        <td>Alta</td>
+                        <td>Impresión automática, tickets, compatibilidad Windows 7/10+</td>
+                    </tr>
+                    <tr>
+                        <td>4. Sistema de Servicios de Lavado</td>
+                        <td>Media-Alta</td>
+                        <td>Gestión de servicios, precios, historial, reactivación</td>
+                    </tr>
+                    <tr>
+                        <td>5. Sistema de Reportes y Dashboard</td>
+                        <td>Alta</td>
+                        <td>Dashboard tiempo real, reportes, cierre de caja</td>
+                    </tr>
+                    <tr>
+                        <td>6. Sistema de Clientes Mensuales</td>
+                        <td>Media</td>
+                        <td>Gestión de membresías, abonos, descuentos</td>
+                    </tr>
+                    <tr>
+                        <td>7. Acceso Remoto y Seguridad</td>
+                        <td>Alta</td>
+                        <td>HTTPS, VPN Tailscale, autenticación, roles</td>
+                    </tr>
+                    <tr>
+                        <td>8. Sistema Híbrido PC1/PC2</td>
+                        <td>Muy Alta</td>
+                        <td>Sincronización bidireccional, detección PC, colas offline</td>
+                    </tr>
+                    <tr>
+                        <td>9. Integración Firebase Completa</td>
+                        <td>Alta</td>
+                        <td>Firestore, Storage, FCM, Service Workers, seguridad</td>
+                    </tr>
+                    <tr>
+                        <td>10. Administración del Sistema</td>
+                        <td>Media</td>
+                        <td>Panel admin, configuración, gestión usuarios</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">💰 Desglose de Horas Reales por Módulo</h2>
+            
+            <div class="hours-breakdown">
+                <div class="hours-title">Cronograma Real de Trabajo (20 días)</div>
+                <div class="hours-item">
+                    <span>Días laborables:</span>
+                    <span>~15 días × 2.5 horas = 37.5 horas</span>
+                </div>
+                <div class="hours-item">
+                    <span>Fines de semana:</span>
+                    <span>~5 días × 8 horas promedio = 40 horas</span>
+                </div>
+                <div class="hours-item">
+                    <span>Horas adicionales debugging y Firebase:</span>
+                    <span>12.5 horas</span>
+                </div>
+                <div class="hours-item">
+                    <span><strong>TOTAL HORAS REALES:</strong></span>
+                    <span><strong>90 horas</strong></span>
+                </div>
+            </div>
+
+            <div class="subsection-title">Distribución de Horas por Actividad:</div>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Categoría</th>
+                        <th>Módulo</th>
+                        <th>Horas</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="5"><strong>Desarrollo Backend</strong><br>(35h)</td>
+                        <td>Gestión Estacionamiento</td>
+                        <td>8h</td>
+                        <td>APIs de ingreso/salida, cálculos de tarifas</td>
+                    </tr>
+                    <tr>
+                        <td>Sistema de Pagos TUU</td>
+                        <td>8h</td>
+                        <td>Integración terminal, manejo transacciones</td>
+                    </tr>
+                    <tr>
+                        <td>Sistema Híbrido PC1/PC2</td>
+                        <td>10h</td>
+                        <td>APIs sincronización, detección PC</td>
+                    </tr>
+                    <tr>
+                        <td>Firebase Integration</td>
+                        <td>5h</td>
+                        <td>APIs Firebase, Firestore, Storage</td>
+                    </tr>
+                    <tr>
+                        <td>Impresión Térmica</td>
+                        <td>4h</td>
+                        <td>APIs de impresión, configuración hardware</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="5"><strong>Desarrollo Frontend</strong><br>(30h)</td>
+                        <td>Interfaz Principal</td>
+                        <td>8h</td>
+                        <td>Dashboard híbrido, navegación, responsive</td>
+                    </tr>
+                    <tr>
+                        <td>Sistema Híbrido JS</td>
+                        <td>8h</td>
+                        <td>Sincronización, detección PC, colas</td>
+                    </tr>
+                    <tr>
+                        <td>Firebase Frontend</td>
+                        <td>6h</td>
+                        <td>FCM, Service Workers, notificaciones</td>
+                    </tr>
+                    <tr>
+                        <td>Gestión de Cobros</td>
+                        <td>4h</td>
+                        <td>Interfaz cobros, integración TUU</td>
+                    </tr>
+                    <tr>
+                        <td>Sistema de Lavados</td>
+                        <td>4h</td>
+                        <td>Interfaz lavados, modalidades</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="6"><strong>Configuración y Debugging</strong><br>(25h)</td>
+                        <td>Firebase Setup</td>
+                        <td>8h</td>
+                        <td>Configuración Firestore, Storage, FCM</td>
+                    </tr>
+                    <tr>
+                        <td>Base de Datos</td>
+                        <td>4h</td>
+                        <td>Setup inicial, scripts SQL, columnas TUU</td>
+                    </tr>
+                    <tr>
+                        <td>Configuración Servidor</td>
+                        <td>4h</td>
+                        <td>Apache, PHP, permisos, HTTPS</td>
+                    </tr>
+                    <tr>
+                        <td>Acceso Remoto</td>
+                        <td>4h</td>
+                        <td>DuckDNS, Let's Encrypt, configuración</td>
+                    </tr>
+                    <tr>
+                        <td>Configuración Impresora</td>
+                        <td>3h</td>
+                        <td>Drivers, servicios, impresión local</td>
+                    </tr>
+                    <tr>
+                        <td>Debugging y Testing</td>
+                        <td>2h</td>
+                        <td>Pruebas funcionales, correcciones</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📈 Cálculo Final</h2>
+            
+            <div class="cost-box">
+                <div class="cost-title">INVERSIÓN TOTAL DEL PROYECTO</div>
+                <div class="cost-amount">$540 USD</div>
+                <div style="font-size: 12px; color: #666; margin-top: 10px;">
+                    90 horas × $6 USD/hora (tarifa especial primer proyecto)
+                </div>
+            </div>
+
+            <div class="hours-breakdown">
+                <div class="hours-title">Desglose de Horas</div>
+                <div class="hours-item">
+                    <span>Desarrollo Backend</span>
+                    <span>35h</span>
+                </div>
+                <div class="hours-item">
+                    <span>Desarrollo Frontend</span>
+                    <span>30h</span>
+                </div>
+                <div class="hours-item">
+                    <span>Configuración y Debugging</span>
+                    <span>25h</span>
+                </div>
+                <div class="hours-item">
+                    <span><strong>TOTAL HORAS REALES</strong></span>
+                    <span><strong>90h</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🎁 Valor Agregado Incluido</h2>
+            <div class="highlight">
+                <div class="highlight-title">Sin costo adicional se incluye:</div>
+                <ul class="module-list">
+                    <li>150+ archivos PHP completamente funcionales</li>
+                    <li>Sistema híbrido PC1/PC2 con sincronización en tiempo real</li>
+                    <li>Integración Firebase completa (Firestore, Storage, FCM)</li>
+                    <li>Documentación completa (70+ archivos de documentación)</li>
+                    <li>Guías de instalación paso a paso para ambas PC</li>
+                    <li>Sistema de respaldo automático y sincronización</li>
+                    <li>Notificaciones push automáticas</li>
+                    <li>Soporte técnico inicial para puesta en marcha</li>
+                    <li>Configuración de seguridad (HTTPS, autenticación, Firebase)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🚀 Beneficios del Sistema</h2>
+            
+            <div class="subsection-title">Para el Negocio:</div>
+            <ul class="module-list">
+                <li>Sistema híbrido con redundancia total (PC1 + PC2)</li>
+                <li>Sincronización en tiempo real entre ambas PC</li>
+                <li>Control de ingresos en tiempo real desde cualquier PC</li>
+                <li>Reducción de errores humanos en cobros</li>
+                <li>Acceso remoto VPN para supervisión segura</li>
+                <li>Notificaciones automáticas de eventos importantes</li>
+                <li>Reportes detallados para toma de decisiones</li>
+                <li>Funcionamiento offline con sincronización posterior</li>
+            </ul>
+
+            <div class="subsection-title">Técnicos:</div>
+            <ul class="module-list">
+                <li>Arquitectura híbrida robusta y escalable</li>
+                <li>Firebase integrado para sincronización en la nube</li>
+                <li>Interfaz moderna y responsive</li>
+                <li>Seguridad implementada (HTTPS, VPN Tailscale, autenticación, Firebase)</li>
+                <li>Backup automático y sincronización de datos</li>
+                <li>Soporte multiplataforma (Antix Linux, Windows 7+)</li>
+                <li>Notificaciones push automáticas</li>
+            </ul>
+        </div>
+
+        <div class="guarantee-box">
+            <div class="guarantee-title">🛡️ GARANTÍA INCLUIDA</div>
+            <div class="guarantee-item">• 4 meses de soporte técnico sin costo adicional</div>
+            <div class="guarantee-item">• Corrección de bugs encontrados durante el período de garantía</div>
+            <div class="guarantee-item">• Dos sesiones de capacitación incluidas (una por PC)</div>
+            <div class="guarantee-item">• Soporte para configuración del sistema híbrido</div>
+            <div class="guarantee-item">• Actualizaciones menores durante el período de garantía</div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📋 Entregables del Proyecto</h2>
+            
+            <div class="subsection-title">Código Fuente:</div>
+            <ul class="module-list">
+                <li>Sistema híbrido completo funcional</li>
+                <li>265+ archivos de código y documentación</li>
+                <li>Base de datos configurada con columnas TUU</li>
+                <li>Scripts de instalación para PC1 y PC2</li>
+                <li>Sistema de sincronización Firebase</li>
+            </ul>
+
+            <div class="subsection-title">Documentación:</div>
+            <ul class="module-list">
+                <li>Manual de usuario completo</li>
+                <li>Guías de instalación para ambas PC</li>
+                <li>Documentación técnica del sistema híbrido</li>
+                <li>Guías de configuración Firebase</li>
+                <li>Procedimientos de emergencia y respaldo</li>
+            </ul>
+
+            <div class="subsection-title">Configuración:</div>
+            <ul class="module-list">
+                <li>Servidor PC1 (Antix) configurado</li>
+                <li>Estación PC2 (Windows 7) configurada</li>
+                <li>Acceso remoto funcionando con HTTPS</li>
+                <li>Impresoras configuradas localmente</li>
+                <li>Terminal TUU integrado con confirmación manual</li>
+                <li>Firebase configurado y funcionando</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📞 Próximos Pasos</h2>
+            <ol style="font-size: 11px; line-height: 1.6;">
+                <li><strong>Revisión del presupuesto actualizado</strong> y aprobación</li>
+                <li><strong>Firma del acuerdo</strong> de desarrollo con garantía de 4 meses</li>
+                <li><strong>Entrega del sistema híbrido</strong> completo (PC1 + PC2)</li>
+                <li><strong>Capacitación</strong> del personal en ambas PC</li>
+                <li><strong>Configuración</strong> del sistema híbrido y Firebase</li>
+                <li><strong>Soporte inicial</strong> de 4 meses incluido</li>
+            </ol>
+        </div>
+
+        <div class="footer">
+            <p><strong>Sistema híbrido completo de gestión para Estacionamiento Los Ríos</strong></p>
+            <p>Desarrollado con dedicación y profesionalismo por Luis Miguel Rodriguez</p>
+            <p>Fecha: 22 de octubre, 2025</p>
+        </div>
+    </div>
+</body>
+</html>

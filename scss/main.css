@@ -151,3 +151,29 @@ h4.mb-0 {
 */
 
 /* Puedes dejar tus utilidades y media queries personalizadas aquí abajo */
+
+/* ================================
+   🎨 Estilos para encabezados ordenables en tabla de reportes
+   ================================ */
+
+.sortable-header {
+  position: relative;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.sortable-header:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.sort-indicator {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 0.9em;
+  font-weight: bold;
+  transition: color 0.2s ease;
+}
+
+.sortable-header:hover .sort-indicator {
+  opacity: 0.7;
+}

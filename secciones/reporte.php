@@ -238,11 +238,23 @@ $rol = $_SESSION['rol'];
             <table class="table table-sm table-bordered">
               <thead class="table-dark">
                 <tr>
-                  <th>#</th>
-                  <th><i class="fas fa-car"></i> Patente</th>
-                  <th><i class="fas fa-calendar"></i> Fecha Salida</th>
-                  <th><i class="fas fa-cog"></i> Servicio</th>
-                  <th><i class="fas fa-dollar-sign"></i> Total</th>
+                  <th style="cursor: default;">#</th>
+                  <th class="sortable-header" data-sort="patente" style="cursor: pointer;">
+                    <i class="fas fa-car"></i> Patente
+                    <span class="sort-indicator"></span>
+                  </th>
+                  <th class="sortable-header" data-sort="fecha" style="cursor: pointer;">
+                    <i class="fas fa-calendar"></i> Fecha Salida
+                    <span class="sort-indicator"></span>
+                  </th>
+                  <th class="sortable-header" data-sort="servicio" style="cursor: pointer;">
+                    <i class="fas fa-cog"></i> Servicio
+                    <span class="sort-indicator"></span>
+                  </th>
+                  <th class="sortable-header" data-sort="total" style="cursor: pointer;">
+                    <i class="fas fa-dollar-sign"></i> Total
+                    <span class="sort-indicator"></span>
+                  </th>
                 </tr>
               </thead>
               <tbody id="tabla-detalles-body">
@@ -401,7 +413,7 @@ $rol = $_SESSION['rol'];
       </div>
       <hr>
       <div class="text-center">
-        <p class="mb-0">&copy; 2024 Estacionamiento Los Ríos</p>
+        <p class="mb-0">&copy;Estacionamiento Los Ríos</p>
       </div>
     </div>
   </footer>

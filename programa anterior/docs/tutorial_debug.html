@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎓 Tutorial de Debugging - Sistema Estacionamiento</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        .tutorial-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .card-header-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+        }
+        .step-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            background: #fff;
+            color: #667eea;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        .code-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .code-box {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .code-box-header {
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .code-box-bad .code-box-header {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .code-box-good .code-box-header {
+            background: #d4edda;
+            color: #155724;
+        }
+        .benefit-card {
+            border-left: 4px solid;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+        }
+        .benefit-card.info { border-color: #17a2b8; background: #d1ecf1; }
+        .benefit-card.success { border-color: #28a745; background: #d4edda; }
+        .benefit-card.warning { border-color: #ffc107; background: #fff3cd; }
+        .benefit-card.danger { border-color: #dc3545; background: #f8d7da; }
+        .tool-button {
+            display: block;
+            width: 100%;
+            padding: 1.5rem;
+            margin: 0.5rem 0;
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s;
+        }
+        .tool-button:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .emoji-large {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+        }
+        @media (max-width: 768px) {
+            .code-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="text-center text-white mb-4">
+            <h1 class="display-4 fw-bold mb-3">
+                <i class="fas fa-graduation-cap"></i> Tutorial de Debugging
+            </h1>
+            <p class="lead">Aprende a depurar tu sistema de estacionamiento como un profesional</p>
+        </div>
+
+        <!-- Introducción -->
+        <div class="tutorial-card">
+            <div class="card-header-custom">
+                <h2 class="mb-0"><i class="fas fa-question-circle"></i> ¿Qué es el Debugging?</h2>
+            </div>
+            <div class="card-body p-4">
+                <p class="lead">
+                    <strong>Debugging</strong> (o depuración) es el proceso de <strong>encontrar y corregir errores</strong> en tu código.
+                    Es como ser un detective: buscas pistas, analizas evidencia y resuelves el misterio.
+                </p>
+                <div class="row mt-4">
+                    <div class="col-md-4 text-center">
+                        <span class="emoji-large">🔍</span>
+                        <h5>Encontrar</h5>
+                        <p>Localizar dónde está el problema</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <span class="emoji-large">🔧</span>
+                        <h5>Arreglar</h5>
+                        <p>Corregir el error encontrado</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <span class="emoji-large">✅</span>
+                        <h5>Verificar</h5>
+                        <p>Confirmar que funciona bien</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Herramientas Disponibles -->
+        <div class="tutorial-card">
+            <div class="card-header-custom">
+                <h2 class="mb-0"><i class="fas fa-toolbox"></i> Tus Herramientas de Debugging</h2>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="debug_panel.php" class="tool-button text-decoration-none" target="_blank">
+                            <div class="text-center">
+                                <i class="fas fa-tachometer-alt fa-3x text-primary mb-3"></i>
+                                <h5 class="text-primary">Panel de Diagnóstico</h5>
+                                <p class="text-muted mb-0">Verifica el estado general del sistema</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="ver_logs.php" class="tool-button text-decoration-none" target="_blank">
+                            <div class="text-center">
+                                <i class="fas fa-terminal fa-3x text-success mb-3"></i>
+                                <h5 class="text-success">Visor de Logs</h5>
+                                <p class="text-muted mb-0">Ve qué está pasando en tiempo real</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="GUIA_DEBUG.md" class="tool-button text-decoration-none" target="_blank">
+                            <div class="text-center">
+                                <i class="fas fa-book fa-3x text-warning mb-3"></i>
+                                <h5 class="text-warning">Guía Completa</h5>
+                                <p class="text-muted mb-0">Documentación detallada</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paso a Paso -->
+        <div class="tutorial-card">
+            <div class="card-header-custom">
+                <h2 class="mb-0"><i class="fas fa-list-ol"></i> Tutorial Paso a Paso</h2>
+            </div>
+            <div class="card-body p-4">
+                
+                <!-- Paso 1 -->
+                <div class="mb-5">
+                    <h3>
+                        <span class="step-number">1</span>
+                        Incluir el Logger
+                    </h3>
+                    <p>Agrega esta línea al inicio de tu archivo PHP:</p>
+                    <pre><code class="language-php">require_once 'debug_logger.php';</code></pre>
+                </div>
+
+                <!-- Paso 2 -->
+                <div class="mb-5">
+                    <h3>
+                        <span class="step-number">2</span>
+                        Registrar Eventos Importantes
+                    </h3>
+                    <p>Usa los diferentes tipos de log según la situación:</p>
+                    
+                    <div class="code-comparison">
+                        <div class="code-box code-box-bad">
+                            <div class="code-box-header">
+                                <i class="fas fa-times-circle"></i> Sin Debug
+                            </div>
+                            <pre><code class="language-php">$patente = $_POST['patente'];
+$total = calcularMonto($patente);
+echo json_encode(['total' => $total]);</code></pre>
+                        </div>
+                        
+                        <div class="code-box code-box-good">
+                            <div class="code-box-header">
+                                <i class="fas fa-check-circle"></i> Con Debug
+                            </div>
+                            <pre><code class="language-php">$patente = $_POST['patente'];
+DebugLogger::info("Calculando monto para: $patente");
+
+$total = calcularMonto($patente);
+
+DebugLogger::info("Monto calculado", [
+    'patente' => $patente,
+    'total' => $total
+]);
+
+echo json_encode(['total' => $total]);</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paso 3 -->
+                <div class="mb-5">
+                    <h3>
+                        <span class="step-number">3</span>
+                        Registrar Errores
+                    </h3>
+                    <p>Siempre registra los errores para poder analizarlos después:</p>
+                    
+                    <pre><code class="language-php">try {
+    $resultado = $conexion->query($sql);
+    DebugLogger::sql($sql, $tiempo);
+    
+} catch (Exception $e) {
+    // ⭐ Registrar la excepción
+    DebugLogger::exception($e);
+    echo json_encode(['error' => 'Error interno']);
+}</code></pre>
+                </div>
+
+                <!-- Paso 4 -->
+                <div class="mb-5">
+                    <h3>
+                        <span class="step-number">4</span>
+                        Ver los Logs
+                    </h3>
+                    <p>Abre el visor de logs y verás todo lo que está pasando:</p>
+                    <div class="text-center">
+                        <a href="ver_logs.php" class="btn btn-primary btn-lg" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> Abrir Visor de Logs
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Tipos de Log -->
+        <div class="tutorial-card">
+            <div class="card-header-custom">
+                <h2 class="mb-0"><i class="fas fa-tags"></i> Tipos de Log y Cuándo Usarlos</h2>
+            </div>
+            <div class="card-body p-4">
+                
+                <div class="benefit-card info">
+                    <h5><i class="fas fa-info-circle"></i> INFO</h5>
+                    <p class="mb-2"><strong>Cuándo:</strong> Operaciones normales del sistema</p>
+                    <code>DebugLogger::info("Usuario registró patente ABC123");</code>
+                </div>
+
+                <div class="benefit-card warning">
+                    <h5><i class="fas fa-exclamation-triangle"></i> WARNING</h5>
+                    <p class="mb-2"><strong>Cuándo:</strong> Algo anormal pero no crítico</p>
+                    <code>DebugLogger::warning("Impresora no responde, reintentando...");</code>
+                </div>
+
+                <div class="benefit-card danger">
+                    <h5><i class="fas fa-times-circle"></i> ERROR</h5>
+                    <p class="mb-2"><strong>Cuándo:</strong> Errores que impiden una operación</p>
+                    <code>DebugLogger::error("No se pudo conectar a la base de datos");</code>
+                </div>
+
+                <div class="benefit-card success">
+                    <h5><i class="fas fa-database"></i> SQL</h5>
+                    <p class="mb-2"><strong>Cuándo:</strong> Consultas a la base de datos</p>
+                    <code>DebugLogger::sql("SELECT * FROM ingresos", 25.5);</code>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Beneficios -->
+        <div class="tutorial-card">
+            <div class="card-header-custom">
+                <h2 class="mb-0"><i class="fas fa-trophy"></i> ¿Por Qué Usar Debugging?</h2>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-clock text-primary"></i> Ahorra Tiempo</h5>
+                        <p>En lugar de adivinar dónde está el problema, ves exactamente qué pasó.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-shield-alt text-success"></i> Mayor Seguridad</h5>
+                        <p>Detectas intentos de hacking o uso indebido del sistema.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-chart-line text-info"></i> Mejor Rendimiento</h5>
+                        <p>Identificas qué partes del código son lentas y las optimizas.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-history text-warning"></i> Historial Completo</h5>
+                        <p>Sabes quién hizo qué y cuándo, útil para auditorías.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ejemplo Práctico -->
+        <div class="tutorial-card">
+            <div class="card-header-custom">
+                <h2 class="mb-0"><i class="fas fa-laptop-code"></i> Ejemplo Práctico Completo</h2>
+            </div>
+            <div class="card-body p-4">
+                <h4>Problema: "No se imprime el ticket"</h4>
+                <p>Veamos cómo usar las herramientas para resolver este problema:</p>
+
+                <div class="accordion" id="debugAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#step1">
+                                Paso 1: Revisar Panel de Diagnóstico
+                            </button>
+                        </h2>
+                        <div id="step1" class="accordion-collapse collapse show" data-bs-parent="#debugAccordion">
+                            <div class="accordion-body">
+                                <ol>
+                                    <li>Abre <a href="debug_panel.php" target="_blank">debug_panel.php</a></li>
+                                    <li>Ve a la sección "Sistema de Impresión"</li>
+                                    <li>Verifica:
+                                        <ul>
+                                            <li>✅ ¿Existe ticket.php?</li>
+                                            <li>✅ ¿Está instalada la librería ESC/POS?</li>
+                                            <li>✅ ¿Se detectan impresoras?</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step2">
+                                Paso 2: Revisar Logs
+                            </button>
+                        </h2>
+                        <div id="step2" class="accordion-collapse collapse" data-bs-parent="#debugAccordion">
+                            <div class="accordion-body">
+                                <ol>
+                                    <li>Abre <a href="ver_logs.php" target="_blank">ver_logs.php</a></li>
+                                    <li>Filtra por "PRINT"</li>
+                                    <li>Busca mensajes de error en rojo</li>
+                                    <li>El log te dirá exactamente qué falló</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step3">
+                                Paso 3: Agregar Más Logging
+                            </button>
+                        </h2>
+                        <div id="step3" class="accordion-collapse collapse" data-bs-parent="#debugAccordion">
+                            <div class="accordion-body">
+                                <p>En <code>ImpresionTermica/ticket.php</code> agrega:</p>
+                                <pre><code class="language-php">DebugLogger::info("Intentando imprimir ticket", [
+    'patente' => $patente,
+    'puerto' => $puerto
+]);
+
+try {
+    $printer->print();
+    DebugLogger::print_ticket($patente, true);
+} catch (Exception $e) {
+    DebugLogger::exception($e);
+    DebugLogger::print_ticket($patente, false);
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step4">
+                                Paso 4: Solución Encontrada
+                            </button>
+                        </h2>
+                        <div id="step4" class="accordion-collapse collapse" data-bs-parent="#debugAccordion">
+                            <div class="accordion-body">
+                                <p>Con los logs descubriste que:</p>
+                                <ul>
+                                    <li>La impresora está en USB004, no USB003</li>
+                                    <li>O el puerto está siendo usado por otro programa</li>
+                                    <li>O la impresora está apagada</li>
+                                </ul>
+                                <p class="text-success"><strong>¡Problema resuelto en minutos en lugar de horas!</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Próximos Pasos -->
+        <div class="tutorial-card">
+            <div class="card-header-custom">
+                <h2 class="mb-0"><i class="fas fa-rocket"></i> Próximos Pasos</h2>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <i class="fas fa-book-reader fa-3x text-primary mb-3"></i>
+                            <h5>Lee la Guía</h5>
+                            <p>Revisa <a href="GUIA_DEBUG.md" target="_blank">GUIA_DEBUG.md</a> para más detalles</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <i class="fas fa-code fa-3x text-success mb-3"></i>
+                            <h5>Ve el Ejemplo</h5>
+                            <p>Mira <a href="ejemplos/calcular-cobro_CON_DEBUG.php" target="_blank">el código con debugging</a></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <i class="fas fa-wrench fa-3x text-warning mb-3"></i>
+                            <h5>Practica</h5>
+                            <p>Agrega logging a tus propios archivos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-white mt-4">
+            <a href="index.php" class="btn btn-light btn-lg">
+                <i class="fas fa-arrow-left"></i> Volver al Sistema
+            </a>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,32 @@
+.logo {
+    height: 100px;
+    width: 150px;
+    font-size: 100px;
+    line-height: 1;
+    margin-left: 0px;
+  
+  }
+
+  
+.navbar {
+    padding: 0%;
+ .container-fluid {
+        display: flex;
+        flex-direction: column;
+        background-color: $rosaeve;
+        margin: 0%;
+        padding-bottom: 20px;
+      }
+  }
+
+ .nav-link {
+    font-family: "effloresce";
+    color: $marroneve;
+    &:hover {
+        background-color: white;
+    }
+  }
+.nav-border {
+  border: 2px solid $marroneve;
+  color: $marroneve;
+}  

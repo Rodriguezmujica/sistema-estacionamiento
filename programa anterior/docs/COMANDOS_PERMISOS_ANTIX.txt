@@ -1,0 +1,53 @@
+# 🔧 COMANDOS PARA CORREGIR PERMISOS EN ANTIX
+# Copia y pega estos comandos uno por uno en la terminal de Antix
+
+# 1. Ir al directorio del sistema
+cd /ruta/a/tu/sistema/estacionamiento
+
+# 2. Cambiar permisos de directorios principales
+chmod 0757 .
+chmod 0757 api
+chmod 0757 secciones
+chmod 0757 JS
+chmod 0757 logs
+chmod 0757 imagenes
+chmod 0757 scss
+
+# 3. Cambiar permisos de archivos PHP
+find . -name "*.php" -type f -exec chmod 0644 {} \;
+
+# 4. Cambiar permisos de archivos JS y CSS
+find . -name "*.js" -type f -exec chmod 0644 {} \;
+find . -name "*.css" -type f -exec chmod 0644 {} \;
+
+# 5. Archivos sensibles (más restrictivos)
+chmod 0600 config-sensible.php
+chmod 0644 conexion.php
+
+# 6. Cambiar propietario (reemplaza 'www-data' por el usuario correcto de tu sistema)
+sudo chown -R www-data:www-data .
+
+# 7. Si www-data no existe, usa el usuario del servidor web
+# Para Apache: sudo chown -R apache:apache .
+# Para Nginx: sudo chown -R nginx:nginx .
+
+# 8. Verificar permisos
+ls -ld .
+ls -ld api
+ls -ld secciones
+ls -ld JS
+
+# 9. Prueba de escritura
+touch test_write.tmp
+if [ -f "test_write.tmp" ]; then
+    echo "✅ Escritura funcionando"
+    rm test_write.tmp
+else
+    echo "❌ Error de escritura"
+fi
+
+# 10. Si aún hay problemas, usar permisos más amplios (solo para desarrollo)
+# sudo chmod 0777 .
+# sudo chmod 0777 api
+# sudo chmod 0777 secciones
+# sudo chmod 0777 JS

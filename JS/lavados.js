@@ -323,7 +323,7 @@ async function cobrarLavado(idIngreso, patente) {
               patente,
               data.datos_lavado.servicio || 'Lavado',
               data.datos_lavado.total || data.datos_lavado.monto || 0,
-              new Date().toLocaleString('es-AR')
+              new Date().toLocaleString('es-CL')
             );
           } catch (errorImprimir) {
             console.warn('⚠️ No se pudo imprimir el comprobante:', errorImprimir);
@@ -456,7 +456,7 @@ function realizarRegistroLavado(patente, tipoLavado, nombreCliente, precioExtra,
             patente,
             nombreServicio,
             precioTotal,
-            ahora.toLocaleString('es-AR')
+            ahora.toLocaleString('es-CL')
           );
         } catch (errorImprimir) {
           console.warn('⚠️ No se pudo imprimir el ticket:', errorImprimir);

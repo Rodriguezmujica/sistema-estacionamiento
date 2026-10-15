@@ -1,0 +1,13 @@
+# Archivo de conexión a la base de datos. ¡NUNCA SUBIR A GIT!
+conexion.php
+
+# Archivos de configuración de editores de código
+.vscode/
+.idea/
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Dependencias de Composer (si las usaras en el futuro)
+/vendor/

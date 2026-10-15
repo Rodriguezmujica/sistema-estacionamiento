@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INSTRUCCIONES SISTEMA ESTACIONAMIENTO</title>
+    <style>
+        body {
+            font-family: 'Arial Black', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .title {
+            font-size: 4rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 2rem;
+            color: #FFD700;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 8px solid #FFD700;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            color: #FFD700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .step {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #00FF00;
+        }
+        
+        .step-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #00FF00;
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            background: #00FF00;
+            color: #000;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 50px;
+            margin-right: 20px;
+            vertical-align: top;
+        }
+        
+        .step-content {
+            display: inline-block;
+            width: calc(100% - 80px);
+            vertical-align: top;
+        }
+        
+        .step-text {
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+        }
+        
+        .credentials {
+            background: rgba(255, 0, 0, 0.2);
+            border: 3px solid #FF0000;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .credential-item {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #FFD700;
+        }
+        
+        .warning {
+            background: rgba(255, 165, 0, 0.3);
+            border: 4px solid #FFA500;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .warning-title {
+            font-size: 2.2rem;
+            color: #FFA500;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .warning-text {
+            font-size: 1.8rem;
+            color: #FFFFFF;
+        }
+        
+        .emergency {
+            background: rgba(255, 0, 0, 0.3);
+            border: 4px solid #FF0000;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .emergency-title {
+            font-size: 2.2rem;
+            color: #FF0000;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .emergency-steps {
+            font-size: 1.8rem;
+            color: #FFFFFF;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 1.4rem;
+            color: #CCCCCC;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .container {
+                background: white;
+                box-shadow: none;
+            }
+            .section {
+                background: #f0f0f0;
+                color: black;
+            }
+            .step {
+                background: #e8f5e8;
+                color: black;
+            }
+            .credentials {
+                background: #ffe6e6;
+                color: black;
+            }
+            .warning {
+                background: #fff3cd;
+                color: black;
+            }
+            .emergency {
+                background: #f8d7da;
+                color: black;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">SISTEMA DE ESTACIONAMIENTO</h1>
+            <h2 class="subtitle">INSTRUCCIONES DE USO</h2>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🔌 ENCENDIDO DEL SISTEMA</h2>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                    <div class="step-text">Presionar el botón de encendido de la computadora</div>
+                </div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                    <div class="step-text">Esperar a que el sistema inicie completamente</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🔑 ACCESO AL SISTEMA</h2>
+            
+            <div class="credentials">
+                <div class="credential-item">USUARIO: ServidorLosRios</div>
+                <div class="credential-item">PRESIONAR: ENTER</div>
+                <div class="credential-item">CONTRASEÑA: losrios733</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <div class="step-content">
+                    <div class="step-text">Hacer clic en el icono del navegador web</div>
+                </div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <div class="step-content">
+                    <div class="step-text">El sistema se abrirá automáticamente en la página de login</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="warning">
+            <div class="warning-title">⚠️ SOLUCIÓN DE PROBLEMAS</div>
+            <div class="warning-text">
+                Si NO se conecta a Internet o el sistema no responde
+            </div>
+        </div>
+
+        <div class="emergency">
+            <div class="emergency-title">🚨 PROCEDIMIENTO DE EMERGENCIA</div>
+            <div class="emergency-steps">
+                1. <strong>APAGAR</strong> completamente el sistema<br>
+                2. <strong>ESPERAR</strong> 10 segundos<br>
+                3. <strong>ENCENDER</strong> nuevamente el sistema<br>
+                <br>
+                <strong>NUNCA usar "Reiniciar" - siempre apagar y encender</strong>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📋 INFORMACIÓN IMPORTANTE</h2>
+            <div style="font-size: 1.8rem; line-height: 1.8;">
+                • <strong>Usuario:</strong> ServidorLosRios<br>
+                • <strong>Contraseña:</strong> losrios733<br>
+                • <strong>Procedimiento de emergencia:</strong> Apagar y encender (nunca reiniciar)<br>
+                • <strong>Tiempo de espera:</strong> 10 segundos entre apagado y encendido
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Sistema de Estacionamiento - Los Ríos</p>
+            <p>Documento para imprimir y plastificar</p>
+        </div>
+    </div>
+</body>
+</html>

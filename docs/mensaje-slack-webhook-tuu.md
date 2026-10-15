@@ -1,0 +1,71 @@
+# 💬 Mensaje para Slack - Pregunta sobre Webhook TUU
+
+## Versión Completa
+
+```
+Hola equipo 👋
+
+Tengo una pregunta sobre la integración de TUU con webhooks:
+
+**Contexto:**
+Estoy integrando TUU en mi sistema de estacionamiento y necesito recibir notificaciones automáticas cuando se completan los pagos (exitosos o fallidos). Según la documentación oficial, existe un webhook que notifica estos eventos, pero requiere configuración manual por el equipo de integradores.
+
+**Mi pregunta:**
+¿Alguien ha probado o implementado la recepción de webhooks de TUU? Específicamente:
+
+1. ¿Es posible configurar TUU para que envíe notificaciones de webhook a una URL externa?
+2. ¿Qué formato de datos envía TUU en el webhook?
+3. ¿Hay alguna limitación o requisito especial para la URL del webhook?
+4. ¿Cuál es el tiempo de respuesta típico del webhook después de un pago?
+
+**Mi situación específica:**
+- Sistema local sin dominio público
+- Propongo usar Firebase Real-time Database como intermediario
+- La URL sería algo como: `https://[proyecto]-default-rtdb.firebaseio.com/tuu_webhook_notifications.json`
+
+Si alguien tiene experiencia con esto o conoce a alguien que lo haya implementado, me encantaría conocer su experiencia o recibir cualquier consejo.
+
+Gracias de antemano! 🙏
+```
+
+## Versión Corta
+
+```
+Hola equipo 👋
+
+¿Alguien ha probado recibir webhooks de TUU para notificaciones de pagos? 
+
+Necesito configurar el webhook de TUU pero requiere configuración manual. ¿Es posible y qué formato de datos envía?
+
+Mi sistema es local, así que propongo usar Firebase como intermediario. ¿Alguien tiene experiencia con esto?
+
+Gracias! 🙏
+```
+
+## Versión Técnica (para canales técnicos)
+
+```
+Hola,
+
+Pregunta técnica sobre integración TUU:
+
+**Objetivo:** Recibir webhooks de TUU para notificaciones de pagos (success/failed)
+
+**Problema:** Sistema local sin dominio público, webhook requiere configuración manual
+
+**Solución propuesta:** Firebase Real-time Database como intermediario
+- URL: `https://[proyecto]-default-rtdb.firebaseio.com/tuu_webhook_notifications.json`
+- Método: POST/PUT
+- Formato: JSON
+
+**Preguntas:**
+1. ¿Alguien ha implementado webhooks de TUU?
+2. ¿Qué estructura de datos envía TUU?
+3. ¿Hay limitaciones de URL (debe ser HTTPS, dominio específico, etc.)?
+4. ¿Tiempo de respuesta del webhook?
+
+Cualquier experiencia o documentación sería útil.
+
+Thanks!
+```
+

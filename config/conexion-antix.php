@@ -7,6 +7,25 @@
 error_reporting(E_ERROR | E_PARSE);
 ini_set('display_errors', '0');
 
+if (!function_exists('setMySQLChileTimezone')) {
+    function setMySQLChileTimezone($conn) {
+        if ($conn->query("SET time_zone = 'America/Santiago'")) {
+            return true;
+        }
+    
+        $tz = new DateTimeZone('America/Santiago');
+        $now = new DateTime('now', $tz);
+        $offsetSeconds = $tz->getOffset($now);
+        $sign = $offsetSeconds >= 0 ? '+' : '-';
+        $abs = abs($offsetSeconds);
+        $hours = floor($abs / 3600);
+        $minutes = floor(($abs % 3600) / 60);
+        $offset = sprintf("%s%02d:%02d", $sign, $hours, $minutes);
+    
+        return (bool)$conn->query("SET time_zone = '{$offset}'");
+    }
+}
+
 // ============================================
 // CONFIGURACIÓN ESPECÍFICA PARA ANTIX
 // ============================================
@@ -99,9 +118,9 @@ function getInfoConexion() {
 // CONFIGURACIÓN ADICIONAL
 // ============================================
 
-// Configurar zona horaria en MySQL
+// Configurar zona horaria en MySQL con fallback seguro
 if ($conn) {
-    $conn->query("SET time_zone = '-03:00'");
+    setMySQLChileTimezone($conn);
 }
 
 // Log final

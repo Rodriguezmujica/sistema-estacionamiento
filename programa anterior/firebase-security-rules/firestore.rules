@@ -1,0 +1,148 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // REGLAS PARA USUARIOS
+    // ============================================
+    match /usuarios/{userId} {
+      // Los usuarios solo pueden leer/escribir sus propios datos
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Los administradores pueden leer todos los usuarios
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin';
+    }
+    
+    // ============================================
+    // REGLAS PARA TICKETS DE ESTACIONAMIENTO
+    // ============================================
+    match /tickets/{ticketId} {
+      // Solo usuarios autenticados pueden leer/escribir tickets
+      allow read, write: if request.auth != null;
+      
+      // Validaciones adicionales para escritura
+      allow create: if request.auth != null && 
+        request.resource.data.keys().hasAll(['patente', 'tipo_servicio', 'fecha_ingreso', 'usuario_id']) &&
+        request.resource.data.patente is string &&
+        request.resource.data.tipo_servicio in ['estacionamiento', 'lavado'] &&
+        request.resource.data.usuario_id is string;
+      
+      allow update: if request.auth != null && 
+        request.resource.data.patente is string &&
+        request.resource.data.tipo_servicio in ['estacionamiento', 'lavado'];
+    }
+    
+    // ============================================
+    // REGLAS PARA SERVICIOS DE LAVADO
+    // ============================================
+    match /servicios_lavado/{servicioId} {
+      // Solo usuarios autenticados pueden leer/escribir servicios
+      allow read, write: if request.auth != null;
+      
+      // Validaciones para creación
+      allow create: if request.auth != null && 
+        request.resource.data.keys().hasAll(['patente', 'tipo_lavado', 'precio_base', 'usuario_id']) &&
+        request.resource.data.patente is string &&
+        request.resource.data.tipo_lavado in ['básico', 'premium', 'completo'] &&
+        request.resource.data.precio_base is number &&
+        request.resource.data.usuario_id is string;
+    }
+    
+    // ============================================
+    // REGLAS PARA REPORTES
+    // ============================================
+    match /reportes/{reporteId} {
+      // Solo administradores pueden leer/escribir reportes
+      allow read, write: if request.auth != null && 
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin';
+    }
+    
+    // ============================================
+    // REGLAS PARA CONFIGURACIÓN
+    // ============================================
+    match /configuracion/{configId} {
+      // Solo administradores pueden leer/escribir configuración
+      allow read, write: if request.auth != null && 
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin';
+    }
+    
+    // ============================================
+    // REGLAS PARA ARCHIVOS DE PRUEBA
+    // ============================================
+    match /test/{documentId} {
+      // Solo en desarrollo - permitir todo
+      allow read, write: if request.auth != null;
+    }
+    
+    // ============================================
+    // REGLAS PARA BACKUPS
+    // ============================================
+    match /backups/{backupId} {
+      // Solo administradores pueden acceder a backups
+      allow read, write: if request.auth != null && 
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin';
+    }
+    
+    // ============================================
+    // REGLAS PARA LOGS DEL SISTEMA
+    // ============================================
+    match /logs/{logId} {
+      // Solo administradores pueden leer logs
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin';
+      
+      // El sistema puede escribir logs
+      allow write: if request.auth != null;
+    }
+    
+    // ============================================
+    // REGLAS PARA ESTADÍSTICAS
+    // ============================================
+    match /estadisticas/{statId} {
+      // Todos los usuarios autenticados pueden leer estadísticas
+      allow read: if request.auth != null;
+      
+      // Solo administradores pueden escribir estadísticas
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin';
+    }
+    
+    // ============================================
+    // REGLAS PARA NOTIFICACIONES
+    // ============================================
+    match /notificaciones/{notificacionId} {
+      // Los usuarios pueden leer sus propias notificaciones
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.usuario_id;
+      
+      // El sistema puede crear notificaciones
+      allow create: if request.auth != null;
+      
+      // Los usuarios pueden marcar como leídas sus notificaciones
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.usuario_id &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leida', 'fecha_lectura']);
+    }
+    
+    // ============================================
+    // REGLAS PARA AUDITORÍA
+    // ============================================
+    match /auditoria/{auditId} {
+      // Solo administradores pueden leer auditoría
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin';
+      
+      // El sistema puede escribir auditoría
+      allow write: if request.auth != null;
+    }
+    
+    // ============================================
+    // REGLAS POR DEFECTO
+    // ============================================
+    // Denegar acceso a cualquier otra colección no especificada
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

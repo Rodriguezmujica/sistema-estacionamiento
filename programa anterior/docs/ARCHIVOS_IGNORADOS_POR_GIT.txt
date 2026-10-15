@@ -1,0 +1,53 @@
+===============================================
+  ARCHIVOS QUE NO SE SUBEN A GITHUB
+  (Están en .gitignore)
+===============================================
+
+⚠️ IMPORTANTE: Estos archivos debes respaldarlos manualmente
+antes de clonar el repositorio en una nueva máquina.
+
+---
+
+1. ARCHIVOS DE CONFIGURACIÓN CRÍTICOS:
+   ✅ conexion.php - Contiene credenciales de la base de datos
+      → Existe conexion.php.example como plantilla
+      → Debes crear manualmente en la nueva máquina
+
+2. ARCHIVOS DE SCRIPTS:
+   - gitpush.bat - Script de Windows (no necesario en Ubuntu)
+   - Cualquier *.bat (scripts de Windows)
+
+3. ARCHIVOS DE RESPALDO:
+   - *.bak
+   - *.backup
+   - *_backup.*
+   - *_original.*
+
+4. CARPETAS DE DEPENDENCIAS:
+   - /vendor/ (si usas Composer en el futuro)
+   - /node_modules/ (si usas Node.js)
+
+5. CARPETAS DE CONFIGURACIÓN DE EDITORES:
+   - .vscode/
+   - .idea/
+
+6. SCRIPTS SQL DE EJECUCIÓN ÚNICA:
+   - /sql/ejecutar_*.php
+
+---
+
+PROCESO RECOMENDADO DE MIGRACIÓN:
+
+1. Exporta la base de datos desde phpMyAdmin
+2. Guarda una copia de conexion.php (para ver las credenciales)
+3. Sube los cambios a GitHub: git push
+4. En la nueva máquina (Ubuntu):
+   - git clone [tu-repositorio]
+   - Copia conexion.php.example a conexion.php
+   - Edita conexion.php con las credenciales correctas
+   - Importa la base de datos
+
+---
+
+Archivo generado automáticamente para referencia.
+

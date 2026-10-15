@@ -28,6 +28,7 @@ try {
     }
     
     // 📊 CONSULTA PRINCIPAL CORREGIDA Y VERIFICADA
+    // Usar fecha_salida cuando existe, si no usar fecha_ingreso (igual que otros reportes)
     $sql = "SELECT 
         i.idautos_estacionados,
         i.patente,
@@ -49,11 +50,11 @@ try {
     FROM ingresos i 
     LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos 
     LEFT JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos 
-    WHERE i.fecha_ingreso >= ? 
-    AND i.fecha_ingreso <= ?
+    WHERE COALESCE(s.fecha_salida, i.fecha_ingreso) >= ? 
+    AND COALESCE(s.fecha_salida, i.fecha_ingreso) <= ?
     AND s.id_ingresos IS NOT NULL
     AND (ti.es_plan IS NULL OR ti.es_plan = 0)
-    ORDER BY i.fecha_ingreso DESC";
+    ORDER BY COALESCE(s.fecha_salida, i.fecha_ingreso) DESC";
     
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
@@ -121,14 +122,15 @@ try {
     }
     
     // 🔍 OBTENER DESGLOSE DE ESTACIONAMIENTO X MINUTO
+    // Usar fecha_salida cuando existe, si no usar fecha_ingreso (igual que otros reportes)
     $sqlEstacionamiento = "SELECT 
         COUNT(*) as cantidad_estacionamiento,
         SUM(s.total) as total_estacionamiento
     FROM ingresos i 
     LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos 
     LEFT JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos 
-    WHERE i.fecha_ingreso >= ? 
-    AND i.fecha_ingreso <= ?
+    WHERE COALESCE(s.fecha_salida, i.fecha_ingreso) >= ? 
+    AND COALESCE(s.fecha_salida, i.fecha_ingreso) <= ?
     AND ti.nombre_servicio LIKE '%estacionamiento%minuto%'
     AND s.id_ingresos IS NOT NULL";
     

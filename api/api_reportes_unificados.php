@@ -19,51 +19,36 @@ function ejecutarConsulta($conn, $sql) {
 }
 
 try {
-    // 1. Reporte Diario (últimos 7 días para mostrar datos)
+    // 1. Reporte Diario (solo para el día de hoy)
+    // Excluir pagos mensuales (metodo_pago = 'MENSUAL' o id_ingresos = 0)
     $fecha_hoy = date('Y-m-d');
     $sql_diario = "SELECT COUNT(s.id_ingresos) as servicios, SUM(s.total) as ingresos 
                    FROM salidas s
-                   WHERE DATE(s.fecha_salida) = '$fecha_hoy'";
+                   WHERE DATE(s.fecha_salida) = '$fecha_hoy'
+                   AND s.id_ingresos > 0
+                   AND (s.metodo_pago IS NULL OR s.metodo_pago != 'MENSUAL')";
     $reporte_diario = ejecutarConsulta($conn, $sql_diario);
 
-    // 2. Reporte Mensual (Lunes a Viernes) - último mes con datos
+    // 2. Reporte Mensual (Lunes a Viernes) - solo para el mes actual
+    // Excluir pagos mensuales (metodo_pago = 'MENSUAL' o id_ingresos = 0)
     $mes_actual = date('Y-m');
     $sql_mensual_lv = "SELECT COUNT(s.id_ingresos) as servicios, SUM(s.total) as ingresos 
                        FROM salidas s
-                       WHERE DATE_FORMAT(s.fecha_salida, '%Y-%m') = '$mes_actual' AND DAYOFWEEK(s.fecha_salida) BETWEEN 2 AND 6";
+                       WHERE DATE_FORMAT(s.fecha_salida, '%Y-%m') = '$mes_actual' 
+                       AND DAYOFWEEK(s.fecha_salida) BETWEEN 2 AND 6
+                       AND s.id_ingresos > 0
+                       AND (s.metodo_pago IS NULL OR s.metodo_pago != 'MENSUAL')";
     $reporte_mensual_lv = ejecutarConsulta($conn, $sql_mensual_lv);
 
-    // 3. Reporte Mensual Completo (Lunes a Sábado) - último mes con datos
+    // 3. Reporte Mensual Completo (Lunes a Sábado) - solo para el mes actual
+    // Excluir pagos mensuales (metodo_pago = 'MENSUAL' o id_ingresos = 0)
     $sql_mensual_completo = "SELECT COUNT(s.id_ingresos) as servicios, SUM(s.total) as ingresos 
                              FROM salidas s
-                             WHERE DATE_FORMAT(s.fecha_salida, '%Y-%m') = '$mes_actual' AND DAYOFWEEK(s.fecha_salida) != 1";
+                             WHERE DATE_FORMAT(s.fecha_salida, '%Y-%m') = '$mes_actual' 
+                             AND DAYOFWEEK(s.fecha_salida) != 1
+                             AND s.id_ingresos > 0
+                             AND (s.metodo_pago IS NULL OR s.metodo_pago != 'MENSUAL')";
     $reporte_mensual_completo = ejecutarConsulta($conn, $sql_mensual_completo);
-    
-    // Si no hay datos en el mes actual, mostrar datos del último mes disponible
-    if ($reporte_diario['servicios'] == 0 && $reporte_mensual_lv['servicios'] == 0) {
-        $sql_ultimo_mes = "SELECT DATE_FORMAT(fecha_salida, '%Y-%m') as mes 
-                          FROM salidas 
-                          ORDER BY fecha_salida DESC 
-                          LIMIT 1";
-        $result_ultimo_mes = $conn->query($sql_ultimo_mes);
-        if ($result_ultimo_mes && $row = $result_ultimo_mes->fetch_assoc()) {
-            $ultimo_mes = $row['mes'];
-            $sql_diario = "SELECT COUNT(s.id_ingresos) as servicios, SUM(s.total) as ingresos 
-                          FROM salidas s
-                          WHERE DATE(s.fecha_salida) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
-            $reporte_diario = ejecutarConsulta($conn, $sql_diario);
-            
-            $sql_mensual_lv = "SELECT COUNT(s.id_ingresos) as servicios, SUM(s.total) as ingresos 
-                              FROM salidas s
-                              WHERE DATE_FORMAT(s.fecha_salida, '%Y-%m') = '$ultimo_mes' AND DAYOFWEEK(s.fecha_salida) BETWEEN 2 AND 6";
-            $reporte_mensual_lv = ejecutarConsulta($conn, $sql_mensual_lv);
-            
-            $sql_mensual_completo = "SELECT COUNT(s.id_ingresos) as servicios, SUM(s.total) as ingresos 
-                                    FROM salidas s
-                                    WHERE DATE_FORMAT(s.fecha_salida, '%Y-%m') = '$ultimo_mes' AND DAYOFWEEK(s.fecha_salida) != 1";
-            $reporte_mensual_completo = ejecutarConsulta($conn, $sql_mensual_completo);
-        }
-    }
 
     // 4. Servicios Activos
     $sql_activos = "SELECT 

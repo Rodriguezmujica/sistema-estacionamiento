@@ -654,11 +654,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ticket_id: ticketCobroActual.id,
             patente: ticketCobroActual.patente,
             fecha_ingreso: ticketCobroActual.fecha_ingreso,
-            fecha_salida: ahora.toLocaleString('es-AR'),
+            fecha_salida: ahora.toLocaleString('es-CL'),
             tiempo_estadia: tiempoTexto,
             monto: total,
             metodo_pago: metodo,
-            fecha_pago: ahora.toLocaleString('es-AR')
+            fecha_pago: ahora.toLocaleString('es-CL')
           });
           
           if (resultado.success) {

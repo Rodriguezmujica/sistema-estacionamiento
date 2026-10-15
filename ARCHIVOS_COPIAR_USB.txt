@@ -1,0 +1,140 @@
+════════════════════════════════════════════════════════════════
+  📦 ARCHIVOS PARA COPIAR AL USB Y USAR EN LINUX MINT
+════════════════════════════════════════════════════════════════
+
+ESTRUCTURA DE CARPETAS A CREAR EN EL USB:
+-----------------------------------------
+sistemaEstacionamiento/
+├── tests/
+│   ├── test_gd_logo.php
+│   ├── fix_logo_problema.php
+│   ├── test_imprimir_logo.php
+│   └── crear_logo_simple.php
+└── scripts/
+    └── instalar_gd_linux.sh
+
+════════════════════════════════════════════════════════════════
+  📋 ARCHIVOS A COPIAR (en orden de importancia)
+════════════════════════════════════════════════════════════════
+
+1. DIAGNÓSTICO Y SOLUCIÓN PRINCIPAL:
+   ✅ tests/test_gd_logo.php
+   ✅ tests/fix_logo_problema.php
+
+2. SCRIPTS DE SOPORTE:
+   ✅ scripts/instalar_gd_linux.sh
+   ✅ tests/test_imprimir_logo.php
+   ✅ tests/crear_logo_simple.php
+
+3. DOCUMENTACIÓN (opcional pero útil):
+   ✅ SOLUCION_LOGO_LINUX.txt
+   ✅ SOLUCION_LOGO_0x0.md
+   ✅ README_DEBUG_LOGO.md
+
+════════════════════════════════════════════════════════════════
+  📁 ESTRUCTURA COMPLETA DEL USB
+════════════════════════════════════════════════════════════════
+
+Copia estos archivos manteniendo la estructura de carpetas:
+
+USB:/sistemaEstacionamiento/
+├── tests/
+│   ├── test_gd_logo.php              ← PRIMERO ejecutar
+│   ├── fix_logo_problema.php          ← SEGUNDO ejecutar
+│   ├── test_imprimir_logo.php         ← TERCERO ejecutar
+│   └── crear_logo_simple.php          ← Alternativa
+├── scripts/
+│   └── instalar_gd_linux.sh          ← Si falta GD
+└── [Documentación opcional]
+    ├── SOLUCION_LOGO_LINUX.txt
+    ├── SOLUCION_LOGO_0x0.md
+    └── README_DEBUG_LOGO.md
+
+════════════════════════════════════════════════════════════════
+  🚀 CÓMO USAR LOS ARCHIVOS EN LINUX MINT
+════════════════════════════════════════════════════════════════
+
+PASO 1: Copiar archivos al servidor
+------------------------------------
+1. Conecta el USB al servidor Linux Mint
+2. Copia los archivos al sistema:
+
+   sudo cp -r /media/[usuario]/[nombre-usb]/sistemaEstacionamiento/tests \
+              /var/www/html/sistemaEstacionamiento/
+
+   sudo cp -r /media/[usuario]/[nombre-usb]/sistemaEstacionamiento/scripts \
+              /var/www/html/sistemaEstacionamiento/
+
+3. Dar permisos de ejecución al script:
+
+   sudo chmod +x /var/www/html/sistemaEstacionamiento/scripts/instalar_gd_linux.sh
+
+PASO 2: Diagnóstico inicial
+-----------------------------
+cd /var/www/html/sistemaEstacionamiento
+php tests/test_gd_logo.php
+
+Esto te dirá QUÉ falta (GD, formato, etc.)
+
+PASO 3: Solucionar el problema del logo
+----------------------------------------
+php tests/fix_logo_problema.php
+
+Este script convierte el logo a formato compatible y lo guarda como:
+- imagenes/image_fixed.jpg
+- ImpresionTermica/geek_fixed.png
+
+PASO 4: Reemplazar el logo
+---------------------------
+# Backup del original
+cp imagenes/image.jpg imagenes/image.jpg.backup
+
+# Usar el logo arreglado
+cp imagenes/image_fixed.jpg imagenes/image.jpg
+
+PASO 5: Verificar que funciona
+--------------------------------
+php tests/test_imprimir_logo.php
+
+Debe mostrar dimensiones correctas (no 0x0) y funcionar.
+
+PASO 6 (Si falta GD): Instalar dependencias
+---------------------------------------------
+sudo bash scripts/instalar_gd_linux.sh
+
+Esto instala GD y todas las dependencias necesarias.
+
+════════════════════════════════════════════════════════════════
+  ⚡ COMANDOS RÁPIDOS (copiar y pegar)
+════════════════════════════════════════════════════════════════
+
+# 1. Ir al directorio del sistema
+cd /var/www/html/sistemaEstacionamiento
+
+# 2. Diagnóstico
+php tests/test_gd_logo.php
+
+# 3. Arreglar logo
+php tests/fix_logo_problema.php
+
+# 4. Reemplazar logo
+cp imagenes/image.jpg imagenes/image.jpg.backup
+cp imagenes/image_fixed.jpg imagenes/image.jpg
+
+# 5. Probar
+php tests/test_imprimir_logo.php
+
+# 6. Si falta GD (ejecutar como root)
+sudo bash scripts/instalar_gd_linux.sh
+
+════════════════════════════════════════════════════════════════
+  📝 NOTAS IMPORTANTES
+════════════════════════════════════════════════════════════════
+
+- Los archivos deben estar en /var/www/html/sistemaEstacionamiento/
+- Los scripts de prueba NO necesitan permisos especiales
+- El script instalar_gd_linux.sh SÍ necesita sudo
+- Después de arreglar el logo, reinicia Apache si es necesario
+
+════════════════════════════════════════════════════════════════
+

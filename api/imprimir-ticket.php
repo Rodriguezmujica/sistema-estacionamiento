@@ -1,137 +1,128 @@
 <?php
+/**
+ * API para Re-imprimir Tickets
+ * Este script actúa como un puente:
+ * 1. Recibe un ID de ticket desde el frontend.
+ * 2. Busca todos los datos completos de ese ticket en la base de datos.
+ * 3. Envía los datos completos al servicio de impresión.
+ */
+
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/conexion.php';
 
+// Desactivar errores en pantalla para no corromper la respuesta JSON
+ini_set('display_errors', 0);
+error_reporting(0);
+
 try {
-    $tipo = $_POST['tipo'] ?? ''; // 'ingreso' o 'salida'
-    $id = $_POST['id'] ?? '';
-    
-    if (empty($tipo) || empty($id)) {
-        throw new Exception('Tipo e ID son requeridos');
+    $tipo = $_POST['tipo'] ?? null;
+    $id = $_POST['id'] ?? null;
+
+    if (!$tipo || !$id) {
+        throw new Exception("Tipo de ticket e ID son requeridos.");
     }
-    
+
+    $id = intval($id);
+    $datosParaImprimir = [];
+    $nombreImpresora = 'POSESTACIONAMIENTO'; // Nombre por defecto para Windows
+
     if ($tipo === 'ingreso') {
-        // Obtener datos del ingreso
-        $sql = "SELECT i.idautos_estacionados, i.patente, i.fecha_ingreso, 
-                       ti.nombre_servicio
+        // Buscar datos del ticket de ingreso
+        $sql = "SELECT i.patente, ti.nombre_servicio, i.fecha_ingreso
                 FROM ingresos i
                 JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                 WHERE i.idautos_estacionados = ?";
         
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('i', $id);
+        $stmt = $conexion->prepare($sql);
+        $stmt->bind_param("i", $id);
         $stmt->execute();
-        $result = $stmt->get_result();
+        $resultado = $stmt->get_result();
         
-        if ($row = $result->fetch_assoc()) {
-            // Preparar datos para impresión de ingreso usando print-service-php
-            $fecha_ingreso = new DateTime($row['fecha_ingreso']);
-            $datos_impresion = [
-                'patente' => $row['patente'],
-                'tipo_vehiculo' => 'Vehículo',
-                'ticket_id' => $row['idautos_estacionados'],
-                'fecha_ingreso' => $fecha_ingreso->format('d-m-Y'),
-                'hora_ingreso' => $fecha_ingreso->format('H:i:s')
+        if ($fila = $resultado->fetch_assoc()) {
+            $fecha = new DateTime($fila['fecha_ingreso']);
+            $datosParaImprimir = [
+                'patente'       => $fila['patente'],
+                'tipo_vehiculo' => $fila['nombre_servicio'],
+                'ticket_id'     => $id,
+                'fecha_ingreso' => $fecha->format('d-m-Y'),
+                'hora_ingreso'  => $fecha->format('H:i:s')
             ];
-            
         } else {
-            throw new Exception('Ingreso no encontrado');
+            throw new Exception("No se encontró el ticket de ingreso con ID: $id");
         }
-        
+        $stmt->close();
+
     } elseif ($tipo === 'salida') {
-        // Obtener datos de la salida
-        $sql = "SELECT s.id_ingresos, s.fecha_salida, s.total, s.metodo_pago,
-                       i.patente, i.fecha_ingreso,
-                       ti.nombre_servicio
+        // Buscar datos del ticket de salida
+        $sql = "SELECT i.patente, i.fecha_ingreso, s.fecha_salida, s.total, s.metodo_pago
                 FROM salidas s
                 JOIN ingresos i ON s.id_ingresos = i.idautos_estacionados
-                JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
                 WHERE s.id_ingresos = ?";
         
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('i', $id);
+        $stmt = $conexion->prepare($sql);
+        $stmt->bind_param("i", $id);
         $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($row = $result->fetch_assoc()) {
-            // Preparar datos para impresión de salida usando print-service-php
-            $fecha_ingreso = new DateTime($row['fecha_ingreso']);
-            $fecha_salida = new DateTime($row['fecha_salida']);
-            
-            // Calcular tiempo de estadía
-            $intervalo = $fecha_ingreso->diff($fecha_salida);
-            $tiempo_estadia = $intervalo->format('%H:%I:%S');
-            
-            $datos_impresion = [
-                'patente' => $row['patente'],
-                'fecha_ingreso' => $fecha_ingreso->format('d-m-Y H:i:s'),
-                'fecha_salida' => $fecha_salida->format('d-m-Y H:i:s'),
-                'tiempo_estadia' => $tiempo_estadia,
-                'monto' => $row['total'],
-                'metodo_pago' => $row['metodo_pago'] ?: 'MANUAL'
+        $resultado = $stmt->get_result();
+
+        if ($fila = $resultado->fetch_assoc()) {
+            $ingreso = new DateTime($fila['fecha_ingreso']);
+            $salida = new DateTime($fila['fecha_salida']);
+            $intervalo = $ingreso->diff($salida);
+            $tiempoEstadia = $intervalo->format('%h h %i min');
+
+            $datosParaImprimir = [
+                'ticket_id'     => $id,
+                'patente'       => $fila['patente'],
+                'fecha_ingreso' => $ingreso->format('d-m-Y H:i'),
+                'fecha_salida'  => $salida->format('d-m-Y H:i'),
+                'tiempo_estadia'=> $tiempoEstadia,
+                'monto'         => $fila['total'],
+                'metodo_pago'   => $fila['metodo_pago']
             ];
-            
         } else {
-            throw new Exception('Salida no encontrada');
+            throw new Exception("No se encontró el ticket de salida con ID: $id");
         }
+        $stmt->close();
+
     } else {
-        throw new Exception('Tipo de ticket inválido');
+        throw new Exception("Tipo de ticket no válido: $tipo");
     }
-    
-    // Llamar al servicio de impresión PHP
-    $url_impresion = 'http://localhost:8080/sistemaEstacionamiento/print-service-php/imprimir.php';
-    
-    // Preparar datos en el formato correcto que espera imprimir.php
-    $payload = [
+
+    // Ahora, enviar los datos completos al servicio de impresión
+    $payload = json_encode([
         'tipo' => $tipo,
-        'datos' => $datos_impresion,
-        'impresora' => 'POSESTACIONAMIENTO'
-    ];
-    
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url_impresion);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/json'
+        'datos' => $datosParaImprimir,
+        'impresora' => $nombreImpresora
     ]);
-    
-    $response = curl_exec($ch);
+
+    // Usar cURL para hacer la petición POST al servicio de impresión
+    $ch = curl_init('http://localhost/sistemaEstacionamiento/print-service-php/imprimir.php');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10); // Timeout de 10 segundos
+
+    $respuestaImpresion = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curl_error = curl_error($ch);
     curl_close($ch);
-    
+
     if ($curl_error) {
-        throw new Exception('Error de conexión: ' . $curl_error);
+        throw new Exception("Error de cURL al contactar el servicio de impresión: " . $curl_error);
     }
-    
-    if ($http_code === 200) {
-        $resultado = json_decode($response, true);
-        if ($resultado && $resultado['success']) {
-            echo json_encode([
-                'success' => true,
-                'message' => 'Ticket impreso correctamente',
-                'tipo' => $tipo
-            ]);
-        } else {
-            // El servicio responde pero hay un error de impresión (impresora no disponible, etc.)
-            $mensaje_error = $resultado['message'] ?? $resultado['error'] ?? 'Error desconocido en la impresión';
-            echo json_encode([
-                'success' => false,
-                'error' => 'Error de impresión: ' . $mensaje_error,
-                'tipo' => $tipo
-            ]);
-        }
-    } else {
-        throw new Exception("Error HTTP $http_code: " . $response);
+
+    $respuestaJson = json_decode($respuestaImpresion, true);
+    if ($http_code !== 200 || !$respuestaJson || !$respuestaJson['success']) {
+        throw new Exception("El servicio de impresión devolvió un error: " . ($respuestaJson['message'] ?? 'Error desconocido'));
     }
-    
+
+    echo json_encode(['success' => true, 'message' => "Ticket de $tipo enviado a la impresora."]);
+
 } catch (Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
+
+$conexion->close();
 ?>

@@ -1,0 +1,177 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ============================================
+    // REGLAS PARA IMÁGENES DE TICKETS
+    // ============================================
+    match /tickets/{ticketId}/{fileName} {
+      // Solo usuarios autenticados pueden subir/descargar imágenes de tickets
+      allow read, write: if request.auth != null;
+      
+      // Validar que sea una imagen
+      allow write: if request.auth != null && 
+        fileName.matches('.*\\.(jpg|jpeg|png|gif)$') &&
+        request.resource.size < 5 * 1024 * 1024; // Máximo 5MB
+    }
+    
+    // ============================================
+    // REGLAS PARA IMÁGENES DE SERVICIOS DE LAVADO
+    // ============================================
+    match /servicios_lavado/{servicioId}/{fileName} {
+      // Solo usuarios autenticados pueden subir/descargar imágenes
+      allow read, write: if request.auth != null;
+      
+      // Validar que sea una imagen
+      allow write: if request.auth != null && 
+        fileName.matches('.*\\.(jpg|jpeg|png|gif)$') &&
+        request.resource.size < 5 * 1024 * 1024; // Máximo 5MB
+    }
+    
+    // ============================================
+    // REGLAS PARA REPORTES PDF
+    // ============================================
+    match /reportes/{reporteId}/{fileName} {
+      // Solo administradores pueden subir/descargar reportes
+      allow read, write: if request.auth != null && 
+        request.auth.token.rol == 'admin';
+      
+      // Validar que sea un PDF
+      allow write: if request.auth != null && 
+        request.auth.token.rol == 'admin' &&
+        fileName.matches('.*\\.pdf$') &&
+        request.resource.size < 10 * 1024 * 1024; // Máximo 10MB
+    }
+    
+    // ============================================
+    // REGLAS PARA ARCHIVOS DE BACKUP
+    // ============================================
+    match /backups/{backupType}/{fileName} {
+      // Solo administradores pueden subir/descargar backups
+      allow read, write: if request.auth != null && 
+        request.auth.token.rol == 'admin';
+      
+      // Validar que sea un archivo de backup
+      allow write: if request.auth != null && 
+        request.auth.token.rol == 'admin' &&
+        fileName.matches('.*\\.(sql|zip|tar\\.gz)$') &&
+        request.resource.size < 100 * 1024 * 1024; // Máximo 100MB
+    }
+    
+    // ============================================
+    // REGLAS PARA ARCHIVOS DE CONFIGURACIÓN
+    // ============================================
+    match /config/{fileName} {
+      // Solo administradores pueden subir/descargar archivos de configuración
+      allow read, write: if request.auth != null && 
+        request.auth.token.rol == 'admin';
+      
+      // Validar tipos de archivo permitidos
+      allow write: if request.auth != null && 
+        request.auth.token.rol == 'admin' &&
+        fileName.matches('.*\\.(json|yaml|yml|conf|ini)$') &&
+        request.resource.size < 1 * 1024 * 1024; // Máximo 1MB
+    }
+    
+    // ============================================
+    // REGLAS PARA ARCHIVOS DE LOG
+    // ============================================
+    match /logs/{logType}/{fileName} {
+      // Solo administradores pueden leer logs
+      allow read: if request.auth != null && 
+        request.auth.token.rol == 'admin';
+      
+      // El sistema puede escribir logs
+      allow write: if request.auth != null;
+      
+      // Validar que sea un archivo de log
+      allow write: if request.auth != null && 
+        fileName.matches('.*\\.(log|txt)$') &&
+        request.resource.size < 5 * 1024 * 1024; // Máximo 5MB
+    }
+    
+    // ============================================
+    // REGLAS PARA ARCHIVOS DE PRUEBA
+    // ============================================
+    match /test/{fileName} {
+      // Solo en desarrollo - permitir todo para usuarios autenticados
+      allow read, write: if request.auth != null;
+      
+      // Validar tamaño máximo
+      allow write: if request.auth != null && 
+        request.resource.size < 10 * 1024 * 1024; // Máximo 10MB
+    }
+    
+    // ============================================
+    // REGLAS PARA ARCHIVOS TEMPORALES
+    // ============================================
+    match /temp/{userId}/{fileName} {
+      // Los usuarios pueden acceder a sus propios archivos temporales
+      allow read, write: if request.auth != null && 
+        request.auth.uid == userId;
+      
+      // Validar tamaño máximo
+      allow write: if request.auth != null && 
+        request.auth.uid == userId &&
+        request.resource.size < 5 * 1024 * 1024; // Máximo 5MB
+    }
+    
+    // ============================================
+    // REGLAS PARA ARCHIVOS DE AUDITORÍA
+    // ============================================
+    match /auditoria/{auditId}/{fileName} {
+      // Solo administradores pueden acceder a archivos de auditoría
+      allow read, write: if request.auth != null && 
+        request.auth.token.rol == 'admin';
+      
+      // Validar que sea un archivo de auditoría
+      allow write: if request.auth != null && 
+        request.auth.token.rol == 'admin' &&
+        fileName.matches('.*\\.(log|txt|csv)$') &&
+        request.resource.size < 5 * 1024 * 1024; // Máximo 5MB
+    }
+    
+    // ============================================
+    // REGLAS PARA ARCHIVOS DE ESTADÍSTICAS
+    // ============================================
+    match /estadisticas/{statId}/{fileName} {
+      // Todos los usuarios autenticados pueden leer estadísticas
+      allow read: if request.auth != null;
+      
+      // Solo administradores pueden escribir estadísticas
+      allow write: if request.auth != null && 
+        request.auth.token.rol == 'admin';
+      
+      // Validar tipos de archivo permitidos
+      allow write: if request.auth != null && 
+        request.auth.token.rol == 'admin' &&
+        fileName.matches('.*\\.(csv|json|xml)$') &&
+        request.resource.size < 2 * 1024 * 1024; // Máximo 2MB
+    }
+    
+    // ============================================
+    // REGLAS PARA ARCHIVOS DE NOTIFICACIONES
+    // ============================================
+    match /notificaciones/{notificacionId}/{fileName} {
+      // Los usuarios pueden acceder a sus propias notificaciones
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.metadata.usuario_id;
+      
+      // El sistema puede crear notificaciones
+      allow create: if request.auth != null;
+      
+      // Validar que sea un archivo de notificación
+      allow write: if request.auth != null && 
+        fileName.matches('.*\\.(txt|html|pdf)$') &&
+        request.resource.size < 1 * 1024 * 1024; // Máximo 1MB
+    }
+    
+    // ============================================
+    // REGLAS POR DEFECTO
+    // ============================================
+    // Denegar acceso a cualquier otra ruta no especificada
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

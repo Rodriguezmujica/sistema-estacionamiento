@@ -1,3 +1,10 @@
+function formatDateInputLocal(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   cargarReportesUnificados();
   // Establecer fechas por defecto (últimos 7 días)
@@ -6,11 +13,14 @@ document.addEventListener('DOMContentLoaded', function() {
   // Establecer fecha de cierre de caja (hoy por defecto)
   const fechaCierre = document.getElementById('fecha-cierre');
   if (fechaCierre) {
-    fechaCierre.value = new Date().toISOString().split('T')[0];
+    fechaCierre.value = formatDateInputLocal(new Date());
   }
   
-  // Actualizar cada 30 segundos
-  setInterval(cargarReportesUnificados, 30000);
+  // 🛡️ CORRECCIÓN DEFINITIVA: Solo activar la actualización automática si estamos en el dashboard.
+  // Esto evita que el intervalo se ejecute en otras páginas como admin.php y cause conflictos.
+  if (document.getElementById('total-hoy')) {
+    setInterval(cargarReportesUnificados, 30000);
+  }
 });
 
 function establecerFechasPorDefecto() {
@@ -27,19 +37,30 @@ function establecerFechasPorDefecto() {
   hace7Dias.setDate(hoy.getDate() - 7);
   
   // Formatear fechas para input type="date"
-  const fechaHasta = hoy.toISOString().split('T')[0];
-  const fechaDesde = hace7Dias.toISOString().split('T')[0];
+  const fechaHasta = formatDateInputLocal(hoy);
+  const fechaDesde = formatDateInputLocal(hace7Dias);
   
   fechaDesdeEl.value = fechaDesde;
   fechaHastaEl.value = fechaHasta;
 }
 
 function cargarReportesUnificados() {
+  // 🛡️ CORRECCIÓN DE SEGURIDAD:
+  // Solo ejecutar esta función si estamos en el dashboard o en la página de reportes.
+  // Esto evita errores de JS en otras páginas como admin.php.
+  const esDashboard = !!document.getElementById('total-hoy');
+  const esPaginaReportes = !!document.getElementById('servicios-diario');
+  if (!esDashboard && !esPaginaReportes) return;
+
   // Determinar la ruta correcta según la página actual
   const isReportesPage = window.location.pathname.includes('reporte.php');
-  const apiPath = isReportesPage ? '../api/api_reportes_unificados.php' : './api/api_reportes_unificados.php';
+  let apiPath = isReportesPage ? '../api/api_reportes_unificados.php' : './api/api_reportes_unificados.php';
   
-  fetch(apiPath)
+  // ✅ CORRECCIÓN: Añadir un parámetro con la fecha y hora actual para evitar problemas de caché en el servidor
+  // y asegurar que los cálculos de "hoy" y "mes actual" sean correctos.
+  const timestamp = new Date().toISOString();
+  
+  fetch(`${apiPath}?ts=${timestamp}`)
     .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -261,25 +282,172 @@ function obtenerIconoCategoria(categoria) {
   return iconos[categoria] || '📋';
 }
 
+// Variables globales para el ordenamiento
+let datosTablaDetalles = [];
+let columnaOrdenActual = null;
+let ordenActual = 'asc'; // 'asc' o 'desc'
+
+// Función para formatear fecha en formato HH:MM:SS, DD-MM-YYYY
+function formatearFechaHora(fecha) {
+  if (!fecha) return 'N/A';
+  const date = new Date(fecha);
+  if (isNaN(date.getTime())) return 'N/A';
+  
+  // Obtener componentes de fecha y hora
+  const horas = String(date.getHours()).padStart(2, '0');
+  const minutos = String(date.getMinutes()).padStart(2, '0');
+  const segundos = String(date.getSeconds()).padStart(2, '0');
+  const dia = String(date.getDate()).padStart(2, '0');
+  const mes = String(date.getMonth() + 1).padStart(2, '0');
+  const año = date.getFullYear();
+  
+  return `${horas}:${minutos}:${segundos}, ${dia}-${mes}-${año}`;
+}
+
+// Función para renderizar la tabla de detalles
+function renderizarTablaDetalles(servicios) {
+  const tbody = document.getElementById('tabla-detalles-body');
+  
+  if (servicios.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay servicios en esta categoría</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = servicios.map((servicio, index) => `
+    <tr>
+      <td>${index + 1}</td>
+      <td>${servicio.patente}</td>
+      <td>${formatearFechaHora(servicio.fecha_salida_real || servicio.fecha_salida)}</td>
+      <td>${servicio.nombre_servicio}</td>
+      <td class="text-end">$${parseInt(servicio.total).toLocaleString('es-CL')}</td>
+    </tr>
+  `).join('');
+}
+
+// Función para ordenar los datos
+function ordenarTabla(columna) {
+  // Si se hace clic en la misma columna, invertir el orden
+  if (columnaOrdenActual === columna) {
+    ordenActual = ordenActual === 'asc' ? 'desc' : 'asc';
+  } else {
+    columnaOrdenActual = columna;
+    ordenActual = 'asc';
+  }
+  
+  const datosOrdenados = [...datosTablaDetalles];
+  
+  datosOrdenados.sort((a, b) => {
+    let valorA, valorB;
+    
+    switch(columna) {
+      case 'patente':
+        valorA = (a.patente || '').toUpperCase();
+        valorB = (b.patente || '').toUpperCase();
+        break;
+        
+      case 'fecha':
+        const fechaA = new Date(a.fecha_salida_real || a.fecha_salida);
+        const fechaB = new Date(b.fecha_salida_real || b.fecha_salida);
+        valorA = isNaN(fechaA.getTime()) ? 0 : fechaA.getTime();
+        valorB = isNaN(fechaB.getTime()) ? 0 : fechaB.getTime();
+        break;
+        
+      case 'servicio':
+        valorA = (a.nombre_servicio || '').toUpperCase();
+        valorB = (b.nombre_servicio || '').toUpperCase();
+        break;
+        
+      case 'total':
+        // Limpiar símbolo $ y puntos, convertir a número
+        valorA = parseInt((a.total || 0).toString().replace(/[$.]/g, ''));
+        valorB = parseInt((b.total || 0).toString().replace(/[$.]/g, ''));
+        break;
+        
+      default:
+        return 0;
+    }
+    
+    // Manejar valores nulos/undefined
+    if (valorA == null || isNaN(valorA)) valorA = ordenActual === 'asc' ? Infinity : -Infinity;
+    if (valorB == null || isNaN(valorB)) valorB = ordenActual === 'asc' ? Infinity : -Infinity;
+    
+    // Comparar según el tipo
+    if (typeof valorA === 'string' && typeof valorB === 'string') {
+      return ordenActual === 'asc' 
+        ? valorA.localeCompare(valorB)
+        : valorB.localeCompare(valorA);
+    } else {
+      return ordenActual === 'asc' 
+        ? valorA - valorB
+        : valorB - valorA;
+    }
+  });
+  
+  // Actualizar indicadores visuales
+  actualizarIndicadoresOrden(columna);
+  
+  // Renderizar tabla ordenada
+  renderizarTablaDetalles(datosOrdenados);
+}
+
+// Función para actualizar los indicadores visuales de ordenamiento
+function actualizarIndicadoresOrden(columnaActiva) {
+  const headers = document.querySelectorAll('.sortable-header');
+  headers.forEach(header => {
+    const indicator = header.querySelector('.sort-indicator');
+    const columna = header.getAttribute('data-sort');
+    
+    if (columna === columnaActiva) {
+      indicator.textContent = ordenActual === 'asc' ? ' ▲' : ' ▼';
+      indicator.style.color = '#fff';
+    } else {
+      indicator.textContent = '';
+    }
+  });
+}
+
+// Variable para evitar múltiples inicializaciones
+let ordenamientoInicializado = false;
+
+// Función para inicializar los event listeners de ordenamiento usando delegación de eventos
+function inicializarOrdenamiento() {
+  // Usar delegación de eventos en el contenedor de detalles para evitar duplicados
+  const container = document.getElementById('detalles-container');
+  if (!container || ordenamientoInicializado) return;
+  
+  container.addEventListener('click', function(e) {
+    const header = e.target.closest('.sortable-header');
+    if (header) {
+      const columna = header.getAttribute('data-sort');
+      if (columna) {
+        ordenarTabla(columna);
+      }
+    }
+  });
+  
+  ordenamientoInicializado = true;
+}
+
 function verDetallesCategoria(categoria) {
   const serviciosFiltrados = window.serviciosDetalle.filter(s => s.categoria === categoria);
   
-  const tbody = document.getElementById('tabla-detalles-body');
+  // Guardar los datos filtrados para ordenamiento
+  datosTablaDetalles = serviciosFiltrados;
+  
+  // Resetear ordenamiento
+  columnaOrdenActual = null;
+  ordenActual = 'asc';
+  
   const container = document.getElementById('detalles-container');
   
-  if (serviciosFiltrados.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay servicios en esta categoría</td></tr>';
-  } else {
-    tbody.innerHTML = serviciosFiltrados.map((servicio, index) => `
-      <tr>
-        <td>${index + 1}</td>
-        <td>${servicio.patente}</td>
-        <td>${new Date(servicio.fecha_salida_real || servicio.fecha_salida).toLocaleString('es-CL')}</td>
-        <td>${servicio.nombre_servicio}</td>
-        <td class="text-end">$${parseInt(servicio.total).toLocaleString('es-CL')}</td>
-      </tr>
-    `).join('');
-  }
+  // Renderizar tabla inicial
+  renderizarTablaDetalles(serviciosFiltrados);
+  
+  // Limpiar indicadores
+  actualizarIndicadoresOrden(null);
+  
+  // Inicializar event listeners una sola vez
+  inicializarOrdenamiento();
   
   // Mostrar el contenedor de detalles
   container.style.display = 'block';
@@ -426,84 +594,37 @@ function mostrarCierreCaja(data) {
 }
 
 async function imprimirCierreCaja() {
+  // 1. Verificar que se haya generado un cierre de caja
   if (!datoCierreCajaActual) {
     alert('Primero debe generar el cierre de caja');
     return;
   }
-  
-  const desglose = datoCierreCajaActual.desglose_pago;
-  
-  // 🆕 INTENTAR CON NUEVO SERVICIO PRIMERO
-  if (typeof PrintService !== 'undefined') {
-    try {
-      console.log('🆕 Imprimiendo cierre de caja con nuevo servicio...');
-      console.log('📊 Datos del cierre:', datoCierreCajaActual);
-      
-      // Buscar totales de categorías específicas
-      const totalEstacionamiento = datoCierreCajaActual.categorias.find(c => c.categoria.includes('Estacionamiento'))?.total || 0;
-      const totalLavado = datoCierreCajaActual.categorias.find(c => c.categoria.includes('Lavado'))?.total || 0;
-      const totalEfectivo = (desglose.efectivo_manual.total || 0) + (desglose.tuu_efectivo.total || 0);
 
-      // Preparar datos para el nuevo servicio (formato correcto para imprimir.php)
-      const datosCierre = {
-        fecha: datoCierreCajaActual.fecha,
-        hora: new Date().toLocaleTimeString('es-AR'),
-        usuario: 'Usuario', // Ajustar si tienes la info del usuario
-        efectivo_estacionamiento: totalEstacionamiento, // Efectivo total de estacionamiento
-        tuu_estacionamiento: 0, // TUU de estacionamiento (si hay separación)
-        efectivo_lavado: totalLavado, // Efectivo total de lavado
-        tuu_lavado: 0, // TUU de lavado (si hay separación)
-        total: datoCierreCajaActual.resumen.total_ingresos || 0
-      };
-      
-      console.log('📝 Datos preparados para impresión:', datosCierre);
-      
-      const resultado = await PrintService.imprimirCierreCaja(datosCierre);
-      
-      console.log('📄 Resultado de impresión:', resultado);
-      
-      if (resultado.success) {
-        alert('✅ Cierre de caja impreso correctamente');
-        return;
-      } else {
-        console.warn('⚠️ Nuevo servicio respondió con error:', resultado.message);
-        throw new Error('Fallback al método antiguo: ' + resultado.message);
-      }
-    } catch (errorNuevo) {
-      console.error('❌ Error en nuevo servicio:', errorNuevo);
-      console.warn('🔄 Usando método antiguo de impresión...');
-    }
-  } else {
-    console.warn('⚠️ PrintService no está definido, usando método antiguo directamente');
-  }
-  
-  // 🔄 FALLBACK: Método antiguo
-  const formData = new FormData();
-  formData.append('fecha', datoCierreCajaActual.fecha);
-  formData.append('total_servicios', datoCierreCajaActual.resumen.total_servicios);
-  formData.append('total_ingresos', datoCierreCajaActual.resumen.total_ingresos);
-  formData.append('efectivo_manual', desglose.efectivo_manual.total);
-  formData.append('tuu_efectivo', desglose.tuu_efectivo.total);
-  formData.append('tuu_debito', desglose.tuu_debito.total);
-  formData.append('tuu_credito', desglose.tuu_credito.total);
-  formData.append('transferencia', desglose.transferencia.total);
-  formData.append('categorias', JSON.stringify(datoCierreCajaActual.categorias));
-  
+  // 2. Obtener la fecha y el usuario para enviar a la API
+  const fecha = document.getElementById('fecha-cierre').value;
+  // Idealmente, el nombre de usuario vendría de la sesión de PHP, pero lo dejamos así por ahora.
+  const usuario = 'Cajero'; 
+
   try {
-    const response = await fetch('../ImpresionTermica/cierre_caja.php', {
+    // 3. Llamar a la nueva API que se encarga de todo
+    const response = await fetch('../api/imprimir-cierre-caja.php', {
       method: 'POST',
-      body: formData
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `fecha=${fecha}&usuario=${usuario}`
     });
-    
-    const resultado = await response.text();
-    
-    if (resultado.trim() === '1') {
-      alert('✅ Cierre de caja impreso correctamente en la impresora térmica');
+
+    const resultado = await response.json();
+
+    // 4. Mostrar el resultado al usuario
+    if (resultado.success) {
+      alert('✅ ' + (resultado.message || 'Cierre de caja enviado a la impresora.'));
     } else {
-      alert('⚠️ El cierre se generó pero hubo un problema con la impresión.\n\nVerifica que la impresora esté encendida y conectada.');
+      throw new Error(resultado.message || resultado.error || 'Error desconocido');
     }
   } catch (error) {
-    console.error('Error imprimiendo:', error);
-    alert('❌ Error al conectar con la impresora térmica.\n\nAsegúrate de que el servicio de impresión esté activo en el puerto 8080.');
+    console.error('Error al imprimir cierre de caja:', error);
+    alert(`❌ Error al imprimir: ${error.message}`);
   }
 }

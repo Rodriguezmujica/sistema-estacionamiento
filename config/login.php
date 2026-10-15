@@ -11,6 +11,9 @@ if (isset($_SESSION['usuario'])) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($conn) || !$conn || $conn->connect_error) {
+        $error = "Error de conexión a la base de datos: " . ($conn->connect_error ?? 'conexión no inicializada');
+    } else {
     $usuario = trim($_POST['usuario']);
     $password = trim($_POST['password']);
 
@@ -36,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } else {
         $error = "Usuario no encontrado";
+    }
     }
 }
 ?>

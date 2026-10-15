@@ -55,3 +55,19 @@ backup_*.sql
 
 # Carpeta de entrega al cliente (contiene credenciales)
 ENTREGA_JEFE/
+
+# Archivos de diagnóstico
+phpinfo.php
+test_*.php
+test_gd.php
+
+
+# SQLite local persistencia y caches
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+/data/
+
+# Salidas de compilación Electron & Vite
+/dist/
+/release/

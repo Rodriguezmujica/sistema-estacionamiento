@@ -9,6 +9,19 @@
 error_reporting(E_ERROR | E_PARSE);
 ini_set('display_errors', '0');
 
+if (!function_exists('getChileOffsetForMySQL')) {
+    function getChileOffsetForMySQL() {
+        $tz = new DateTimeZone('America/Santiago');
+        $now = new DateTime('now', $tz);
+        $offsetSeconds = $tz->getOffset($now);
+        $sign = $offsetSeconds >= 0 ? '+' : '-';
+        $abs = abs($offsetSeconds);
+        $hours = floor($abs / 3600);
+        $minutes = floor(($abs % 3600) / 60);
+        return sprintf("%s%02d:%02d", $sign, $hours, $minutes);
+    }
+}
+
 // ============================================
 // CONFIGURACIÓN DE ZONA HORARIA
 // ============================================
@@ -42,8 +55,11 @@ if ($conn->connect_error) {
 // Configurar charset
 $conn->set_charset($charset);
 
-// Configurar zona horaria de MySQL
-$conn->query("SET time_zone = '-03:00'");
+// Configurar zona horaria de MySQL con fallback seguro
+if (!$conn->query("SET time_zone = 'America/Santiago'")) {
+    $offset = getChileOffsetForMySQL();
+    $conn->query("SET time_zone = '{$offset}'");
+}
 
 // ============================================
 // OPCIÓN 2: PDO (si te lo piden específicamente)
@@ -59,8 +75,13 @@ try {
     
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    // Configurar zona horaria
-    $pdo->exec("SET time_zone = '-03:00'");
+    // Configurar zona horaria con fallback seguro
+    try {
+        $pdo->exec("SET time_zone = 'America/Santiago'");
+    } catch (Exception $e) {
+        $offset = getChileOffsetForMySQL();
+        $pdo->exec("SET time_zone = '{$offset}'");
+    }
     
 } catch (PDOException $e) {
     error_log("Error de conexión PDO: " . $e->getMessage());

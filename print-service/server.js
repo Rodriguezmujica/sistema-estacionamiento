@@ -401,7 +401,7 @@ function imprimirTest(printer, datos) {
         .style('normal')
         .size(0, 0)
         .text(datos.mensaje || 'Impresora funcionando correctamente')
-        .text(`Fecha: ${new Date().toLocaleString('es-AR')}`)
+        .text(`Fecha: ${new Date().toLocaleString('es-CL')}`)
         .text('--------------------------------')
         .feed(2)
         .cut()

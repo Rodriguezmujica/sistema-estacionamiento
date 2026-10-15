@@ -33,13 +33,63 @@ require_once __DIR__ . '/../ImpresionTermica/ticket/autoload.php';
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\EscposImage;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
+use Mike42\Escpos\PrintConnectors\FilePrintConnector;
+
+/**
+ * Función para crear el conector apropiado según el sistema operativo
+ */
+function crearConectorImpresora($nombreImpresora) {
+    $sistema = php_uname('s');
+    
+    // Verificar si estamos en Linux
+    if (strpos(strtolower($sistema), 'linux') !== false) {
+        // En Linux, buscar el dispositivo USB de la impresora
+        $dispositivos_posibles = [
+            '/dev/usb/lp0',
+            '/dev/usb/lp1',
+            '/dev/usb/lp2',
+            '/dev/usb/lp3',
+            '/dev/usb001', // Dispositivo genérico USB
+            '/dev/usb002',
+            '/dev/usb003',
+            '/dev/usb/printer', // Algunas distribuciones
+        ];
+        
+        // Intentar encontrar el dispositivo escribible
+        foreach ($dispositivos_posibles as $dispositivo) {
+            if (file_exists($dispositivo)) {
+                if (is_writable($dispositivo)) {
+                    error_log("✅ Impresora encontrada y escribible: $dispositivo");
+                    return new FilePrintConnector($dispositivo);
+                } else {
+                    // Dispositivo existe pero no tiene permisos
+                    error_log("⚠️  Dispositivo encontrado sin permisos: $dispositivo");
+                    error_log("💡 Solución: ejecutar 'sudo chmod 666 $dispositivo' o 'sudo usermod -a -G lp www-data'");
+                }
+            }
+        }
+        
+        // Si no encontramos dispositivo escribible, intentar usar archivo temporal + lp
+        try {
+            $impresora_temporal = '/tmp/impresora_' . uniqid() . '.prn';
+            error_log("Usando impresión vía archivo temporal: $impresora_temporal");
+            return new FilePrintConnector($impresora_temporal);
+        } catch (Exception $e) {
+            error_log("❌ Error creando conector: " . $e->getMessage());
+            throw new Exception("No se pudo conectar con la impresora. Verifique permisos en /dev/usb/lp*");
+        }
+    } else {
+        // Windows: usar WindowsPrintConnector
+        return new WindowsPrintConnector($nombreImpresora);
+    }
+}
 
 /**
  * Función para imprimir ticket de ingreso
  */
 function imprimirTicketIngreso($datos, $nombreImpresora) {
     try {
-        $connector = new WindowsPrintConnector($nombreImpresora);
+        $connector = crearConectorImpresora($nombreImpresora);
         $printer = new Printer($connector);
 
         // --- INICIO DE LA SECCIÓN CORREGIDA ---
@@ -56,14 +106,33 @@ function imprimirTicketIngreso($datos, $nombreImpresora) {
         // ========================================
         $printer->setJustification(Printer::JUSTIFY_CENTER);
         try {
-            $logo_path = __DIR__ . "/../ImpresionTermica/geek.png";
+            // Lógica de búsqueda de logo mejorada:
+            // 1. image_fixed.jpg (del script fix_logo_problema.php)
+            // 2. image_compatible.jpg (del script convertir_logo_compatible.php)
+            // 3. image.jpg (original)
+            // 4. geek.png (de respaldo)
+            $posibles_logos = [
+                __DIR__ . "/../imagenes/image_fixed.jpg",
+                __DIR__ . "/../imagenes/image_compatible.jpg",
+                __DIR__ . "/../imagenes/image.jpg",
+                __DIR__ . "/../ImpresionTermica/geek.png"
+            ];
+            foreach ($posibles_logos as $logo_path) {
+                if (file_exists($logo_path)) break;
+            }
+            
             if (file_exists($logo_path)) {
                 $logo = EscposImage::load($logo_path, false);
-                $printer->bitImage($logo);
+                $printer->graphics($logo);
                 $printer->feed(1);
+                error_log("✅ Logo cargado: " . basename($logo_path));
+            } else {
+                error_log("⚠️ No se encontró ningún archivo de logo en las rutas especificadas.");
             }
         } catch(Exception $e) {
-            error_log("Error cargando logo: " . $e->getMessage());
+            error_log("❌ Error cargando logo: " . $e->getMessage());
+            error_log("   💡 Para diagnosticar: php tests/test_gd_logo.php");
+            // Continuar sin logo - el ticket se imprime igual
         }
         
         // ========================================
@@ -101,18 +170,23 @@ function imprimirTicketIngreso($datos, $nombreImpresora) {
         $printer->setBarcodeHeight(80); // Buena altura para escanear
         $printer->setBarcodeWidth(3);   // Ancho visible
         $printer->barcode($patente, Printer::BARCODE_CODE39); // Usamos la PATENTE y CODE39
-        $printer->feed(1);
+        $printer->feed(2); // Más espacio después del código de barras
         $printer->setEmphasis(true);
         $printer->setTextSize(2, 1);
         $printer->text($patente . "\n"); // Repetimos la patente en texto grande
         $printer->setTextSize(1, 1);
         $printer->setEmphasis(false);
+        $printer->feed(1); // Espacio después de la patente
         
         // ========================================
         // 👋 PIE DE PÁGINA
         // ========================================
+        $printer->setEmphasis(true);
+        $printer->text("Horario: 8am a 19pm y Sabados 9am a 16pm\n");
+        $printer->setEmphasis(false);
         $printer->text("\nConserve este ticket para su pago.\n");
         $printer->text("Gracias por su preferencia.\n");
+        $printer->text(".\n");
         
         // Finalizar
         $printer->feed(3);
@@ -130,7 +204,7 @@ function imprimirTicketIngreso($datos, $nombreImpresora) {
  */
 function imprimirTicketSalida($datos, $nombreImpresora) {
     try {
-        $connector = new WindowsPrintConnector($nombreImpresora);
+        $connector = crearConectorImpresora($nombreImpresora);
         $printer = new Printer($connector);
         // ========================================
         // 🖼️ LOGO DEL NEGOCIO
@@ -139,14 +213,28 @@ function imprimirTicketSalida($datos, $nombreImpresora) {
         
         // Intentar cargar e imprimir el logo
         try {
-            $logo_path = __DIR__ . "/../ImpresionTermica/geek.png";
+            // Lógica de búsqueda de logo mejorada
+            $posibles_logos = [
+                __DIR__ . "/../imagenes/image_fixed.jpg",
+                __DIR__ . "/../imagenes/image_compatible.jpg",
+                __DIR__ . "/../imagenes/image.jpg",
+                __DIR__ . "/../ImpresionTermica/geek.png"
+            ];
+            foreach ($posibles_logos as $logo_path) {
+                if (file_exists($logo_path)) break; // Se detiene en el primero que encuentra
+            }
+            
             if (file_exists($logo_path)) {
                 $logo = EscposImage::load($logo_path, false);
-                $printer->bitImage($logo);
+                $printer->graphics($logo);
                 $printer->text("\n"); // Espacio después del logo
+                error_log("✅ Logo cargado: " . basename($logo_path));
+            } else {
+                error_log("⚠️ No se encontró ningún archivo de logo en las rutas especificadas.");
             }
         } catch(Exception $e) {
-            error_log("Error cargando logo: " . $e->getMessage());
+            error_log("❌ Error cargando logo: " . $e->getMessage());
+            error_log("   💡 Para diagnosticar: php tests/test_gd_logo.php");
         }
         // ========================================
         // 📋 ENCABEZADO DEL NEGOCIO
@@ -193,6 +281,9 @@ function imprimirTicketSalida($datos, $nombreImpresora) {
         // 👋 PIE DE PÁGINA
         // ========================================
         $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->setEmphasis(true);
+        $printer->text("Horario: 8am a 19pm y Sabados 9am a 16pm\n");
+        $printer->setEmphasis(false);
         $printer->text("Gracias por su preferencia\n");
         $printer->text("Vuelva pronto\n");
 
@@ -214,7 +305,7 @@ function imprimirTicketLavado($datos, $nombreImpresora) {
     $connector = null;
     
     try {
-        $connector = new WindowsPrintConnector($nombreImpresora);
+        $connector = crearConectorImpresora($nombreImpresora);
         $printer = new Printer($connector);
         
         // ========================================
@@ -224,16 +315,29 @@ function imprimirTicketLavado($datos, $nombreImpresora) {
         
         // Intentar cargar e imprimir el logo
         try {
-            $logo_path = __DIR__ . "/../ImpresionTermica/geek.png";
-            // Verificar que el archivo existe
+            // Lógica de búsqueda de logo mejorada
+            $posibles_logos = [
+                __DIR__ . "/../imagenes/image_fixed.jpg",
+                __DIR__ . "/../imagenes/image_compatible.jpg",
+                __DIR__ . "/../imagenes/image.jpg",
+                __DIR__ . "/../ImpresionTermica/geek.png"
+            ];
+            foreach ($posibles_logos as $logo_path) {
+                if (file_exists($logo_path)) break; // Se detiene en el primero que encuentra
+            }
+            
             if (file_exists($logo_path)) {
                 $logo = EscposImage::load($logo_path, false);
-                $printer->bitImage($logo);
+                $printer->graphics($logo);
                 $printer->text("\n"); // Espacio después del logo
+                error_log("✅ Logo cargado: " . basename($logo_path));
+            } else {
+                error_log("⚠️ No se encontró ningún archivo de logo en las rutas especificadas.");
             }
         } catch(Exception $e) {
             // Si no hay logo, continuar sin él
-            error_log("Error cargando logo: " . $e->getMessage());
+            error_log("❌ Error cargando logo: " . $e->getMessage());
+            error_log("   💡 Para diagnosticar: php tests/test_gd_logo.php");
         }
         // ========================================
         // 📋 ENCABEZADO DEL NEGOCIO
@@ -282,12 +386,13 @@ function imprimirTicketLavado($datos, $nombreImpresora) {
         
         try {
             $printer->barcode($patente, Printer::BARCODE_CODE39);
-            $printer->feed(1);
+            $printer->feed(2); // Más espacio después del código de barras
             $printer->setEmphasis(true);
             $printer->setTextSize(2, 1);
             $printer->text($patente . "\n"); // Repetir la patente en texto grande
             $printer->setTextSize(1, 1);
             $printer->setEmphasis(false);
+            $printer->feed(1); // Espacio después de la patente
         } catch (Exception $e) {
             // Si falla el código de barras, solo mostrar el texto
             error_log("Error generando código de barras: " . $e->getMessage());
@@ -296,8 +401,12 @@ function imprimirTicketLavado($datos, $nombreImpresora) {
             $printer->text($patente . "\n");
             $printer->setTextSize(1, 1);
             $printer->setEmphasis(false);
+            $printer->feed(1); // Espacio después de la patente
         }
-        $printer->feed(1);
+
+        $printer->setEmphasis(true);
+        $printer->text("Horario: 8am a 19pm y Sabados 9am a 16pm\n");
+        $printer->setEmphasis(false);
 
         $printer->text("Gracias por su preferencia\n");
         $printer->feed(2);
@@ -323,7 +432,7 @@ function imprimirTicketLavado($datos, $nombreImpresora) {
  */
 function imprimirCierreCaja($datos, $nombreImpresora) {
     try {
-        $connector = new WindowsPrintConnector($nombreImpresora);
+        $connector = crearConectorImpresora($nombreImpresora);
         $printer = new Printer($connector);
         
         $printer->setJustification(Printer::JUSTIFY_CENTER);
@@ -389,7 +498,7 @@ function imprimirCierreCaja($datos, $nombreImpresora) {
  */
 function imprimirTest($datos, $nombreImpresora) {
     try {
-        $connector = new WindowsPrintConnector($nombreImpresora);
+        $connector = crearConectorImpresora($nombreImpresora);
         $printer = new Printer($connector);
         
         $printer->setJustification(Printer::JUSTIFY_CENTER);

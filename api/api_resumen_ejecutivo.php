@@ -28,13 +28,6 @@ try {
             echo json_encode(['success' => true, 'data' => $resumen], JSON_UNESCAPED_UNICODE);
             break;
             
-        case 'POST':
-            // Actualizar meta mensual
-            $data = json_decode(file_get_contents('php://input'), true);
-            guardarMetaMensual($conn, $data);
-            echo json_encode(['success' => true, 'message' => 'Meta actualizada correctamente']);
-            break;
-            
         default:
             http_response_code(405);
             echo json_encode(['success' => false, 'error' => 'Método no permitido']);
@@ -122,40 +115,10 @@ function obtenerResumenMensual($conn, $mes, $anio) {
         $variacionPorcentaje = (($totalIngresos - $totalIngresosMesAnterior) / $totalIngresosMesAnterior) * 100;
     }
     
-    // 4. TOP 5 SERVICIOS MÁS VENDIDOS
-    // Incluye todos los servicios cobrados
-    // 🔧 CORRECCIÓN: Se separa 'Estacionamiento x Minuto' para que no se agrupe con otros.
-    $sqlTop5 = "SELECT 
-                    CASE 
-                        WHEN ti.nombre_servicio LIKE '%estacionamiento%minuto%' THEN 'Estacionamiento x Minuto'
-                        WHEN ti.nombre_servicio LIKE '%lavado%' THEN 'Lavados'
-                        ELSE ti.nombre_servicio
-                    END as nombre_servicio_agrupado,
-                    COUNT(i.idautos_estacionados) as cantidad,
-                    SUM(COALESCE(s.total, ti.precio, 0)) as total_vendido
-                FROM ingresos i
-                LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
-                JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
-                WHERE i.salida = 1
-                AND i.fecha_ingreso >= ?
-                AND i.fecha_ingreso <= ?
-                GROUP BY nombre_servicio_agrupado
-                ORDER BY total_vendido DESC
-                LIMIT 5";
-    
-    $stmt = $conn->prepare($sqlTop5);
-    $stmt->bind_param('ss', $primerDia, $ultimoDia);
-    $stmt->execute();
-    $resultTop5 = $stmt->get_result();
-    $top5Servicios = [];
-    while ($row = $resultTop5->fetch_assoc()) {
-        $top5Servicios[] = [
-            'servicio' => $row['nombre_servicio_agrupado'],
-            'cantidad' => intval($row['cantidad']),
-            'total' => floatval($row['total_vendido'])
-        ];
-    }
-    $stmt->close();
+    // 4. TOP 5 SERVICIOS MÁS VENDIDOS (general, laborales y sábados)
+    $top5Servicios = obtenerTopServiciosSegmentados($conn, $primerDia, $ultimoDia, 'ALL');
+    $top5ServiciosLV = obtenerTopServiciosSegmentados($conn, $primerDia, $ultimoDia, 'LV');
+    $top5ServiciosSabado = obtenerTopServiciosSegmentados($conn, $primerDia, $ultimoDia, 'SAB');
     
     // 5. DESGLOSE POR MÉTODO DE PAGO
     $sqlMetodosPago = "SELECT 
@@ -315,6 +278,8 @@ function obtenerResumenMensual($conn, $mes, $anio) {
         'ingresos_mes_anterior' => $totalIngresosMesAnterior,
         'variacion_porcentaje' => round($variacionPorcentaje, 2),
         'top_servicios' => $top5Servicios,
+        'top_servicios_lunes_viernes' => $top5ServiciosLV,
+        'top_servicios_sabado' => $top5ServiciosSabado,
         'desglose_pagos' => $desglosePagos,
         'ingresos_por_dia' => $ingresosPorDia,
         'meta' => [
@@ -331,32 +296,71 @@ function obtenerResumenMensual($conn, $mes, $anio) {
     ];
 }
 
-function guardarMetaMensual($conn, $data) {
-    $mes = intval($data['mes']);
-    $anio = intval($data['anio']);
-    $metaMonto = floatval($data['meta_monto']);
-    $soloDiasLaborales = intval($data['solo_dias_laborales'] ?? 1);
-    $incluirMensuales = intval($data['incluir_mensuales'] ?? 0);
-    
-    if ($metaMonto < 0) {
-        throw new Exception("La meta no puede ser negativa");
+/**
+ * Obtiene el Top 5 de servicios vendidos en un rango, permitiendo filtrar por segmento de días.
+ *
+ * @param mysqli $conn
+ * @param string $inicio
+ * @param string $fin
+ * @param string $segmento Opciones: ALL, LV (lunes a viernes), SAB (solo sábados)
+ * @return array
+ */
+function obtenerTopServiciosSegmentados($conn, $inicio, $fin, $segmento = 'ALL') {
+    $condicionDias = '';
+    switch ($segmento) {
+        case 'LV':
+            $condicionDias = ' AND WEEKDAY(i.fecha_ingreso) < 5';
+            break;
+        case 'SAB':
+            $condicionDias = ' AND WEEKDAY(i.fecha_ingreso) = 5';
+            break;
+        case 'DOM':
+            $condicionDias = ' AND WEEKDAY(i.fecha_ingreso) = 6';
+            break;
+        default:
+            $condicionDias = '';
     }
-    
-    $sql = "INSERT INTO metas_mensuales (mes, anio, meta_monto, solo_dias_laborales, incluir_mensuales)
-            VALUES (?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE 
-                meta_monto = VALUES(meta_monto),
-                solo_dias_laborales = VALUES(solo_dias_laborales),
-                incluir_mensuales = VALUES(incluir_mensuales)";
-    
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('iidii', $mes, $anio, $metaMonto, $soloDiasLaborales, $incluirMensuales);
-    
+
+    $sqlTop5 = "SELECT 
+                    CASE 
+                        WHEN ti.nombre_servicio LIKE '%estacionamiento%minuto%' THEN 'Estacionamiento x Minuto'
+                        WHEN ti.nombre_servicio LIKE '%lavado%' THEN 'Lavados'
+                        ELSE ti.nombre_servicio
+                    END as nombre_servicio_agrupado,
+                    COUNT(i.idautos_estacionados) as cantidad,
+                    SUM(COALESCE(s.total, ti.precio, 0)) as total_vendido
+                FROM ingresos i
+                LEFT JOIN salidas s ON i.idautos_estacionados = s.id_ingresos
+                JOIN tipo_ingreso ti ON i.idtipo_ingreso = ti.idtipo_ingresos
+                WHERE i.salida = 1
+                AND i.fecha_ingreso >= ?
+                AND i.fecha_ingreso <= ?"
+                . $condicionDias .
+                " GROUP BY nombre_servicio_agrupado
+                ORDER BY total_vendido DESC
+                LIMIT 5";
+
+    $stmt = $conn->prepare($sqlTop5);
+    if (!$stmt) {
+        throw new Exception("Error preparando consulta de top servicios: " . $conn->error);
+    }
+    $stmt->bind_param('ss', $inicio, $fin);
     if (!$stmt->execute()) {
-        throw new Exception("Error al guardar meta: " . $stmt->error);
+        throw new Exception("Error ejecutando consulta de top servicios: " . $stmt->error);
     }
-    
+
+    $resultTop5 = $stmt->get_result();
+    $topServicios = [];
+    while ($row = $resultTop5->fetch_assoc()) {
+        $topServicios[] = [
+            'servicio' => $row['nombre_servicio_agrupado'],
+            'cantidad' => intval($row['cantidad']),
+            'total' => floatval($row['total_vendido'])
+        ];
+    }
     $stmt->close();
+
+    return $topServicios;
 }
 
 ?>

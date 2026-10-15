@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test Integración TUU - Sistema Estacionamiento</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 32px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: auto;
+        }
+        
+        .status-badge.activo {
+            background: #28a745;
+            color: white;
+        }
+        
+        .status-badge.inactivo {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .status-badge.prueba {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .status-badge.produccion {
+            background: #28a745;
+            color: white;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .info-value {
+            color: #333;
+            font-family: monospace;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .alert.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+        
+        .alert.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .alert.info {
+            background: #d1ecf1;
+            border: 2px solid #17a2b8;
+            color: #0c5460;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .log-container {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 3px 0;
+        }
+        
+        .log-entry.error {
+            color: #ff4444;
+        }
+        
+        .log-entry.success {
+            color: #00ff00;
+        }
+        
+        .log-entry.info {
+            color: #4da6ff;
+        }
+        
+        .checklist {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .checklist h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .checklist ul {
+            margin-left: 20px;
+        }
+        
+        .checklist li {
+            margin: 5px 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de Integración TUU</h1>
+        
+        <div class="grid">
+            <!-- Card 1: Estado del Sistema -->
+            <div class="card">
+                <h2>
+                    ⚙️ Estado del Sistema
+                    <span id="modoBadge" class="status-badge prueba">MODO PRUEBA</span>
+                </h2>
+                
+                <div class="info-row">
+                    <span class="info-label">API URL:</span>
+                    <span class="info-value" style="font-size: 10px;">integrations.payment.haulmer.com</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">API Key:</span>
+                    <span class="info-value" id="apiKeyDisplay">Cargando...</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Máquina Activa:</span>
+                    <span class="info-value" id="maquinaActiva">Cargando...</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Device Serial:</span>
+                    <span class="info-value" id="deviceSerial">Cargando...</span>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="cargarConfiguracion()">
+                    🔄 Actualizar Configuración
+                </button>
+            </div>
+            
+            <!-- Card 2: Configuración de Máquinas -->
+            <div class="card">
+                <h2>🖨️ Máquinas TUU Configuradas</h2>
+                
+                <div id="listaMaquinas">
+                    <p style="color: #999; text-align: center;">Cargando máquinas...</p>
+                </div>
+                
+                <button class="btn btn-primary" onclick="abrirModalCambiarMaquina()">
+                    🔄 Cambiar Máquina Activa
+                </button>
+            </div>
+            
+            <!-- Card 3: Prueba Rápida -->
+            <div class="card">
+                <h2>⚡ Prueba Rápida</h2>
+                
+                <div class="checklist">
+                    <h3>✅ Checklist Pre-Prueba:</h3>
+                    <ul>
+                        <li>Máquina TUU encendida</li>
+                        <li>Conectada a Internet</li>
+                        <li>Papel cargado (para boleta)</li>
+                        <li>Modo integración habilitado en panel TUU</li>
+                    </ul>
+                </div>
+                
+                <div class="form-group">
+                    <label>Monto a Probar (CLP):</label>
+                    <input type="number" id="montoTest" value="1000" min="100" step="100">
+                </div>
+                
+                <div class="form-group">
+                    <label>Método de Pago:</label>
+                    <select id="metodoPago">
+                        <option value="efectivo">💵 Efectivo</option>
+                        <option value="debito">💳 Débito</option>
+                        <option value="credito">💳 Crédito</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-success" onclick="probarPago()">
+                    🚀 Probar Pago con TUU
+                </button>
+                
+                <div id="resultadoTest" class="alert"></div>
+            </div>
+        </div>
+        
+        <!-- Card Full Width: Log de Actividad -->
+        <div class="card">
+            <h2>📋 Log de Actividad</h2>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry info">[SISTEMA] Esperando acciones...</div>
+            </div>
+            <button class="btn btn-secondary" onclick="limpiarLog()">🗑️ Limpiar Log</button>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let configuracion = {};
+        
+        // Función para agregar log
+        function agregarLog(mensaje, tipo = 'info') {
+            const log = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString('es-CL');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${tipo}`;
+            entry.textContent = `[${timestamp}] ${mensaje}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function limpiarLog() {
+            document.getElementById('logContainer').innerHTML = '<div class="log-entry info">[SISTEMA] Log limpiado</div>';
+        }
+        
+        // Cargar configuración al iniciar
+        async function cargarConfiguracion() {
+            agregarLog('Cargando configuración del sistema...', 'info');
+            
+            try {
+                const response = await fetch('api/api_config_tuu.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    configuracion = data;
+                    
+                    // Actualizar interfaz
+                    document.getElementById('apiKeyDisplay').textContent = 
+                        data.api_key.substring(0, 20) + '...';
+                    document.getElementById('maquinaActiva').textContent = 
+                        data.maquina_activa?.nombre || 'No configurada';
+                    document.getElementById('deviceSerial').textContent = 
+                        data.maquina_activa?.device_serial || 'N/A';
+                    
+                    // Actualizar badge de modo
+                    const badge = document.getElementById('modoBadge');
+                    if (data.modo_prueba) {
+                        badge.className = 'status-badge prueba';
+                        badge.textContent = 'MODO PRUEBA';
+                    } else {
+                        badge.className = 'status-badge produccion';
+                        badge.textContent = 'PRODUCCIÓN';
+                    }
+                    
+                    // Actualizar lista de máquinas
+                    actualizarListaMaquinas(data.maquinas);
+                    
+                    agregarLog('✅ Configuración cargada correctamente', 'success');
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+            } catch (error) {
+                agregarLog('❌ Error al cargar configuración: ' + error.message, 'error');
+                mostrarAlerta('resultadoTest', 'Error al cargar configuración', 'error');
+            }
+        }
+        
+        function actualizarListaMaquinas(maquinas) {
+            const lista = document.getElementById('listaMaquinas');
+            lista.innerHTML = '';
+            
+            if (!maquinas || maquinas.length === 0) {
+                lista.innerHTML = '<p style="color: #999;">No hay máquinas configuradas</p>';
+                return;
+            }
+            
+            maquinas.forEach(maq => {
+                const div = document.createElement('div');
+                div.className = 'info-row';
+                div.innerHTML = `
+                    <div>
+                        <strong>${maq.nombre}</strong><br>
+                        <small style="color: #999;">Serial: ${maq.device_serial}</small>
+                    </div>
+                    <span class="status-badge ${maq.activa ? 'activo' : 'inactivo'}">
+                        ${maq.activa ? '✅ ACTIVA' : 'Inactiva'}
+                    </span>
+                `;
+                lista.appendChild(div);
+            });
+        }
+        
+        function mostrarAlerta(idElemento, mensaje, tipo) {
+            const alerta = document.getElementById(idElemento);
+            alerta.className = `alert ${tipo}`;
+            alerta.innerHTML = mensaje;
+            alerta.style.display = 'block';
+        }
+        
+        async function probarPago() {
+            const monto = parseInt(document.getElementById('montoTest').value);
+            const metodo = document.getElementById('metodoPago').value;
+            const resultado = document.getElementById('resultadoTest');
+            
+            if (monto < 100) {
+                mostrarAlerta('resultadoTest', '❌ El monto mínimo es $100', 'error');
+                return;
+            }
+            
+            agregarLog(`Iniciando prueba de pago: $${monto} (${metodo})`, 'info');
+            
+            // Deshabilitar botón
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Procesando...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('id_ingreso', 9999999); // ID de prueba
+                formData.append('patente', 'TEST123');
+                formData.append('total', monto);
+                formData.append('metodo_tarjeta', metodo);
+                formData.append('tipo_documento', 'boleta');
+                
+                agregarLog('Enviando solicitud a TUU...', 'info');
+                
+                const response = await fetch('api/tuu-pago.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                btn.disabled = false;
+                btn.innerHTML = '🚀 Probar Pago con TUU';
+                
+                if (data.success) {
+                    agregarLog('✅ Pago APROBADO', 'success');
+                    agregarLog(`Transaction ID: ${data.transaction_id}`, 'success');
+                    if (data.authorization_code) {
+                        agregarLog(`Auth Code: ${data.authorization_code}`, 'success');
+                    }
+                    if (data.modo_prueba) {
+                        agregarLog('⚠️ Este fue un pago en MODO PRUEBA', 'info');
+                    }
+                    
+                    mostrarAlerta('resultadoTest', `
+                        <h3>✅ Pago Aprobado</h3>
+                        <p><strong>Transaction ID:</strong> ${data.transaction_id}</p>
+                        ${data.authorization_code ? `<p><strong>Código de Autorización:</strong> ${data.authorization_code}</p>` : ''}
+                        ${data.card_type ? `<p><strong>Tipo:</strong> ${data.card_type}</p>` : ''}
+                        ${data.modo_prueba ? '<p><strong>⚠️ MODO PRUEBA</strong></p>' : ''}
+                    `, 'success');
+                } else {
+                    agregarLog('❌ Pago RECHAZADO: ' + (data.error || 'Error desconocido'), 'error');
+                    mostrarAlerta('resultadoTest', `
+                        <h3>❌ Pago Rechazado</h3>
+                        <p>${data.error || 'Error desconocido'}</p>
+                        ${data.details ? '<pre>' + JSON.stringify(data.details, null, 2) + '</pre>' : ''}
+                    `, 'error');
+                }
+            } catch (error) {
+                btn.disabled = false;
+                btn.innerHTML = '🚀 Probar Pago con TUU';
+                agregarLog('❌ Error de comunicación: ' + error.message, 'error');
+                mostrarAlerta('resultadoTest', `
+                    <h3>❌ Error de Comunicación</h3>
+                    <p>${error.message}</p>
+                `, 'error');
+            }
+        }
+        
+        function abrirModalCambiarMaquina() {
+            alert('Esta funcionalidad está disponible en el dashboard principal.\nVe a: Secciones → Admin → Botón "Emergencia"');
+        }
+        
+        // Cargar configuración al inicio
+        window.onload = function() {
+            agregarLog('[SISTEMA] Test de integración TUU iniciado', 'info');
+            cargarConfiguracion();
+        };
+    </script>
+</body>
+</html>
+

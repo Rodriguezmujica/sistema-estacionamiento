@@ -64,23 +64,57 @@ class GdEscposImage extends EscposImage
         } elseif (!EscposImage::isGdLoaded()) {
             throw new Exception(__FUNCTION__ . " requires 'gd' extension.");
         }
-        /* Make a string of 1's and 0's */
-        $imgHeight = imagesy($im);
-        $imgWidth = imagesx($im);
-        $imgData = str_repeat("\0", $imgHeight * $imgWidth);
-        for ($y = 0; $y < $imgHeight; $y++) {
-            for ($x = 0; $x < $imgWidth; $x++) {
-                /* Faster to average channels, blend alpha and negate the image here than via filters (tested!) */
-                $cols = imagecolorsforindex($im, imagecolorat($im, $x, $y));
-                // 1 for white, 0 for black, ignoring transparency
-                $greyness = (int)(($cols['red'] + $cols['green'] + $cols['blue']) / 3) >> 7;
-                // 1 for black, 0 for white, taking into account transparency
-                $black = (1 - $greyness) >> ($cols['alpha'] >> 6);
-                $imgData[$y * $imgWidth + $x] = $black;
+
+        // =================================================================
+        // SOLUCIÓN DEFINITIVA: Forzar la reconstrucción y binarización de la imagen
+        // Esto soluciona problemas de 0x0 y fallos de procesamiento de píxeles.
+        // =================================================================
+
+        // 1. Obtener dimensiones y verificar
+        $width = imagesx($im);
+        $height = imagesy($im);
+
+        if ($width == 0 || $height == 0) {
+            throw new Exception("Failed to load image, GD resource is invalid (0x0).");
+        }
+
+        // 2. Crear un lienzo limpio y copiar la imagen para eliminar formatos extraños (CMYK, etc.)
+        $im_clean = imagecreatetruecolor($width, $height);
+        imagecopy($im_clean, $im, 0, 0, 0, 0, $width, $height);
+        imagedestroy($im);
+
+        // 3. Crear la imagen final en blanco y negro puro (binarización)
+        $im_bw = imagecreatetruecolor($width, $height);
+        $black = imagecolorallocate($im_bw, 0, 0, 0);
+        $white = imagecolorallocate($im_bw, 255, 255, 255);
+        $threshold = 127; // Umbral de gris para decidir si es blanco o negro
+
+        for ($y = 0; $y < $height; $y++) {
+            for ($x = 0; $x < $width; $x++) {
+                $rgb = imagecolorat($im_clean, $x, $y);
+                $r = ($rgb >> 16) & 0xFF;
+                $g = ($rgb >> 8) & 0xFF;
+                $b = $rgb & 0xFF;
+                $grayscale = (int)(0.299 * $r + 0.587 * $g + 0.114 * $b);
+                $color = ($grayscale < $threshold) ? $black : $white;
+                imagesetpixel($im_bw, $x, $y, $color);
             }
         }
-        $this -> setImgWidth($imgWidth);
-        $this -> setImgHeight($imgHeight);
+        imagedestroy($im_clean);
+
+        // 4. Procesar la imagen binarizada para la impresora
+        $imgData = str_repeat("\0", $height * $width);
+        for ($y = 0; $y < $height; $y++) {
+            for ($x = 0; $x < $width; $x++) {
+                $rgb = imagecolorat($im_bw, $x, $y);
+                $isBlack = ($rgb === $black) ? 1 : 0;
+                $imgData[$y * $width + $x] = $isBlack;
+            }
+        }
+        imagedestroy($im_bw);
+
+        $this -> setImgWidth($width);
+        $this -> setImgHeight($height);
         $this -> setImgData($imgData);
     }
 }

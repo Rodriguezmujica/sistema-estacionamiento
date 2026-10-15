@@ -4,8 +4,8 @@
  */
 
 const PrintServiceWin7 = {
-    // URL del servicio PHP local
-    baseURL: 'http://localhost:8080/sistemaEstacionamiento/print-service-php/imprimir.php',
+    // URL del servicio PHP (construida dinámicamente para evitar CORS)
+    baseURL: window.location.origin + '/sistemaEstacionamiento/print-service-php/imprimir.php',
     
     // Nombre de la impresora (ajustar según aparezca en Windows)
     nombreImpresora: 'POSESTACIONAMIENTO',

@@ -10,6 +10,13 @@ if (typeof getBasePath === 'undefined') {
 // BASE_PATH se declara en main.js, solo lo usamos aquí
 // No declarar para evitar conflictos de redeclaración
 
+function formatDateInputLocal(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // === SISTEMA DE TOASTS ===
 function showToast(type, message, duration = 5000) {
   const toastElement = document.getElementById(`toast-${type}`);
@@ -70,6 +77,310 @@ document.addEventListener('DOMContentLoaded', function() {
   cargarDatosAdmin();
   cargarPrecios();
   cargarUsuarios();
+  inicializarConsultaFechasAdmin();
+// ============================================
+// CONSULTA POR FECHAS (Configuración)
+// ============================================
+
+let adminServiciosDetalle = [];
+let adminUltimaConsulta = null;
+let adminUltimasCategorias = [];
+
+function inicializarConsultaFechasAdmin() {
+  const fechaDesde = document.getElementById('admin-fecha-desde');
+  const fechaHasta = document.getElementById('admin-fecha-hasta');
+  const btnConsultar = document.getElementById('admin-btn-consultar-fechas');
+  const btnExportExcel = document.getElementById('admin-btn-exportar-excel');
+  const btnExportPDF = document.getElementById('admin-btn-exportar-pdf');
+
+  if (!fechaDesde || !fechaHasta || !btnConsultar) {
+    return;
+  }
+
+  establecerFechasPorDefectoAdmin();
+  btnConsultar.addEventListener('click', consultarPorFechasAdmin);
+
+  if (btnExportExcel) {
+    btnExportExcel.addEventListener('click', exportarConsultaExcelAdmin);
+  }
+  if (btnExportPDF) {
+    btnExportPDF.addEventListener('click', exportarConsultaPDFAdmin);
+  }
+}
+
+function establecerFechasPorDefectoAdmin() {
+  const fechaDesdeEl = document.getElementById('admin-fecha-desde');
+  const fechaHastaEl = document.getElementById('admin-fecha-hasta');
+
+  if (!fechaDesdeEl || !fechaHastaEl) return;
+
+  const hoy = new Date();
+  const hace7Dias = new Date(hoy);
+  hace7Dias.setDate(hoy.getDate() - 7);
+
+  fechaHastaEl.value = formatDateInputLocal(hoy);
+  fechaDesdeEl.value = formatDateInputLocal(hace7Dias);
+}
+
+async function consultarPorFechasAdmin() {
+  const fechaDesde = document.getElementById('admin-fecha-desde').value;
+  const fechaHasta = document.getElementById('admin-fecha-hasta').value;
+  const resumen = document.getElementById('admin-resumen-fechas');
+  const tbody = document.getElementById('admin-tabla-fechas-body');
+  const btn = document.getElementById('admin-btn-consultar-fechas');
+  const exportContainer = document.getElementById('admin-export-buttons');
+  const btnExportExcel = document.getElementById('admin-btn-exportar-excel');
+  const btnExportPDF = document.getElementById('admin-btn-exportar-pdf');
+
+  if (!fechaDesde || !fechaHasta) {
+    showWarning('Seleccione ambas fechas antes de consultar.');
+    return;
+  }
+
+  if (new Date(fechaDesde) > new Date(fechaHasta)) {
+    showWarning('La fecha "Desde" no puede ser mayor que la fecha "Hasta".');
+    return;
+  }
+
+  const originalBtnHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Consultando...';
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="5" class="text-center text-muted py-4">
+        <i class="fas fa-spinner fa-spin"></i> Consultando...
+      </td>
+    </tr>`;
+
+  if (exportContainer) {
+    exportContainer.style.display = 'none';
+  }
+  if (btnExportExcel) btnExportExcel.disabled = true;
+  if (btnExportPDF) btnExportPDF.disabled = true;
+  adminUltimaConsulta = null;
+  adminUltimasCategorias = [];
+  adminServiciosDetalle = [];
+
+  try {
+    const params = new URLSearchParams({
+      fecha_desde: fechaDesde,
+      fecha_hasta: fechaHasta
+    });
+    const response = await fetch(`${BASE_PATH}/api/api_consulta_fechas.php?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Error al consultar');
+    }
+
+    const resumenFechas = data.resumen || { total_servicios: 0, total_ingresos: 0 };
+    document.getElementById('admin-total-servicios-fecha').textContent = resumenFechas.total_servicios.toLocaleString('es-CL');
+    document.getElementById('admin-total-ingresos-fecha').textContent = resumenFechas.total_ingresos.toLocaleString('es-CL');
+    resumen.style.display = 'flex';
+
+    adminServiciosDetalle = data.servicios_detalle || [];
+    adminUltimaConsulta = {
+      fechaDesde,
+      fechaHasta,
+      resumen: data.resumen || { total_servicios: 0, total_ingresos: 0 }
+    };
+    adminUltimasCategorias = data.categorias || [];
+    cargarCategoriasAdmin(adminUltimasCategorias);
+
+    if (adminServiciosDetalle.length > 0 && exportContainer) {
+      exportContainer.style.display = 'flex';
+      if (btnExportExcel) btnExportExcel.disabled = false;
+      if (btnExportPDF) btnExportPDF.disabled = false;
+    }
+  } catch (error) {
+    console.error('Error consultando fechas:', error);
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-danger py-4">
+          <i class="fas fa-exclamation-triangle"></i> Error: ${error.message}
+        </td>
+      </tr>`;
+    showError('No se pudo completar la consulta: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalBtnHtml;
+  }
+}
+
+function cargarCategoriasAdmin(categorias) {
+  const tbody = document.getElementById('admin-tabla-fechas-body');
+
+  if (!categorias || categorias.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-muted py-4">
+          <i class="fas fa-info-circle"></i> No se encontraron servicios en el rango seleccionado
+        </td>
+      </tr>`;
+    document.getElementById('admin-detalles-container').style.display = 'none';
+    return;
+  }
+
+  tbody.innerHTML = categorias.map(categoria => {
+    const categoriaParam = JSON.stringify(categoria.categoria);
+    return `
+    <tr>
+      <td><span class="badge bg-primary me-2">${obtenerIconoCategoriaAdmin(categoria.categoria)}</span><strong>${categoria.categoria}</strong></td>
+      <td><small class="text-muted">${categoria.tipos_servicios}</small></td>
+      <td class="text-center"><span class="badge bg-info">${categoria.cantidad_servicios}</span></td>
+      <td class="text-end"><strong>$${parseInt(categoria.total_categoria).toLocaleString('es-CL')}</strong></td>
+      <td class="text-center">
+        <button class="btn btn-sm btn-outline-primary" onclick='verDetallesCategoriaAdmin(${categoriaParam})'>
+          <i class="fas fa-eye"></i> Ver
+        </button>
+      </td>
+    </tr>
+  `;
+  }).join('');
+}
+
+function obtenerIconoCategoriaAdmin(categoria) {
+  const iconos = {
+    'Lavados': '🧽',
+    'Estacionamiento x Minuto': '🅿️',
+    'Errores de Ingreso': '❌',
+    'Motos': '🏍️',
+    'Promociones': '🎁',
+    'Otros Servicios': '🔧'
+  };
+  return iconos[categoria] || '📋';
+}
+
+function verDetallesCategoriaAdmin(categoria) {
+  const detalles = adminServiciosDetalle.filter(servicio => servicio.categoria === categoria);
+  const tbody = document.getElementById('admin-tabla-detalles-body');
+  const container = document.getElementById('admin-detalles-container');
+
+  if (!detalles || detalles.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-muted">No hay servicios para esta categoría</td>
+      </tr>`;
+  } else {
+    tbody.innerHTML = detalles.map((servicio, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${servicio.patente}</td>
+        <td>${new Date(servicio.fecha_salida_real || servicio.fecha_salida).toLocaleString('es-CL')}</td>
+        <td>${servicio.nombre_servicio}</td>
+        <td class="text-end">$${parseInt(servicio.total).toLocaleString('es-CL')}</td>
+      </tr>
+    `).join('');
+  }
+
+  container.style.display = 'block';
+  container.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Hacer accesibles las funciones desde los atributos inline
+window.verDetallesCategoriaAdmin = verDetallesCategoriaAdmin;
+window.exportarConsultaExcelAdmin = exportarConsultaExcelAdmin;
+window.exportarConsultaPDFAdmin = exportarConsultaPDFAdmin;
+
+function exportarConsultaExcelAdmin() {
+  if (!adminUltimaConsulta || adminServiciosDetalle.length === 0) {
+    showWarning('Realice primero una consulta para exportar los datos.');
+    return;
+  }
+
+  const headers = ['Patente', 'Servicio', 'Categoría', 'Fecha Ingreso', 'Fecha Salida', 'Método de Pago', 'Total'];
+  const rows = adminServiciosDetalle.map(servicio => [
+    servicio.patente || 'N/A',
+    servicio.nombre_servicio || 'N/A',
+    servicio.categoria || 'N/A',
+    servicio.fecha_ingreso ? new Date(servicio.fecha_ingreso).toLocaleString('es-CL') : 'N/A',
+    servicio.fecha_salida ? new Date(servicio.fecha_salida).toLocaleString('es-CL') : 'N/A',
+    servicio.metodo_pago || 'N/A',
+    servicio.total || 0
+  ]);
+
+  const csvLines = [headers, ...rows].map(row => row.map(value => {
+    const val = value === null || value === undefined ? '' : value.toString();
+    return `"${val.replace(/"/g, '""')}"`;
+  }).join(','));
+
+  const csvContent = csvLines.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const enlace = document.createElement('a');
+  enlace.href = url;
+  enlace.download = `consulta_${adminUltimaConsulta.fechaDesde}_${adminUltimaConsulta.fechaHasta}.csv`;
+  document.body.appendChild(enlace);
+  enlace.click();
+  document.body.removeChild(enlace);
+  URL.revokeObjectURL(url);
+}
+
+function exportarConsultaPDFAdmin() {
+  if (!adminUltimaConsulta || adminServiciosDetalle.length === 0) {
+    showWarning('Realice primero una consulta para exportar los datos.');
+    return;
+  }
+
+  if (!window.jspdf || !window.jspdf.jsPDF || typeof window.jspdf.jsPDF !== 'function') {
+    showError('Biblioteca jsPDF no disponible. Verifique la conexión a internet.');
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape' });
+
+  doc.setFontSize(14);
+  doc.text('Consulta por Rango de Fechas - Administración', 14, 20);
+  doc.setFontSize(10);
+  doc.text(`Periodo: ${adminUltimaConsulta.fechaDesde} al ${adminUltimaConsulta.fechaHasta}`, 14, 34);
+  doc.text(`Total servicios: ${adminUltimaConsulta.resumen.total_servicios.toLocaleString('es-CL')} | Ingresos: $${adminUltimaConsulta.resumen.total_ingresos.toLocaleString('es-CL')}`, 14, 46);
+
+  const bodyServicios = adminServiciosDetalle.map(servicio => [
+    servicio.patente || 'N/A',
+    servicio.nombre_servicio || 'N/A',
+    servicio.categoria || 'N/A',
+    servicio.fecha_salida ? new Date(servicio.fecha_salida).toLocaleDateString('es-CL') : 'N/A',
+    servicio.metodo_pago || 'N/A',
+    `$${parseInt(servicio.total || 0).toLocaleString('es-CL')}`
+  ]);
+
+  doc.autoTable({
+    head: [['Patente', 'Servicio', 'Categoría', 'Fecha Salida', 'Método', 'Total']],
+    body: bodyServicios,
+    startY: 60,
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [33, 150, 243] }
+  });
+
+  if (adminUltimasCategorias.length > 0) {
+    doc.addPage('landscape');
+    doc.setFontSize(12);
+    doc.text('Resumen por Categoría', 14, 20);
+
+    const bodyCategorias = adminUltimasCategorias.map(cat => [
+      cat.categoria,
+      cat.cantidad_servicios,
+      `$${parseInt(cat.total_categoria || 0).toLocaleString('es-CL')}`,
+      cat.tipos_servicios
+    ]);
+
+    doc.autoTable({
+      head: [['Categoría', 'Cantidad', 'Total', 'Tipos de Servicios']],
+      body: bodyCategorias,
+      startY: 30,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [255, 152, 0] }
+    });
+  }
+
+  doc.save(`consulta_${adminUltimaConsulta.fechaDesde}_${adminUltimaConsulta.fechaHasta}.pdf`);
+}
+
 
   // Actualización periódica
   setInterval(cargarDatosAdmin, 60000); // Cada 60 segundos
@@ -77,15 +388,20 @@ document.addEventListener('DOMContentLoaded', function() {
   // Evento para abrir modal en modo "Agregar"
   modalClienteElement.addEventListener('show.bs.modal', function (event) {
     const button = event.relatedTarget;
-    const esEditar = button ? button.getAttribute('data-id') : null;
+    const idCliente = button ? button.getAttribute('data-id') : null;
 
-    // Solo resetear si no estamos editando (si no hay ID en el formulario)
-    const clienteId = document.getElementById('cliente-id-mensual').value;
-    if (!clienteId) {
+    // 🔧 CORRECCIÓN: Limpiar el formulario si el botón que abre el modal no es de edición (no tiene data-id).
+    // Si es edición, llamar a la función para llenar los datos.
+    if (!idCliente) {
+      // Modo Agregar
       const form = document.getElementById('form-cliente-mensual');
       form.reset();
       document.getElementById('cliente-id-mensual').value = '';
       document.getElementById('titulo-modal-cliente').innerText = 'Agregar Nuevo Cliente Mensual';
+    } else {
+      // Modo Editar: Llenar el formulario con los datos del cliente.
+      document.getElementById('titulo-modal-cliente').innerText = 'Editar Cliente Mensual';
+      llenarFormularioCliente(idCliente);
     }
   });
 
@@ -140,12 +456,44 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('filtro-fecha-hasta').value = '';
     aplicarFiltros();
   });
+
+  // Evento para guardar precios
+  const formPrecios = document.getElementById('form-precios');
+  if (formPrecios) {
+    formPrecios.addEventListener('submit', guardarPrecios);
+  }
+
+  // Evento para guardar meta mensual
+  const formMeta = document.getElementById('form-meta');
+  if (formMeta) {
+    formMeta.addEventListener('submit', guardarMetaMensual);
+  }
+
+  // Evento para confirmar y guardar meta desde el modal
+  const btnConfirmarMeta = document.getElementById('btn-confirmar-meta-si');
+  if (btnConfirmarMeta) {
+    btnConfirmarMeta.addEventListener('click', confirmarYGuardarMeta);
+  }
+
+  // Evento para confirmar y procesar pago de cliente desde el modal
+  const btnConfirmarPagoCliente = document.getElementById('btn-confirmar-pago-cliente-si');
+  if (btnConfirmarPagoCliente) {
+    btnConfirmarPagoCliente.addEventListener('click', confirmarYProcesarPagoCliente);
+  }
 });
 
 function cargarDatosAdmin() {
   cargarClientesMensuales();
   cargarServicios();
   cargarUsuarios();
+}
+
+// Selector de mes en resumen ejecutivo
+const selectorMesResumen = document.getElementById('selector-mes-resumen');
+if (selectorMesResumen) {
+  llenarSelectorMeses();
+  selectorMesResumen.addEventListener('change', cargarResumenEjecutivo);
+  cargarResumenEjecutivo(); // Cargar al inicio
 }
 
 // ============================================
@@ -312,26 +660,6 @@ async function eliminarUsuario(id) {
   }
 }
 
-// Evento para guardar precios
-const formPrecios = document.getElementById('form-precios');
-if (formPrecios) {
-  formPrecios.addEventListener('submit', guardarPrecios);
-}
-
-// Evento para guardar meta mensual
-const formMeta = document.getElementById('form-meta');
-if (formMeta) {
-  formMeta.addEventListener('submit', guardarMetaMensual);
-}
-
-// Selector de mes en resumen ejecutivo
-const selectorMesResumen = document.getElementById('selector-mes-resumen');
-if (selectorMesResumen) {
-  llenarSelectorMeses();
-  selectorMesResumen.addEventListener('change', cargarResumenEjecutivo);
-  cargarResumenEjecutivo(); // Cargar al inicio
-}
-
 // ============================================
 // OPTIMIZACIÓN Y MANTENIMIENTO
 // ============================================
@@ -414,10 +742,10 @@ async function respaldarDatos() {
 }
 
 async function exportarReporte() {
-  const fechaInicio = prompt('Fecha de inicio (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+  const fechaInicio = prompt('Fecha de inicio (YYYY-MM-DD):', formatDateInputLocal(new Date()));
   if (!fechaInicio) return;
   
-  const fechaFin = prompt('Fecha de fin (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+  const fechaFin = prompt('Fecha de fin (YYYY-MM-DD):', formatDateInputLocal(new Date()));
   if (!fechaFin) return;
   
   try {
@@ -528,14 +856,14 @@ function renderizarTablaClientes(clientes) {
     return `
       <tr class="${claseFila}">
         <td>${badgeEstado}</td>
-        <td><strong>${cliente.patente}</strong></td>
+        <td><strong>${cliente.patente || 'N/A'}</strong></td>
         <td>${cliente.nombre_cliente}</td>
         <td>${cliente.tipo_vehiculo || 'N/A'}</td>
         <td>${cliente.fecha_inicio_plan ? new Date(cliente.fecha_inicio_plan + 'T00:00:00').toLocaleDateString('es-CL') : 'N/A'}</td>
         <td><strong>${finPlan.toLocaleDateString('es-CL')}</strong></td>
         <td><strong class="text-success">$${parseFloat(cliente.monto_plan).toLocaleString('es-CL')}</strong></td>
         <td>
-          <button class="btn btn-sm btn-outline-primary" data-id="${cliente.id}" onclick="editarClienteMensual(this)">
+          <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalCliente" data-id="${cliente.id}">
             <i class="fas fa-edit"></i>
           </button>
           <button class="btn btn-sm btn-outline-danger" onclick="eliminarClienteMensual(${cliente.id})">
@@ -550,7 +878,7 @@ function renderizarTablaClientes(clientes) {
   }).join('');
 }
 
-function actualizarEstadisticasMensuales(clientes) {
+async function actualizarEstadisticasMensuales(clientes) {
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
   const mesActual = hoy.getMonth();
@@ -567,12 +895,29 @@ function actualizarEstadisticasMensuales(clientes) {
     } else {
       vencidos++;
     }
-
-    const inicioPlan = new Date(c.fecha_inicio_plan + 'T00:00:00'); // Usamos la fecha de inicio para calcular ingresos del mes
-    if (inicioPlan.getMonth() === mesActual && inicioPlan.getFullYear() === anioActual) {
-      ingresosMes += parseFloat(c.monto_plan);
-    }
   });
+
+  // Obtener ingresos mensuales reales del mes actual desde la tabla salidas
+  try {
+    const primerDia = `${anioActual}-${String(mesActual + 1).padStart(2, '0')}-01`;
+    const ultimoDia = formatDateInputLocal(new Date(anioActual, mesActual + 1, 0));
+    
+    const response = await fetch(`${BASE_PATH}/api/api_ingresos_mensuales.php?fecha_desde=${primerDia}&fecha_hasta=${ultimoDia}`);
+    const data = await response.json();
+    
+    if (data.success) {
+      ingresosMes = parseFloat(data.total || 0);
+    }
+  } catch (error) {
+    console.error('Error al obtener ingresos mensuales:', error);
+    // Si falla, usar método anterior como fallback
+    clientes.forEach(c => {
+      const inicioPlan = new Date(c.fecha_inicio_plan + 'T00:00:00');
+      if (inicioPlan.getMonth() === mesActual && inicioPlan.getFullYear() === anioActual) {
+        ingresosMes += parseFloat(c.monto_plan);
+      }
+    });
+  }
 
   document.getElementById('clientes-activos').textContent = activos;
   document.getElementById('clientes-vencidos').textContent = vencidos;
@@ -619,31 +964,27 @@ async function guardarClienteMensual() {
   }
 }
 
-async function editarClienteMensual(button) {
-  const id = button.getAttribute('data-id');
-  try {
-    const response = await fetch(`${BASE_PATH}/api/api_clientes_mensuales.php`);
-    const result = await response.json();
-    if (!result.success) throw new Error(result.error);
+/**
+ * Llena el formulario del modal de cliente con los datos de un cliente existente.
+ * @param {number} id - El ID del cliente a editar.
+ */
+function llenarFormularioCliente(id) {
+  // Usamos la lista de clientes ya cargada en `todosLosClientes` para no hacer otra llamada a la API.
+  const cliente = todosLosClientes.find(c => c.id == id);
 
-    const cliente = result.data.find(c => c.id == id);
-    if (cliente) {
-      document.getElementById('titulo-modal-cliente').innerText = 'Editar Cliente Mensual';
-      document.getElementById('cliente-id-mensual').value = cliente.id;
-      document.getElementById('cliente-patente-mensual').value = cliente.patente;
-      document.getElementById('cliente-nombre-mensual').value = cliente.nombre_cliente; // nombre_cliente es CONCAT(nombres, ' ', apellidos)
-      document.getElementById('cliente-vehiculo-mensual').value = cliente.tipo_vehiculo;
-      document.getElementById('cliente-monto-mensual').value = cliente.monto_plan;
-      document.getElementById('cliente-dia-pago-mensual').value = cliente.dia_pago_mensual;
-      document.getElementById('cliente-vencimiento-mensual').value = cliente.fecha_proximo_vencimiento;
-      document.getElementById('cliente-notas-mensual').value = cliente.notas;
-      
-      new bootstrap.Modal(document.getElementById('modalCliente')).show();
-    } else {
-      showError('No se encontró el cliente para editar.');
-    }
-  } catch (error) {
-    showError('Error al cargar datos del cliente: ' + error.message);
+  if (cliente) {
+    document.getElementById('cliente-id-mensual').value = cliente.id;
+    document.getElementById('cliente-patente-mensual').value = cliente.patente;
+    document.getElementById('cliente-nombre-mensual').value = cliente.nombre_cliente;
+    document.getElementById('cliente-vehiculo-mensual').value = cliente.tipo_vehiculo;
+    document.getElementById('cliente-monto-mensual').value = cliente.monto_plan;
+    document.getElementById('cliente-dia-pago-mensual').value = cliente.dia_pago_mensual;
+    document.getElementById('cliente-vencimiento-mensual').value = cliente.fecha_proximo_vencimiento;
+    document.getElementById('cliente-notas-mensual').value = cliente.notas;
+  } else {
+    showError('No se encontró el cliente para editar.');
+    // Opcional: cerrar el modal si no se encuentra el cliente
+    bootstrap.Modal.getInstance(document.getElementById('modalCliente')).hide();
   }
 }
 
@@ -668,11 +1009,88 @@ async function eliminarClienteMensual(id) {
   }
 }
 
+// Variable global para almacenar el ID del cliente pendiente de pago
+let idClientePagoPendiente = null;
+
 async function pagarClienteMensual(id) {
-  if (!confirm('¿Confirmar el pago de este cliente? Esto actualizará la fecha de vencimiento al próximo mes.')) {
+  // Convertir el ID a número para asegurar comparación correcta
+  const idNumero = parseInt(id);
+  
+  if (isNaN(idNumero)) {
+    showError('ID de cliente inválido');
     return;
   }
+  
+  let cliente = null;
+  
+  // Primero intentar buscar en la lista cargada
+  if (todosLosClientes && todosLosClientes.length > 0) {
+    cliente = todosLosClientes.find(c => {
+      const cId = parseInt(c.id) || parseInt(c.idclientes) || 0;
+      return cId === idNumero;
+    });
+  }
+  
+  // Si no se encuentra, obtener directamente de la API
+  if (!cliente) {
+    try {
+      const response = await fetch(`${BASE_PATH}/api/api_clientes_mensuales.php?id=${idNumero}`);
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        // La API devuelve un objeto cuando se busca por ID, o un array cuando se buscan todos
+        cliente = Array.isArray(data.data) ? data.data[0] : data.data;
+      } else {
+        console.error('Error de la API:', data.error);
+      }
+    } catch (error) {
+      console.error('Error al obtener cliente de la API:', error);
+    }
+  }
+  
+  if (!cliente) {
+    showError('No se encontró la información del cliente. Por favor, recarga la página e intenta nuevamente.');
+    return;
+  }
+  
+  // Guardar el ID para usar después de la confirmación
+  idClientePagoPendiente = idNumero;
+  
+  // Llenar el modal de confirmación con los datos del cliente
+  document.getElementById('confirm-pago-cliente-nombre').textContent = cliente.nombre_cliente || cliente.nombres || 'N/A';
+  document.getElementById('confirm-pago-cliente-patente').textContent = cliente.patente || 'N/A';
+  document.getElementById('confirm-pago-cliente-monto').textContent = `$${parseFloat(cliente.monto_plan || 0).toLocaleString('es-CL')}`;
+  
+  // Formatear fecha de vencimiento actual
+  const fechaVencimiento = cliente.fecha_proximo_vencimiento 
+    ? new Date(cliente.fecha_proximo_vencimiento + 'T00:00:00').toLocaleDateString('es-CL')
+    : 'N/A';
+  document.getElementById('confirm-pago-cliente-vencimiento-actual').textContent = fechaVencimiento;
+  
+  // Mostrar el modal de confirmación
+  const modalConfirmar = new bootstrap.Modal(document.getElementById('modalConfirmarPagoCliente'));
+  modalConfirmar.show();
+}
 
+// Función que se ejecuta cuando el usuario confirma el pago en el modal
+async function confirmarYProcesarPagoCliente() {
+  if (!idClientePagoPendiente) {
+    showError('No hay cliente seleccionado para procesar el pago');
+    return;
+  }
+  
+  // Cerrar el modal
+  const modalConfirmar = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarPagoCliente'));
+  if (modalConfirmar) {
+    modalConfirmar.hide();
+  }
+  
+  // Deshabilitar el botón mientras se procesa
+  const btnConfirmar = document.getElementById('btn-confirmar-pago-cliente-si');
+  const textoOriginal = btnConfirmar.innerHTML;
+  btnConfirmar.disabled = true;
+  btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+  
   try {
     const response = await fetch(`${BASE_PATH}/api/api_clientes_mensuales.php`, {
       method: 'PUT',
@@ -680,7 +1098,7 @@ async function pagarClienteMensual(id) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        id: id,
+        id: idClientePagoPendiente,
         action: 'pagar'
       })
     });
@@ -689,11 +1107,16 @@ async function pagarClienteMensual(id) {
     if (result.success) {
       showSuccess('✅ Cliente marcado como pagado. La fecha de vencimiento se ha actualizado.');
       cargarClientesMensuales(); // Recargar la tabla para mostrar el cambio
+      idClientePagoPendiente = null; // Limpiar ID
     } else {
       throw new Error(result.error);
     }
   } catch (error) {
     showError('Error al procesar el pago: ' + error.message);
+  } finally {
+    // Restaurar el botón
+    btnConfirmar.disabled = false;
+    btnConfirmar.innerHTML = textoOriginal;
   }
 }
 
@@ -895,8 +1318,8 @@ async function cargarPrecios() {
 }
 
 async function guardarPrecios(event) {
-  event.preventDefault();
-  
+  event.preventDefault(); // Prevenir el envío del formulario
+
   const precioMinuto = parseInt(document.getElementById('precio-minuto').value);
   const precioMinimo = parseInt(document.getElementById('precio-minimo').value);
   
@@ -1064,38 +1487,10 @@ async function cargarResumenEjecutivo() {
       }
       console.log('🌐 URL de la petición:', url);
     
-    console.log('🌐 Intentando fetch a:', url);
-    
-    // Usar XMLHttpRequest como alternativa a fetch
-    const response = await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', url, true);
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            console.log('✅ Response recibida:', xhr.status, xhr.statusText);
-            resolve({
-              ok: true,
-              status: xhr.status,
-              statusText: xhr.statusText,
-              json: () => Promise.resolve(JSON.parse(xhr.responseText))
-            });
-          } else {
-            console.error('❌ Error HTTP:', xhr.status, xhr.statusText);
-            reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
-          }
-        }
-      };
-      xhr.onerror = function() {
-        console.error('❌ Error de red en XMLHttpRequest');
-        reject(new Error('Error de red'));
-      };
-      xhr.send();
-    });
-    
-    // Verificar si la respuesta es válida
+    const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Error HTTP ${response.status}: ${errorText}`);
     }
     
     const result = await response.json();
@@ -1250,12 +1645,26 @@ function renderizarResumenEjecutivo(data) {
   document.getElementById('info-meta').textContent = infoMeta + infoMensuales;
   
   // Cargar meta en el formulario
-  document.getElementById('meta-mensual').value = parseInt(meta.monto);
-  document.getElementById('solo-dias-laborales').checked = meta.solo_dias_laborales === 1;
-  document.getElementById('incluir-mensuales').checked = meta.incluir_mensuales === 1;
+  // 🛡️ Verificación defensiva para evitar errores si los elementos no están en el DOM
+  const inputMeta = document.getElementById('meta-mensual');
+  const checkDiasLaborales = document.getElementById('solo-dias-laborales');
+  const checkIncluirMensuales = document.getElementById('incluir-mensuales');
+
+  if (inputMeta) inputMeta.value = parseInt(meta.monto);
+  if (checkDiasLaborales) checkDiasLaborales.checked = meta.solo_dias_laborales === 1;
+  if (checkIncluirMensuales) checkIncluirMensuales.checked = meta.incluir_mensuales === 1;
+
   
-  // 3. TOP 5 SERVICIOS
-  renderizarTop5Servicios(data.top_servicios);
+  // 3. TOP 5 SERVICIOS (separados por segmento)
+  const topServiciosLaborales = data.top_servicios_lunes_viernes || data.top_servicios || [];
+  const topServiciosSabado = data.top_servicios_sabado || [];
+  renderizarTop5Servicios(topServiciosLaborales, 'top-servicios-lv', 'Sin datos de lunes a viernes');
+  renderizarTop5Servicios(topServiciosSabado, 'top-servicios-sab', 'Sin datos de sábados');
+  
+  // Compatibilidad: si existe el contenedor antiguo, rellenarlo con el top general
+  if (document.getElementById('top-servicios')) {
+    renderizarTop5Servicios(data.top_servicios || [], 'top-servicios', 'No hay datos para este mes');
+  }
   
   // 4. DESGLOSE DE PAGOS
   renderizarDesglosePagos(data.desglose_pagos);
@@ -1264,15 +1673,16 @@ function renderizarResumenEjecutivo(data) {
   renderizarGraficoIngresos(data.ingresos_por_dia);
 }
 
-function renderizarTop5Servicios(topServicios) {
-  const container = document.getElementById('top-servicios');
+function renderizarTop5Servicios(topServicios, containerId, emptyMessage = 'No hay datos para este periodo') {
+  const container = document.getElementById(containerId);
+  if (!container) return;
   
-  if (topServicios.length === 0) {
-    container.innerHTML = '<p class="text-muted text-center py-3">No hay datos para este mes</p>';
+  if (!topServicios || topServicios.length === 0) {
+    container.innerHTML = `<p class="text-muted text-center py-3">${emptyMessage}</p>`;
     return;
   }
   
-  container.innerHTML = topServicios.map((servicio, index) => {
+  const listaServicios = topServicios.map((servicio, index) => {
     const medallas = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
     return `
       <div class="list-group-item">
@@ -1286,6 +1696,17 @@ function renderizarTop5Servicios(topServicios) {
       </div>
     `;
   }).join('');
+
+  const totalMonto = topServicios.reduce((sum, servicio) => sum + (parseFloat(servicio.total) || 0), 0);
+  const totalServicios = topServicios.reduce((sum, servicio) => sum + (parseInt(servicio.cantidad) || 0), 0);
+
+  container.innerHTML = `
+    ${listaServicios}
+    <div class="list-group-item text-end bg-light">
+      <div><small>Total servicios: <strong>${totalServicios.toLocaleString('es-CL')}</strong></small></div>
+      <div class="fw-bold text-primary">Total del mes: $${parseInt(totalMonto).toLocaleString('es-CL')}</div>
+    </div>
+  `;
 }
 
 function renderizarDesglosePagos(desglose) {
@@ -1400,6 +1821,9 @@ function renderizarGraficoIngresos(ingresosPorDia) {
   });
 }
 
+// Variable global para almacenar los datos de la meta antes de confirmar
+let datosMetaPendiente = null;
+
 async function guardarMetaMensual(event) {
   event.preventDefault();
   
@@ -1409,42 +1833,72 @@ async function guardarMetaMensual(event) {
   const incluirMensuales = document.getElementById('incluir-mensuales').checked ? 1 : 0;
   
   if (!metaMonto || metaMonto < 0) {
-    alert('Ingrese una meta válida');
+    showError('Ingrese una meta válida');
     return;
   }
   
-  const confirmar = confirm(
-    `¿Confirmar meta para ${document.getElementById('selector-mes-resumen').selectedOptions[0].text}?\n\n` +
-    `Meta: $${metaMonto.toLocaleString('es-CL')}\n` +
-    `Solo días laborales: ${soloDiasLaborales ? 'Sí (Lun-Vie)' : 'No (Todos los días)'}\n` +
-    `Incluir mensuales: ${incluirMensuales ? 'Sí' : 'No'}`
-  );
+  // Guardar datos para usar después de la confirmación
+  datosMetaPendiente = {
+    mes: parseInt(mesAnio[0]),
+    anio: parseInt(mesAnio[1]),
+    meta_monto: metaMonto,
+    solo_dias_laborales: soloDiasLaborales,
+    incluir_mensuales: incluirMensuales
+  };
   
-  if (!confirmar) return;
+  // Llenar el modal de confirmación
+  const periodoTexto = document.getElementById('selector-mes-resumen').selectedOptions[0].text;
+  document.getElementById('confirm-meta-periodo').textContent = `Período: ${periodoTexto}`;
+  document.getElementById('confirm-meta-monto').textContent = `$${metaMonto.toLocaleString('es-CL')}`;
+  document.getElementById('confirm-solo-laborales').textContent = soloDiasLaborales ? 'Sí (Lun-Vie)' : 'No (Todos los días)';
+  document.getElementById('confirm-incluir-mensuales').textContent = incluirMensuales ? 'Sí' : 'No';
+  
+  // Mostrar el modal de confirmación
+  const modalConfirmar = new bootstrap.Modal(document.getElementById('modalConfirmarMeta'));
+  modalConfirmar.show();
+}
+
+// Función que se ejecuta cuando el usuario confirma en el modal
+async function confirmarYGuardarMeta() {
+  if (!datosMetaPendiente) {
+    showError('No hay datos de meta para guardar');
+    return;
+  }
+  
+  // Cerrar el modal
+  const modalConfirmar = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarMeta'));
+  if (modalConfirmar) {
+    modalConfirmar.hide();
+  }
+  
+  // Deshabilitar el botón mientras se procesa
+  const btnConfirmar = document.getElementById('btn-confirmar-meta-si');
+  const textoOriginal = btnConfirmar.innerHTML;
+  btnConfirmar.disabled = true;
+  btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
   
   try {
-    const response = await fetch(`${BASE_PATH}/api/api_resumen_ejecutivo.php`, {
+    const response = await fetch(`${BASE_PATH}/api/api_meta.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        mes: parseInt(mesAnio[0]),
-        anio: parseInt(mesAnio[1]),
-        meta_monto: metaMonto,
-        solo_dias_laborales: soloDiasLaborales,
-        incluir_mensuales: incluirMensuales
-      })
+      body: JSON.stringify(datosMetaPendiente)
     });
     
     const result = await response.json();
     
     if (result.success) {
-      alert('✅ Meta guardada correctamente');
+      showSuccess('✅ Meta guardada correctamente');
       cargarResumenEjecutivo(); // Recargar para ver cambios
+      datosMetaPendiente = null; // Limpiar datos
     } else {
       throw new Error(result.error);
     }
   } catch (error) {
-    alert('❌ Error al guardar meta: ' + error.message);
+    showError('❌ Error al guardar meta: ' + error.message);
+  } finally {
+    // Restaurar el botón
+    btnConfirmar.disabled = false;
+    btnConfirmar.innerHTML = textoOriginal;
   }
 }
 

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Centro de Depuración - Sistema Estacionamiento</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        .hero {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .tool-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            height: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .tool-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            color: inherit;
+        }
+        .tool-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        .badge-status {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.8rem;
+        }
+        .category-header {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            margin: 2rem 0 1rem 0;
+        }
+        .quick-start {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+        .stat-box {
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero">
+            <i class="fas fa-shield-alt" style="font-size: 5rem; color: #667eea;"></i>
+            <h1 class="display-3 fw-bold mt-3">Centro de Depuración</h1>
+            <p class="lead text-muted">Sistema completo de debugging para encontrar y resolver problemas</p>
+            <hr class="my-4">
+            <p>
+                <span class="badge bg-success me-2">✓ Sistema Activo</span>
+                <span class="badge bg-info me-2">8 Herramientas</span>
+                <span class="badge bg-warning text-dark">Listo para usar</span>
+            </p>
+        </div>
+
+        <!-- Inicio Rápido -->
+        <div class="quick-start">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h3><i class="fas fa-rocket"></i> Inicio Rápido (¡Empieza aquí!)</h3>
+                    <p class="mb-0">¿Primera vez? Te recomendamos empezar con el tutorial interactivo que te guiará paso a paso.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <a href="tutorial_debug.html" class="btn btn-light btn-lg">
+                        <i class="fas fa-graduation-cap"></i> Ir al Tutorial
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas Rápidas -->
+        <div class="row text-white mb-4">
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <h2 id="stat-logs">-</h2>
+                    <p class="mb-0">Eventos Registrados</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <h2>100%</h2>
+                    <p class="mb-0">Sistema Operativo</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <h2>8</h2>
+                    <p class="mb-0">Herramientas</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <h2>5</h2>
+                    <p class="mb-0">Tipos de Log</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Herramientas Principales -->
+        <div class="category-header">
+            <h2 class="mb-0"><i class="fas fa-tools"></i> Herramientas Principales</h2>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <a href="debug_panel.php" class="tool-card" target="_blank">
+                    <span class="badge bg-primary badge-status">Principal</span>
+                    <i class="fas fa-tachometer-alt tool-icon text-primary"></i>
+                    <h3>Panel de Diagnóstico</h3>
+                    <p class="text-muted">
+                        Verifica el estado completo del sistema: base de datos, archivos, 
+                        impresoras, APIs y rendimiento.
+                    </p>
+                    <span class="badge bg-light text-dark">
+                        <i class="fas fa-clock"></i> Tiempo real
+                    </span>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a href="ver_logs.php" class="tool-card" target="_blank">
+                    <span class="badge bg-success badge-status">En Vivo</span>
+                    <i class="fas fa-terminal tool-icon text-success"></i>
+                    <h3>Visor de Logs</h3>
+                    <p class="text-muted">
+                        Monitorea eventos en tiempo real. Filtra por tipo, 
+                        auto-actualización y estadísticas visuales.
+                    </p>
+                    <span class="badge bg-light text-dark">
+                        <i class="fas fa-sync-alt"></i> Auto-refresh
+                    </span>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a href="test_debug_sistema.php" class="tool-card">
+                    <span class="badge bg-warning text-dark badge-status">Test</span>
+                    <i class="fas fa-flask tool-icon text-warning"></i>
+                    <h3>Prueba del Sistema</h3>
+                    <p class="text-muted">
+                        Genera eventos de prueba para verificar que todo 
+                        el sistema de logging funciona correctamente.
+                    </p>
+                    <span class="badge bg-light text-dark">
+                        <i class="fas fa-check-circle"></i> Verificación
+                    </span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Tutoriales y Documentación -->
+        <div class="category-header">
+            <h2 class="mb-0"><i class="fas fa-book"></i> Tutoriales y Documentación</h2>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <a href="tutorial_debug.html" class="tool-card">
+                    <i class="fas fa-graduation-cap tool-icon text-info"></i>
+                    <h3>Tutorial Interactivo</h3>
+                    <p class="text-muted">
+                        Aprende paso a paso cómo usar el sistema de debugging 
+                        con ejemplos visuales y prácticos.
+                    </p>
+                    <span class="badge bg-info">Recomendado para principiantes</span>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a href="GUIA_DEBUG.md" class="tool-card" target="_blank">
+                    <i class="fas fa-book-open tool-icon text-primary"></i>
+                    <h3>Guía Completa</h3>
+                    <p class="text-muted">
+                        Documentación detallada con todos los casos de uso, 
+                        ejemplos de código y mejores prácticas.
+                    </p>
+                    <span class="badge bg-primary">Referencia completa</span>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a href="README_DEBUG.md" class="tool-card" target="_blank">
+                    <i class="fas fa-readme tool-icon text-secondary"></i>
+                    <h3>Inicio Rápido</h3>
+                    <p class="text-muted">
+                        Resumen ejecutivo con enlaces rápidos y comandos 
+                        esenciales para empezar en minutos.
+                    </p>
+                    <span class="badge bg-secondary">Quick start</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Ejemplos y Código -->
+        <div class="category-header">
+            <h2 class="mb-0"><i class="fas fa-code"></i> Ejemplos de Código</h2>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <a href="ejemplos/calcular-cobro_CON_DEBUG.php" class="tool-card" target="_blank">
+                    <i class="fas fa-file-code tool-icon text-success"></i>
+                    <h3>Ejemplo Práctico</h3>
+                    <p class="text-muted">
+                        Código real de tu sistema (calcular-cobro.php) con 
+                        logging implementado. Compara con el original.
+                    </p>
+                    <span class="badge bg-success">Código comentado</span>
+                </a>
+            </div>
+
+            <div class="col-md-6">
+                <div class="tool-card" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                    <i class="fas fa-lightbulb tool-icon text-warning"></i>
+                    <h3>Cómo Usarlo</h3>
+                    <div class="text-start">
+                        <p class="mb-2"><strong>1. Incluye el logger:</strong></p>
+                        <code class="d-block bg-white p-2 rounded mb-3">require_once 'debug_logger.php';</code>
+                        
+                        <p class="mb-2"><strong>2. Registra eventos:</strong></p>
+                        <code class="d-block bg-white p-2 rounded">DebugLogger::info("Tu mensaje");</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Casos de Uso -->
+        <div class="category-header">
+            <h2 class="mb-0"><i class="fas fa-question-circle"></i> ¿Cuándo Usar Cada Herramienta?</h2>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="tool-card" style="border-left: 5px solid #dc3545;">
+                    <h4 class="text-danger"><i class="fas fa-exclamation-triangle"></i> Hay un Problema</h4>
+                    <ol class="text-muted">
+                        <li>Abre <strong>debug_panel.php</strong> → Verifica configuración</li>
+                        <li>Abre <strong>ver_logs.php</strong> → Busca errores (rojos)</li>
+                        <li>Identifica dónde falla</li>
+                        <li>Corrige el error</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="tool-card" style="border-left: 5px solid #ffc107;">
+                    <h4 class="text-warning"><i class="fas fa-turtle"></i> Sistema Lento</h4>
+                    <ol class="text-muted">
+                        <li>Agrega logging a tu código</li>
+                        <li>Abre <strong>ver_logs.php</strong> → Filtra por "SQL"</li>
+                        <li>Encuentra consultas lentas (>50ms)</li>
+                        <li>Optimiza esas consultas</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="tool-card" style="border-left: 5px solid #17a2b8;">
+                    <h4 class="text-info"><i class="fas fa-users"></i> Auditoría de Usuarios</h4>
+                    <ol class="text-muted">
+                        <li>Agrega logging en operaciones importantes</li>
+                        <li>Abre <strong>ver_logs.php</strong></li>
+                        <li>Ve historial completo de acciones</li>
+                        <li>Exporta logs si es necesario</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="tool-card" style="border-left: 5px solid #28a745;">
+                    <h4 class="text-success"><i class="fas fa-user-graduate"></i> Aprender a Usar</h4>
+                    <ol class="text-muted">
+                        <li>Abre <strong>tutorial_debug.html</strong></li>
+                        <li>Lee <strong>GUIA_DEBUG.md</strong></li>
+                        <li>Ejecuta <strong>test_debug_sistema.php</strong></li>
+                        <li>Ve el ejemplo en <strong>ejemplos/</strong></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acceso Rápido al Sistema -->
+        <div class="row">
+            <div class="col-12">
+                <div style="background: white; padding: 2rem; border-radius: 15px; text-align: center;">
+                    <h4 class="mb-3">¿Listo para empezar?</h4>
+                    <div class="btn-group" role="group">
+                        <a href="tutorial_debug.html" class="btn btn-primary btn-lg">
+                            <i class="fas fa-play-circle"></i> Tutorial
+                        </a>
+                        <a href="test_debug_sistema.php" class="btn btn-warning btn-lg">
+                            <i class="fas fa-flask"></i> Probar
+                        </a>
+                        <a href="ver_logs.php" class="btn btn-success btn-lg" target="_blank">
+                            <i class="fas fa-terminal"></i> Ver Logs
+                        </a>
+                        <a href="index.php" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-white mt-4">
+            <p class="mb-1">
+                <small>
+                    Sistema de Depuración v1.0 | 
+                    <i class="fas fa-shield-alt"></i> Seguro y Confiable | 
+                    <i class="fas fa-rocket"></i> Listo para Producción
+                </small>
+            </p>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Cargar estadística de logs
+        fetch('ver_logs.php?ajax=1&lineas=10000')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('stat-logs').textContent = data.total;
+                }
+            })
+            .catch(() => {
+                document.getElementById('stat-logs').textContent = '0';
+            });
+    </script>
+</body>
+</html>
+
+

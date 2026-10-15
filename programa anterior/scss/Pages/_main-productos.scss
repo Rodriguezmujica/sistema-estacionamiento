@@ -1,0 +1,94 @@
+
+
+.productosItem {
+        display: flex;
+        flex-direction: column;
+        ul {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            list-style: none;
+            
+          }
+      
+      }
+.fotospro {
+        width: 240px;
+      }
+      
+.redv {
+    width: 130px;
+    }
+  .tortainfa { 
+    img {
+    width: 40vh;
+  }
+  }
+
+  .productos {
+    margin: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    h2 {
+      font-size: 28px;
+      text-align: center;
+    }
+    li {
+      background-color: white;
+      width: 300px;
+      margin: 20px;
+      padding: 20px;
+      border: 1px solid $rosaeve;
+      border-radius: 5px;
+      text-align: center;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 20px;
+    }
+    h3 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: $marroneve;
+    }
+    p {
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    a {
+      display: block;
+      text-align: center;
+      background-color: $rosaeve;
+      color: #fff;
+      font-size: 20px;
+      padding: 10px;
+      border-radius: 5px;
+      text-decoration: none;
+       &:hover {  background-color: #0062cc;}
+    }
+   
+  }
+
+  h1 {
+    text-align: center;
+    color: $marroneve;
+  }
+  .cupcafe {
+    width: 120px;
+  }
+.tortast {
+  p {
+    margin-bottom: 70px;
+  }
+}
+
+.packcup {
+  p {
+    margin-bottom: 86px;
+  }
+}

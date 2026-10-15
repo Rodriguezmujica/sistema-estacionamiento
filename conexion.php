@@ -7,6 +7,27 @@
 error_reporting(E_ERROR | E_PARSE);
 ini_set('display_errors', '0');
 
+if (!function_exists('setMySQLChileTimezone')) {
+    function setMySQLChileTimezone($conn) {
+        // 1) Intentar zona IANA (requiere tablas timezone cargadas en MySQL/MariaDB)
+        if ($conn->query("SET time_zone = 'America/Santiago'")) {
+            return true;
+        }
+    
+        // 2) Fallback seguro: offset actual de Chile calculado por PHP (considera DST actual)
+        $tz = new DateTimeZone('America/Santiago');
+        $now = new DateTime('now', $tz);
+        $offsetSeconds = $tz->getOffset($now);
+        $sign = $offsetSeconds >= 0 ? '+' : '-';
+        $abs = abs($offsetSeconds);
+        $hours = floor($abs / 3600);
+        $minutes = floor(($abs % 3600) / 60);
+        $offset = sprintf("%s%02d:%02d", $sign, $hours, $minutes);
+    
+        return (bool)$conn->query("SET time_zone = '{$offset}'");
+    }
+}
+
 // ============================================
 // CARGAR CONFIGURACIÓN
 // ============================================
@@ -37,16 +58,18 @@ if (file_exists(__DIR__ . '/config/config.php')) {
         $dbname = 'estacionamiento';
         $port = 3306;
     } else {
-        // Configuración para Linux (ANTIX) - Conecta a Windows 7
-        // 🔌 CONEXIÓN REMOTA A SERVIDOR WINDOWS 7
-        $host = '192.168.3.101';  // IP de Windows 7
-        $user = 'antix';          // Usuario MySQL en Windows 7
-        $pass = '733';            // Contraseña MySQL
-        $dbname = 'estacionamiento';
-        $port = 3306;
+        // Configuración para Linux:
+        // 1) Variables de entorno (producción)
+        // 2) Fallback seguro para entornos locales
+        $host = getenv('DB_HOST') ?: 'localhost';
+        $user = getenv('DB_USER') ?: 'root';
+        // Mantener compatibilidad con el fallback histórico (conexion-ejemplo.php)
+        $pass = getenv('DB_PASS') !== false ? getenv('DB_PASS') : 'losrios733';
+        $dbname = getenv('DB_NAME') ?: 'estacionamiento';
+        $port = intval(getenv('DB_PORT') ?: 3306);
         
-        // Log de conexión remota
-        error_log("🔌 ANTIX: Conectando a servidor Windows 7 en $host:$port");
+        // Log de conexión (sin exponer credenciales)
+        error_log("🔌 LINUX: Conectando a DB en $host:$port ($dbname)");
     }
 }
 
@@ -74,8 +97,8 @@ try {
         // Configurar charset
         $conn->set_charset('utf8mb4');
         
-        // Configurar zona horaria de MySQL
-        $conn->query("SET time_zone = '-03:00'");
+        // Configurar zona horaria de MySQL (con fallback si no existen tablas de timezone)
+        setMySQLChileTimezone($conn);
         
         // Configuraciones adicionales para estabilidad en Windows
         if ($is_windows) {

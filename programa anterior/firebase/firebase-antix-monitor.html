@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Monitor Sincronización Firebase ↔ Antix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .status-card {
+            border-left: 4px solid #007bff;
+            margin-bottom: 20px;
+            transition: transform 0.2s ease;
+        }
+        .status-card:hover {
+            transform: translateY(-2px);
+        }
+        .status-online {
+            border-left-color: #28a745;
+        }
+        .status-offline {
+            border-left-color: #dc3545;
+        }
+        .status-warning {
+            border-left-color: #ffc107;
+        }
+        .log-entry {
+            padding: 8px 12px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .log-time {
+            color: #6c757d;
+            margin-right: 10px;
+        }
+        .log-type {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .sync-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        .sync-step {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            min-width: 120px;
+        }
+        .sync-step.active {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        .sync-step.error {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        .sync-arrow {
+            font-size: 1.5rem;
+            color: #6c757d;
+        }
+        .metric-card {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="h3 text-primary mb-4">
+                    <i class="fas fa-sync-alt me-2"></i>
+                    Monitor Sincronización Firebase ↔ Antix
+                </h1>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Monitoreo en tiempo real de la sincronización entre Firebase y Antix
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado General -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card status-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">
+                            <i class="fas fa-fire me-2"></i>Firebase
+                        </h5>
+                        <span class="badge bg-secondary fs-6" id="firebase-sync-status">Verificando...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card status-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">
+                            <i class="fas fa-desktop me-2"></i>Antix
+                        </h5>
+                        <span class="badge bg-secondary fs-6" id="antix-sync-status">Verificando...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card status-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">
+                            <i class="fas fa-clock me-2"></i>Última Sync
+                        </h5>
+                        <small class="text-muted" id="last-sync-time">Nunca</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card status-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">
+                            <i class="fas fa-hourglass-half me-2"></i>Pendientes
+                        </h5>
+                        <span class="badge bg-warning fs-6" id="pending-operations">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flujo de Sincronización -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-project-diagram me-2"></i>Flujo de Sincronización
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="sync-flow">
+                            <div class="sync-step" id="step-firebase">
+                                <i class="fas fa-fire fa-2x mb-2"></i>
+                                <div>Firebase</div>
+                                <small>Enviando...</small>
+                            </div>
+                            <div class="sync-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                            <div class="sync-step" id="step-network">
+                                <i class="fas fa-wifi fa-2x mb-2"></i>
+                                <div>Red</div>
+                                <small>Transmitiendo...</small>
+                            </div>
+                            <div class="sync-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                            <div class="sync-step" id="step-antix">
+                                <i class="fas fa-desktop fa-2x mb-2"></i>
+                                <div>Antix</div>
+                                <small>Recibiendo...</small>
+                            </div>
+                            <div class="sync-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                            <div class="sync-step" id="step-processed">
+                                <i class="fas fa-check fa-2x mb-2"></i>
+                                <div>Procesado</div>
+                                <small>Completado</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métricas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="total-operations">0</div>
+                    <div class="metric-label">Total Operaciones</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="success-rate">0%</div>
+                    <div class="metric-label">Tasa de Éxito</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="firebase-sent">0</div>
+                    <div class="metric-label">Enviados a Firebase</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="antix-processed">0</div>
+                    <div class="metric-label">Procesados por Antix</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs en Tiempo Real -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>Logs en Tiempo Real
+                        </h5>
+                        <div>
+                            <button class="btn btn-outline-light btn-sm me-2" onclick="exportLogs()">
+                                <i class="fas fa-download me-1"></i> Exportar
+                            </button>
+                            <button class="btn btn-outline-light btn-sm" onclick="clearLogs()">
+                                <i class="fas fa-trash me-1"></i> Limpiar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        <div id="sync-logs">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-spinner fa-spin me-2"></i>
+                                Cargando logs...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del Sistema -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Información del Sistema
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Estado de Red</h6>
+                                <div id="network-info">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                    Verificando...
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Estado de Base de Datos</h6>
+                                <div id="database-info">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                    Verificando...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enlaces -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <a href="firebase-monitor.html" class="btn btn-outline-primary me-2" target="_blank">
+                    <i class="fas fa-fire me-1"></i> Monitor Firebase
+                </a>
+                <a href="index.php" class="btn btn-outline-success me-2">
+                    <i class="fas fa-home me-1"></i> Dashboard Principal
+                </a>
+                <button class="btn btn-outline-info" onclick="location.reload()">
+                    <i class="fas fa-redo me-1"></i> Actualizar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="JS/firebase-sync-monitor.js"></script>
+    
+    <script>
+        // Simular eventos de sincronización para demostración
+        function simularSincronizacion() {
+            const operaciones = [
+                { collection: 'ingresos', docId: 'ingreso_001', patente: 'ABC123' },
+                { collection: 'salidas', docId: 'salida_001', patente: 'ABC123' },
+                { collection: 'lavados', docId: 'lavado_001', patente: 'DEF456' }
+            ];
+
+            operaciones.forEach((op, index) => {
+                setTimeout(() => {
+                    // Simular envío a Firebase
+                    window.dispatchEvent(new CustomEvent('firebase-sync-sent', { detail: op }));
+                    
+                    // Simular recepción en Antix
+                    setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent('antix-sync-received', { detail: op }));
+                        
+                        // Simular procesamiento en Antix
+                        setTimeout(() => {
+                            window.dispatchEvent(new CustomEvent('antix-sync-processed', { 
+                                detail: { 
+                                    operation: op, 
+                                    result: { success: true, processed_at: new Date().toISOString() }
+                                }
+                            }));
+                        }, 1000);
+                    }, 2000);
+                }, index * 3000);
+            });
+        }
+
+        // Actualizar métricas
+        function actualizarMetricas() {
+            if (window.FirebaseSyncMonitor) {
+                const stats = window.FirebaseSyncMonitor.getSyncStats();
+                
+                document.getElementById('total-operations').textContent = stats.total;
+                document.getElementById('success-rate').textContent = stats.success_rate + '%';
+                document.getElementById('firebase-sent').textContent = stats.firebase_sent;
+                document.getElementById('antix-processed').textContent = stats.antix_processed;
+            }
+        }
+
+        // Actualizar información del sistema
+        async function actualizarInfoSistema() {
+            try {
+                const response = await fetch('api/check-antix-status.php');
+                const data = await response.json();
+                
+                // Actualizar información de red
+                const networkInfo = document.getElementById('network-info');
+                networkInfo.innerHTML = `
+                    <span class="badge ${data.network.status === 'online' ? 'bg-success' : 'bg-danger'}">
+                        ${data.network.status === 'online' ? 'Online' : 'Offline'}
+                    </span>
+                    ${data.network.latency_ms ? ` - ${data.network.latency_ms}ms` : ''}
+                `;
+                
+                // Actualizar información de base de datos
+                const databaseInfo = document.getElementById('database-info');
+                databaseInfo.innerHTML = `
+                    <span class="badge ${data.database.status === 'connected' ? 'bg-success' : 'bg-danger'}">
+                        ${data.database.status === 'connected' ? 'Conectado' : 'Desconectado'}
+                    </span>
+                    ${data.database.operaciones_pendientes ? ` - ${data.database.operaciones_pendientes} pendientes` : ''}
+                `;
+                
+            } catch (error) {
+                console.error('Error actualizando información del sistema:', error);
+            }
+        }
+
+        // Exportar logs
+        function exportLogs() {
+            if (window.FirebaseSyncMonitor) {
+                window.FirebaseSyncMonitor.exportLogs();
+            }
+        }
+
+        // Limpiar logs
+        function clearLogs() {
+            if (window.FirebaseSyncMonitor) {
+                window.FirebaseSyncMonitor.logs = [];
+                window.FirebaseSyncMonitor.saveLogs();
+                window.FirebaseSyncMonitor.updateLogDisplay();
+                actualizarMetricas();
+            }
+        }
+
+        // Actualizar cada 5 segundos
+        setInterval(actualizarMetricas, 5000);
+        setInterval(actualizarInfoSistema, 10000);
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                actualizarMetricas();
+                actualizarInfoSistema();
+            }, 1000);
+            
+            // Simular sincronización después de 3 segundos
+            setTimeout(simularSincronizacion, 3000);
+        });
+    </script>
+</body>
+</html>

@@ -16,7 +16,8 @@ $firebaseConfig = [
     'projectId' => 'sistemaestacionamiento-46735',
     'storageBucket' => 'sistemaestacionamiento-46735.firebasestorage.app',
     'messagingSenderId' => '570161231939',
-    'appId' => '1:570161231939:web:50a5f88fcd65e98fa03cf6'
+    'appId' => '1:570161231939:web:ee1c2463ecd946e8a03cf6',
+    'measurementId' => 'G-KW4MQ6ELZW'
 ];
 
 echo "<h3>📋 Configuración para Haulmer:</h3>";

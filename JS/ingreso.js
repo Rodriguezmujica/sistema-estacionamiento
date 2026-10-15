@@ -314,8 +314,8 @@ document.addEventListener('DOMContentLoaded', () => {
           codigoParaImpresion,
           patente || 'SIN-PATENTE',
           servicioTexto || 'Estacionamiento',
-          fechaActual.toLocaleDateString('es-AR'),
-          fechaActual.toLocaleTimeString('es-AR')
+          fechaActual.toLocaleDateString('es-CL'),
+          fechaActual.toLocaleTimeString('es-CL')
         );
         
         if (resultado.success) {

@@ -1,0 +1,212 @@
+═══════════════════════════════════════════════════════════════════
+  GUÍA DE INSTALACIÓN PASO A PASO - Servicio de Impresión Star BSC10
+═══════════════════════════════════════════════════════════════════
+
+PASO 1: INSTALAR NODE.JS
+─────────────────────────
+1. Ir a https://nodejs.org/
+2. Descargar versión LTS (recomendada)
+3. Ejecutar instalador con opciones por defecto
+4. Verificar instalación abriendo CMD o PowerShell:
+   
+   node --version
+   npm --version
+
+   Deberías ver algo como: v20.x.x y 10.x.x
+
+
+PASO 2: INSTALAR DRIVER DE IMPRESORA
+─────────────────────────────────────
+1. Conectar impresora Star BSC10 vía USB
+2. Descargar driver desde:
+   https://www.starmicronics.com/support/downloads.aspx
+3. Buscar "BSC10" en la página
+4. Instalar driver según tu sistema operativo
+5. Verificar en "Panel de Control > Dispositivos e Impresoras"
+   que aparezca la impresora
+
+
+PASO 3: COPIAR CARPETA print-service
+─────────────────────────────────────
+1. Copiar toda la carpeta "print-service" a la PC de producción
+2. Ubicación recomendada: C:\PrintService
+3. La estructura debe quedar:
+   
+   C:\PrintService\
+   ├── server.js
+   ├── package.json
+   ├── install-service.js
+   ├── uninstall-service.js
+   ├── test-print.js
+   └── README.md
+
+
+PASO 4: INSTALAR DEPENDENCIAS
+──────────────────────────────
+1. Abrir PowerShell o CMD como Administrador
+2. Navegar a la carpeta:
+   
+   cd C:\PrintService
+
+3. Instalar dependencias:
+   
+   npm install
+
+4. Esperar a que termine (puede tomar unos minutos)
+
+
+PASO 5: PROBAR EL SERVICIO MANUALMENTE
+───────────────────────────────────────
+1. En la misma ventana, ejecutar:
+   
+   npm start
+
+2. Deberías ver:
+   
+   🚀 Servicio de Impresión iniciado
+   📍 Escuchando en http://localhost:3000
+   ✅ Servidor corriendo...
+
+3. Abrir OTRA ventana de PowerShell/CMD
+4. Ejecutar prueba:
+   
+   npm test
+
+5. Si todo está bien, debería imprimir un ticket de prueba
+6. Presionar Ctrl+C en la primera ventana para detener
+
+
+PASO 6: INSTALAR COMO SERVICIO DE WINDOWS (OPCIONAL PERO RECOMENDADO)
+──────────────────────────────────────────────────────────────────────
+1. Instalar node-windows globalmente:
+   
+   npm install -g node-windows
+   npm link node-windows
+
+2. Instalar el servicio (como Administrador):
+   
+   node install-service.js
+
+3. El servicio se instalará y arrancará automáticamente
+4. Para verificar:
+   - Presionar Win+R
+   - Escribir: services.msc
+   - Buscar: "PrintServiceEstacionamiento"
+   - Debe estar "En ejecución"
+
+
+PASO 7: CONFIGURAR INICIO AUTOMÁTICO
+─────────────────────────────────────
+Si instalaste como servicio de Windows:
+1. Abrir services.msc
+2. Doble clic en "PrintServiceEstacionamiento"
+3. Tipo de inicio: "Automático"
+4. Aplicar y Aceptar
+
+Ahora el servicio arrancará automáticamente cuando inicie Windows.
+
+
+PASO 8: INTEGRAR CON TU SISTEMA WEB
+────────────────────────────────────
+En tus archivos JavaScript, agregar esta función:
+
+async function imprimirTicketLocal(tipo, datos) {
+    try {
+        const response = await fetch('http://localhost:3000/print', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ tipo, datos })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Ticket impreso correctamente');
+        } else {
+            alert('Error al imprimir: ' + result.message);
+        }
+    } catch (error) {
+        alert('No se pudo conectar al servicio de impresión');
+    }
+}
+
+// Ejemplo de uso al registrar ingreso:
+imprimirTicketLocal('ingreso', {
+    ticket_id: ticketId,
+    patente: patente,
+    tipo_vehiculo: tipoVehiculo,
+    fecha_ingreso: fecha,
+    hora_ingreso: hora
+});
+
+
+VERIFICACIÓN FINAL
+──────────────────
+✓ Node.js instalado
+✓ Driver de impresora instalado
+✓ Impresora conectada y encendida
+✓ Carpeta print-service copiada
+✓ Dependencias instaladas (npm install)
+✓ Servicio funcionando (npm start o instalado como servicio)
+✓ Prueba exitosa (npm test imprimió ticket)
+✓ Sistema web integrado
+
+
+COMANDOS ÚTILES
+───────────────
+Iniciar manualmente:
+  npm start
+
+Probar impresión:
+  npm test
+
+Instalar como servicio:
+  node install-service.js
+
+Desinstalar servicio:
+  node uninstall-service.js
+
+Ver impresoras conectadas:
+  curl http://localhost:3000/printers
+
+Verificar estado:
+  curl http://localhost:3000/
+
+
+SOLUCIÓN DE PROBLEMAS
+─────────────────────
+⚠ "Impresora no detectada"
+→ Verificar driver instalado
+→ Desconectar y reconectar USB
+→ Verificar en Administrador de dispositivos
+
+⚠ "Puerto 3000 en uso"
+→ Cambiar puerto en server.js (const PORT = 3001)
+
+⚠ "Error LIBUSB_ERROR_ACCESS"
+→ Ejecutar como Administrador
+→ O instalar como servicio de Windows
+
+⚠ "Cannot find module"
+→ Ejecutar: npm install
+
+
+SOPORTE TÉCNICO
+───────────────
+Si tienes problemas, revisar:
+1. Logs del servicio (si está instalado):
+   C:\ProgramData\node-windows\PrintServiceEstacionamiento\
+
+2. Ejecutar modo debug:
+   npm run dev
+
+3. Verificar conectividad:
+   curl http://localhost:3000/
+
+
+═══════════════════════════════════════════════════════════════════
+                        ¡INSTALACIÓN COMPLETA!
+═══════════════════════════════════════════════════════════════════
+

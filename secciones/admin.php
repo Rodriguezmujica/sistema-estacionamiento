@@ -324,7 +324,7 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
                       <input type="number" class="form-control" id="precio-minimo" value="500">
                     </div>
                   </div>
-                  <button type="submit" class="btn btn-primary">
+                  <button type="submit" class="btn btn-primary" id="btn-guardar-precios">
                     <i class="fas fa-save"></i> Guardar Configuración
                   </button>
                 </form>
@@ -371,7 +371,7 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
                     <small class="text-muted d-block">Suma los planes mensuales a la meta</small>
                   </div>
                   
-                  <button type="submit" class="btn btn-info">
+                  <button type="submit" class="btn btn-info" id="btn-guardar-meta">
                     <i class="fas fa-save"></i> Guardar Meta
                   </button>
                 </form>
@@ -483,23 +483,37 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
                   </div>
                   
                   <!-- Top 5 Servicios y Desglose de Pagos -->
-                  <div class="row mb-4">
-                    <div class="col-md-6">
-                      <div class="card">
-                        <div class="card-header bg-light">
-                          <h6 class="mb-0"><i class="fas fa-trophy"></i> Top 5 Servicios Más Vendidos</h6>
+                  <div class="row mb-4 g-3">
+                    <div class="col-12 col-md-6 col-lg-3">
+                      <div class="card h-100 border-success">
+                        <div class="card-header bg-success text-white">
+                          <h6 class="mb-0"><i class="fas fa-briefcase"></i> Top 5 (Lun-Vie)</h6>
                         </div>
                         <div class="card-body">
-                          <div id="top-servicios" class="list-group list-group-flush">
+                          <div id="top-servicios-lv" class="list-group list-group-flush">
                             <div class="text-center text-muted py-3">
-                              <i class="fas fa-spinner fa-spin"></i> Cargando...
+                              <i class="fas fa-spinner fa-spin"></i> Cargando datos laborales...
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div class="col-md-6">
-                      <div class="card">
+                    <div class="col-12 col-md-6 col-lg-3">
+                      <div class="card h-100 border-warning">
+                        <div class="card-header bg-warning text-dark">
+                          <h6 class="mb-0"><i class="fas fa-sun"></i> Top 5 (Solo Sábados)</h6>
+                        </div>
+                        <div class="card-body">
+                          <div id="top-servicios-sab" class="list-group list-group-flush">
+                            <div class="text-center text-muted py-3">
+                              <i class="fas fa-spinner fa-spin"></i> Cargando datos de sábados...
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                      <div class="card h-100">
                         <div class="card-header bg-light">
                           <h6 class="mb-0"><i class="fas fa-credit-card"></i> Desglose por Método de Pago</h6>
                         </div>
@@ -528,19 +542,110 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
                     </div>
                   </div>
                   
-                  <!-- Botones de Exportación -->
-                  <div class="row">
-                    <div class="col-12 text-center">
-                      <button class="btn btn-danger" onclick="exportarResumenPDF()">
-                        <i class="fas fa-file-pdf"></i> Exportar a PDF
-                      </button>
-                      <button class="btn btn-success" onclick="exportarResumenExcel()">
-                        <i class="fas fa-file-excel"></i> Exportar a Excel
-                      </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Consulta por rango de fechas -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card border-info shadow-sm">
+              <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                  <i class="fas fa-calendar-alt"></i> Consulta por Rango de Fechas
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="row g-3 mb-3">
+                  <div class="col-md-4">
+                    <label for="admin-fecha-desde" class="form-label">
+                      <i class="fas fa-calendar-plus"></i> Desde:
+                    </label>
+                    <input type="date" class="form-control" id="admin-fecha-desde">
+                  </div>
+                  <div class="col-md-4">
+                    <label for="admin-fecha-hasta" class="form-label">
+                      <i class="fas fa-calendar-minus"></i> Hasta:
+                    </label>
+                    <input type="date" class="form-control" id="admin-fecha-hasta">
+                  </div>
+                  <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" id="admin-btn-consultar-fechas">
+                      <i class="fas fa-search"></i> Consultar
+                    </button>
+                  </div>
+                </div>
+
+                <div class="row g-3 mb-3" id="admin-resumen-fechas" style="display: none;">
+                  <div class="col-md-6">
+                    <div class="alert alert-success mb-0">
+                      <i class="fas fa-chart-line"></i>
+                      <strong>Total Servicios:</strong> <span id="admin-total-servicios-fecha">0</span>
                     </div>
                   </div>
-                  
+                  <div class="col-md-6">
+                    <div class="alert alert-success mb-0">
+                      <i class="fas fa-dollar-sign"></i>
+                      <strong>Total Ingresos:</strong> $<span id="admin-total-ingresos-fecha">0</span>
+                    </div>
+                  </div>
                 </div>
+
+                <div class="row g-3 mb-3" id="admin-export-buttons" style="display: none;">
+                  <div class="col-md-6">
+                    <button class="btn btn-success w-100" id="admin-btn-exportar-excel" disabled>
+                      <i class="fas fa-file-excel"></i> Exportar Excel
+                    </button>
+                  </div>
+                  <div class="col-md-6">
+                    <button class="btn btn-danger w-100" id="admin-btn-exportar-pdf" disabled>
+                      <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </button>
+                  </div>
+                </div>
+
+                <div class="table-responsive">
+                  <table class="table table-striped mb-0">
+                    <thead class="table-secondary">
+                      <tr>
+                        <th><i class="fas fa-tags"></i> Categoría</th>
+                        <th><i class="fas fa-list"></i> Tipos de Servicios</th>
+                        <th><i class="fas fa-chart-bar"></i> Cantidad</th>
+                        <th><i class="fas fa-dollar-sign"></i> Total</th>
+                        <th><i class="fas fa-eye"></i> Ver Detalles</th>
+                      </tr>
+                    </thead>
+                    <tbody id="admin-tabla-fechas-body">
+                      <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                          <i class="fas fa-info-circle"></i> Selecciona un rango de fechas para consultar
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div id="admin-detalles-container" style="display: none;" class="mt-3">
+                  <h6><i class="fas fa-list-alt"></i> Detalles de Servicios</h6>
+                  <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                      <thead class="table-dark">
+                        <tr>
+                          <th>#</th>
+                          <th><i class="fas fa-car"></i> Patente</th>
+                          <th><i class="fas fa-calendar"></i> Fecha Salida</th>
+                          <th><i class="fas fa-cog"></i> Servicio</th>
+                          <th><i class="fas fa-dollar-sign"></i> Total</th>
+                        </tr>
+                      </thead>
+                      <tbody id="admin-tabla-detalles-body">
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
@@ -577,6 +682,7 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
             </div>
           </div>
         </div>
+
       </div>
 
       <!-- ============ PESTAÑA: GESTIÓN DE USUARIOS (SOLO ADMIN) ============ -->
@@ -780,6 +886,71 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
     </div>
   </div>
 
+  <!-- Modal de Confirmación para Pago de Cliente Mensual -->
+  <div class="modal fade" id="modalConfirmarPagoCliente" tabindex="-1" aria-labelledby="modalConfirmarPagoClienteLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="modalConfirmarPagoClienteLabel">
+            <i class="fas fa-check-circle"></i> Confirmar Pago de Cliente Mensual
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Está seguro de que desea marcar como pagado a este cliente?</p>
+          <div class="alert alert-info">
+            <strong>Cliente:</strong> <span id="confirm-pago-cliente-nombre"></span><br>
+            <strong>Patente:</strong> <span id="confirm-pago-cliente-patente"></span><br>
+            <strong>Monto del Plan:</strong> <span id="confirm-pago-cliente-monto"></span><br>
+            <strong>Fecha Actual de Vencimiento:</strong> <span id="confirm-pago-cliente-vencimiento-actual"></span>
+          </div>
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Nota:</strong> Esto actualizará la fecha de vencimiento al próximo mes.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-success" id="btn-confirmar-pago-cliente-si">
+            <i class="fas fa-check"></i> Sí, Confirmar Pago
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación para Meta Mensual -->
+  <div class="modal fade" id="modalConfirmarMeta" tabindex="-1" aria-labelledby="modalConfirmarMetaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title" id="modalConfirmarMetaLabel">
+            <i class="fas fa-bullseye"></i> Confirmar Meta Mensual
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Está seguro de que desea guardar la siguiente meta?</p>
+          <div class="alert alert-info">
+            <strong id="confirm-meta-periodo"></strong><br>
+            <strong>Meta:</strong> <span id="confirm-meta-monto"></span><br>
+            <strong>Solo días laborales:</strong> <span id="confirm-solo-laborales"></span><br>
+            <strong>Incluir mensuales:</strong> <span id="confirm-incluir-mensuales"></span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-info" id="btn-confirmar-meta-si">
+            <i class="fas fa-check"></i> Sí, Guardar Meta
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
     <!-- Toast de éxito -->
@@ -833,6 +1004,8 @@ $rol = $_SESSION['rol']; // guardamos el rol para usarlo en el menú
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../JS/main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.28/dist/jspdf.plugin.autotable.min.js"></script>
   <script src="../JS/admin.js"></script>
 </body>
 </html>

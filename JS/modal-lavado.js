@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
             patente || 'SIN-PATENTE',
             nombreServicio || 'Lavado',
             total,
-            fechaActual.toLocaleString('es-AR')
+            fechaActual.toLocaleString('es-CL')
           );
         } else {
           // Fallback al método de ingreso si no existe el específico de lavado
@@ -378,8 +378,8 @@ document.addEventListener('DOMContentLoaded', () => {
             codigoParaImpresion,
             patente || 'SIN-PATENTE',
             nombreServicio || 'Lavado',
-            fechaActual.toLocaleDateString('es-AR'),
-            fechaActual.toLocaleTimeString('es-AR')
+            fechaActual.toLocaleDateString('es-CL'),
+            fechaActual.toLocaleTimeString('es-CL')
           );
         }
         

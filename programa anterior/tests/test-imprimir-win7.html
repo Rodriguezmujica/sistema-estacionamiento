@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Impresión - Windows 7</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        .btn-print {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+        }
+        .btn-print:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-online {
+            background-color: #28a745;
+            box-shadow: 0 0 10px #28a745;
+        }
+        .status-offline {
+            background-color: #dc3545;
+            box-shadow: 0 0 10px #dc3545;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .log-console {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h1 class="mb-3">🖨️ Test de Impresión - Windows 7</h1>
+                        <p class="mb-2">
+                            Estado del servicio: 
+                            <span id="status-indicator" class="status-indicator status-offline"></span>
+                            <span id="status-text">Verificando...</span>
+                        </p>
+                        <p class="text-muted mb-3">
+                            Servicio: <code id="service-url">http://localhost/sistemaEstacionamiento/print-service-php/imprimir.php</code>
+                        </p>
+                        <button class="btn btn-sm btn-outline-primary" onclick="verificarServicio()">
+                            🔄 Refrescar Estado
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Test Básico -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-warning">
+                        <h5 class="mb-0">🧪 Test Básico</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Prueba rápida para verificar que la impresora funciona.</p>
+                        <form id="form-test">
+                            <div class="mb-3">
+                                <label class="form-label">Mensaje</label>
+                                <textarea class="form-control" id="test-mensaje" rows="3">¡Impresora Star BSC10 funcionando en Windows 7!</textarea>
+                            </div>
+                            <button type="submit" class="btn btn-print w-100">
+                                🖨️ Imprimir Test
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Ingreso -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">📥 Test Ticket Ingreso</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="form-ingreso">
+                            <div class="mb-2">
+                                <label class="form-label">Ticket ID</label>
+                                <input type="text" class="form-control" id="ingreso-ticket" value="12345">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Patente</label>
+                                <input type="text" class="form-control" id="ingreso-patente" value="ABC123">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Tipo Vehículo</label>
+                                <select class="form-select" id="ingreso-tipo">
+                                    <option value="Auto">Auto</option>
+                                    <option value="Moto">Moto</option>
+                                    <option value="Camioneta">Camioneta</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-print w-100">
+                                🖨️ Imprimir Ingreso
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Salida -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">📤 Test Ticket Salida</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="form-salida">
+                            <div class="mb-2">
+                                <label class="form-label">Ticket ID</label>
+                                <input type="text" class="form-control" id="salida-ticket" value="12345">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Patente</label>
+                                <input type="text" class="form-control" id="salida-patente" value="ABC123">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Tiempo</label>
+                                <input type="text" class="form-control" id="salida-tiempo" value="4h 15min">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Monto</label>
+                                <input type="number" class="form-control" id="salida-monto" value="500">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Método</label>
+                                <select class="form-select" id="salida-metodo">
+                                    <option value="Efectivo">Efectivo</option>
+                                    <option value="TUU">TUU</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-print w-100">
+                                🖨️ Imprimir Salida
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Lavado -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">🚿 Test Ticket Lavado</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="form-lavado">
+                            <div class="mb-2">
+                                <label class="form-label">Ticket ID</label>
+                                <input type="text" class="form-control" id="lavado-ticket" value="LAV001">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Patente</label>
+                                <input type="text" class="form-control" id="lavado-patente" value="XYZ789">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Servicio</label>
+                                <select class="form-select" id="lavado-servicio">
+                                    <option value="Lavado Simple">Lavado Simple</option>
+                                    <option value="Lavado Premium">Lavado Premium</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Monto</label>
+                                <input type="number" class="form-control" id="lavado-monto" value="300">
+                            </div>
+                            <button type="submit" class="btn btn-print w-100">
+                                🖨️ Imprimir Lavado
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Console de Log -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">📋 Console de Diagnóstico</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="log-console" class="log-console">
+                            &gt; Esperando operaciones...<br>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary mt-2" onclick="limpiarConsola()">
+                            🗑️ Limpiar Console
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instrucciones -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">📖 Instrucciones</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>✅ Checklist antes de probar:</h6>
+                        <ul>
+                            <li>Apache está corriendo en XAMPP (luz verde)</li>
+                            <li>Impresora Star BSC10 conectada por USB y encendida</li>
+                            <li>Driver de impresora instalado</li>
+                            <li>Verificar nombre de impresora en Panel de Control</li>
+                        </ul>
+                        
+                        <h6>🔧 Si no funciona:</h6>
+                        <ol>
+                            <li>Verificar estado del servicio (debe estar "Online" arriba)</li>
+                            <li>Abrir: <code>http://localhost/sistemaEstacionamiento/print-service-php/imprimir.php?action=status</code></li>
+                            <li>Revisar la console de diagnóstico abajo para ver errores</li>
+                            <li>Verificar nombre exacto de impresora y actualizar en archivos</li>
+                        </ol>
+                        
+                        <h6>📝 Archivos a verificar:</h6>
+                        <ul>
+                            <li><code>print-service-php/imprimir.php</code> - Línea 139 (nombre impresora)</li>
+                            <li><code>JS/print-service-client-win7.js</code> - Línea 9 (nombre impresora)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="JS/print-service-client-win7.js"></script>
+    
+    <script>
+        // Función para agregar a la console
+        function log(mensaje, tipo = 'info') {
+            const console = document.getElementById('log-console');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = tipo === 'error' ? '#ff4444' : tipo === 'success' ? '#00ff00' : '#00aaff';
+            console.innerHTML += `<span style="color: ${color}">[${timestamp}] ${mensaje}</span><br>`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function limpiarConsola() {
+            document.getElementById('log-console').innerHTML = '&gt; Console limpiada<br>';
+        }
+
+        // Verificar estado del servicio
+        async function verificarServicio() {
+            log('Verificando estado del servicio...');
+            const estado = await PrintService.verificarEstado();
+            const indicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            
+            if (estado.disponible) {
+                indicator.className = 'status-indicator status-online';
+                statusText.textContent = `Online (v${estado.version})`;
+                statusText.style.color = '#28a745';
+                log('✅ Servicio online y funcionando', 'success');
+            } else {
+                indicator.className = 'status-indicator status-offline';
+                statusText.textContent = 'Offline';
+                statusText.style.color = '#dc3545';
+                log('❌ Servicio offline: ' + estado.error, 'error');
+            }
+        }
+
+        // Test
+        document.getElementById('form-test').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mensaje = document.getElementById('test-mensaje').value;
+            log('Imprimiendo test...');
+            const resultado = await PrintService.imprimirTest(mensaje);
+            if (resultado.success) {
+                log('✅ Test impreso correctamente', 'success');
+            } else {
+                log('❌ Error: ' + resultado.message, 'error');
+            }
+        });
+
+        // Ingreso
+        document.getElementById('form-ingreso').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            log('Imprimiendo ticket de ingreso...');
+            const resultado = await PrintService.imprimirTicketIngreso(
+                document.getElementById('ingreso-ticket').value,
+                document.getElementById('ingreso-patente').value,
+                document.getElementById('ingreso-tipo').value,
+                new Date().toLocaleDateString('es-AR'),
+                new Date().toLocaleTimeString('es-AR')
+            );
+            if (resultado.success) {
+                log('✅ Ticket de ingreso impreso', 'success');
+            } else {
+                log('❌ Error: ' + resultado.message, 'error');
+            }
+        });
+
+        // Salida
+        document.getElementById('form-salida').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            log('Imprimiendo ticket de salida...');
+            const resultado = await PrintService.imprimirTicketSalida({
+                ticket_id: document.getElementById('salida-ticket').value,
+                patente: document.getElementById('salida-patente').value,
+                fecha_ingreso: '2025-10-13 10:30:00',
+                fecha_salida: new Date().toLocaleString('es-AR'),
+                tiempo_estadia: document.getElementById('salida-tiempo').value,
+                monto: document.getElementById('salida-monto').value,
+                metodo_pago: document.getElementById('salida-metodo').value,
+                fecha_pago: new Date().toLocaleString('es-AR')
+            });
+            if (resultado.success) {
+                log('✅ Ticket de salida impreso', 'success');
+            } else {
+                log('❌ Error: ' + resultado.message, 'error');
+            }
+        });
+
+        // Lavado
+        document.getElementById('form-lavado').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            log('Imprimiendo ticket de lavado...');
+            const resultado = await PrintService.imprimirTicketLavado(
+                document.getElementById('lavado-ticket').value,
+                document.getElementById('lavado-patente').value,
+                document.getElementById('lavado-servicio').value,
+                document.getElementById('lavado-monto').value,
+                new Date().toLocaleString('es-AR')
+            );
+            if (resultado.success) {
+                log('✅ Ticket de lavado impreso', 'success');
+            } else {
+                log('❌ Error: ' + resultado.message, 'error');
+            }
+        });
+
+        // Verificar al cargar
+        window.addEventListener('load', () => {
+            log('Página cargada. Iniciando verificación...');
+            verificarServicio();
+        });
+    </script>
+</body>
+</html>
+
