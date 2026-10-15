@@ -1,0 +1,114 @@
+{
+  "name": "sistema-estacionamiento-desktop",
+  "version": "1.0.0",
+  "description": "Sistema de Gestión de Estacionamiento y Lavado de Autos - Aplicación de Escritorio (Electron + Node.js + SQLite)",
+  "main": "main.js",
+  "scripts": {
+    "dev": "concurrently -k -s first \"npm run dev:react\" \"wait-on http://127.0.0.1:5173 && npm run dev:electron\"",
+    "dev:react": "vite",
+    "dev:electron": "cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron . --enable-logging",
+    "build": "vite build",
+    "build:start": "npm run build && electron .",
+    "start": "electron .",
+    "test:db": "node database.js",
+    "migrate:sql": "node scripts/migrar-sql-a-sqlite.js",
+    "postinstall": "electron-builder install-app-deps",
+    "rebuild": "electron-builder install-app-deps",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder --win",
+    "dist:installer": "npm run build && electron-builder --win nsis",
+    "dist:portable": "npm run build && electron-builder --win portable"
+  },
+  "keywords": [
+    "electron",
+    "nodejs",
+    "sqlite",
+    "parking-management",
+    "desktop-app",
+    "portfolio"
+  ],
+  "author": "Equipo de Desarrollo Senior",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "lucide-react": "^1.57.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^6.1.2",
+    "autoprefixer": "^10.6.1",
+    "concurrently": "^10.0.6",
+    "cross-env": "^10.1.0",
+    "electron": "^31.7.7",
+    "electron-builder": "^26.15.3",
+    "postcss": "^8.5.30",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.4",
+    "wait-on": "^9.5.1"
+  },
+  "build": {
+    "appId": "com.parkflow.app",
+    "productName": "ParkFlow",
+    "copyright": "Copyright © 2026 ParkFlow",
+    "npmRebuild": false,
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "ipc/**/*",
+      "services/**/*",
+      "build/icon.ico",
+      "database.js",
+      "main.js",
+      "preload.js",
+      "package.json",
+      "!**/*.map"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/sqlite3/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "data/sistema_estacionamiento.sqlite",
+        "to": "initial_data/sistema_estacionamiento.sqlite"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ParkFlow",
+      "uninstallDisplayName": "ParkFlow - Sistema de Estacionamiento",
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "ParkFlow-Portable-${version}.exe"
+    }
+  }
+}
